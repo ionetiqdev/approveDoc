@@ -111,6 +111,21 @@ body { display: flex; min-height: 100vh; }
   padding: .5rem .6rem;
   flex-shrink: 0;
 }
+.sidebar-footer .nav-link {
+  display: flex;
+  align-items: center;
+  gap: .75rem;
+  padding: .55rem .65rem;
+  margin-bottom: .5rem;
+  border-radius: var(--tblr-border-radius, .375rem);
+  color: rgba(var(--sidebar-fg-rgb), .75);
+  text-decoration: none;
+  font-size: 1em;
+  white-space: nowrap;
+  transition: background-color .12s ease, color .12s ease;
+}
+.sidebar-footer .nav-link i:first-child { font-size: 1.15rem; flex-shrink: 0; width: 1.15rem; text-align: center; }
+.sidebar-footer .nav-link:hover { background: rgba(var(--sidebar-fg-rgb), .08); color: var(--sidebar-fg); }
 .sidebar-user-row {
   display: flex;
   align-items: center;

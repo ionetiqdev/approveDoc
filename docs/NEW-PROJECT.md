@@ -61,7 +61,22 @@ git remote add origin <your-repo-url>
 git push -u origin main
 ```
 
-**Check:** the repo on GitHub shows all the template's files.
+**Check:** the repo on GitHub shows all the template's files -
+**specifically, browse to `.github/workflows/deploy.yml` and confirm
+it's actually there.** This is the single file every later deploy
+depends on (it's what makes GitHub Actions run at all), and it's
+also the easiest one to silently lose - folders starting with a dot
+are hidden by default in Windows Explorer, and depending on how you
+extracted the build zip, it's possible to end up with every other
+file present and this one missing, with no error anywhere. The only
+symptom shows up much later as "I pushed, but nothing happened in
+the Actions tab" - by then it's a confusing thing to debug, so check
+it now while the fix is a five-second `git add .github`.
+
+If it's missing: `mkdir .github\workflows` (Windows allows creating
+a dot-folder by command even though Explorer may hide it afterward),
+copy `deploy.yml` into it from the build zip, then
+`git add .github && git commit -m "Add missing workflow file" && git push`.
 
 ## 3. Create the Supabase project (You, or Claude - test first)
 

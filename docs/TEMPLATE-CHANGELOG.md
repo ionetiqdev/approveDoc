@@ -25,6 +25,22 @@ the start of their bullet point - per `docs/UPDATING-PROJECTS.md`,
 these are the one category worth pulling into every live project
 regardless of how unrelated the rest of that version is.
 
+## 1.1.2 - 27 June 2026
+
+- `docs/NEW-PROJECT.md` step 2's check now explicitly calls out
+  `.github/workflows/deploy.yml` by name and explains why it's easy
+  to lose silently (hidden dot-folder in Windows Explorer, no error
+  if `git add -A` somehow misses it at the very first commit) - found
+  the hard way on a real project where the workflow file never made
+  it into the initial push, so every later `git push` succeeded with
+  zero error output but no GitHub Actions run ever fired. The only
+  symptom was "Actions tab shows nothing," days after the actual
+  cause.
+- `project.conf.example` rewritten as plain `KEY=value` lines with no
+  inline `REM` comments - the comments made the file hard to read and
+  risky to hand-edit. The explanatory text that used to live inline
+  now lives in `docs/PROJECT-CONF.md`, one field per row in a table.
+
 ## 1.1.1 - 27 June 2026
 
 - 🔒 SECURITY: `supabase/03-issues.sql`'s two trigger functions
