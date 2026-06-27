@@ -1,0 +1,742 @@
+<!DOCTYPE html>
+<html lang="en" data-bs-theme="light" data-app-root="../../">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Issues - approveDoc</title>
+
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/core@1.4.0/dist/css/tabler.min.css" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.44.0/dist/tabler-icons.min.css" />
+  <link rel="stylesheet" href="../../assets/css/theme.css?r=1clzy8jt" />
+
+  <script>
+    (function() {
+      try {
+        var root = document.documentElement.dataset.appRoot || './';
+        var absoluteRoot = new URL(root, window.location.href).pathname;
+        var suffix = ':' + absoluteRoot;
+        var savedTheme = localStorage.getItem('app_theme');
+        var theme = savedTheme || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+        document.documentElement.setAttribute('data-bs-theme', theme);
+        var accent = localStorage.getItem('app_accent' + suffix);
+        if (accent) {
+          document.documentElement.style.setProperty('--tblr-primary', accent);
+          var ah = accent.replace('#','');
+          if (ah.length === 3) ah = ah.split('').map(function(c){return c+c;}).join('');
+          document.documentElement.style.setProperty('--tblr-primary-rgb', parseInt(ah.slice(0,2),16) + ', ' + parseInt(ah.slice(2,4),16) + ', ' + parseInt(ah.slice(4,6),16));
+        }
+        var sidebarBg = localStorage.getItem('app_sidebar_bg' + suffix);
+        if (sidebarBg) {
+          document.documentElement.style.setProperty('--bg-sidebar', sidebarBg);
+          var hex = sidebarBg.replace('#', '');
+          if (hex.length === 3) hex = hex.split('').map(function(c){return c+c;}).join('');
+          var r = parseInt(hex.slice(0,2),16) / 255, g = parseInt(hex.slice(2,4),16) / 255, b = parseInt(hex.slice(4,6),16) / 255;
+          var toLinear = function(c){ return c <= 0.03928 ? c/12.92 : Math.pow((c+0.055)/1.055, 2.4); };
+          var isLight = (0.2126*toLinear(r) + 0.7152*toLinear(g) + 0.0722*toLinear(b)) > 0.5;
+          document.documentElement.style.setProperty('--sidebar-fg', isLight ? '#0f172a' : '#ffffff');
+          document.documentElement.style.setProperty('--sidebar-fg-rgb', isLight ? '15,23,42' : '255,255,255');
+        }
+      } catch (e) {}
+    })();
+  </script>
+</head>
+<body>
+
+  <aside id="sidebar"></aside>
+  <div id="sidebarOverlay" class="sidebar-overlay"></div>
+
+  <div class="app-content-wrapper">
+
+    <header class="navbar navbar-expand-md d-print-none border-bottom">
+      <div class="container-fluid">
+        <button id="sidebarToggle" class="btn btn-icon" aria-label="Toggle sidebar" title="Toggle sidebar">
+          <i class="ti ti-menu-2"></i>
+        </button>
+        <h1 class="navbar-brand d-none d-sm-inline-block ms-2 mb-0 fs-5">Issues</h1>
+        <div class="navbar-nav flex-row order-md-last align-items-center gap-2">
+          <div data-active-organisation></div>
+          <button class="btn btn-icon" data-theme-toggle title="Toggle dark mode"><i class="ti ti-moon"></i></button>
+          <button class="btn btn-icon" id="headerPreferencesBtn" title="Preferences">
+            <i class="ti ti-adjustments"></i>
+          </button>
+          <span class="avatar avatar-sm rounded-circle bg-primary-lt" data-user-initials>?</span>
+          <span class="d-none d-xl-block">
+            <span class="d-block fw-semibold" style="font-size:.8125rem" data-user-name>—</span>
+            <span class="d-block text-secondary" style="font-size:.7rem" data-user-email>—</span>
+          </span>
+        </div>
+      </div>
+    </header>
+
+    <div class="page-body">
+      <div class="container-fluid">
+
+        <div class="card">
+          <div class="card-header d-flex align-items-center justify-content-between flex-wrap gap-2">
+            <h3 class="card-title mb-0">Issues</h3>
+            <div class="d-flex align-items-center gap-2 flex-wrap">
+              <span class="text-secondary small">Show</span>
+              <select id="pageSizeSelect" class="form-select form-select-sm" style="width:auto">
+                <option value="10">10</option>
+                <option value="25">25</option>
+                <option value="50">50</option>
+                <option value="100">100</option>
+              </select>
+              <span class="text-secondary small">entries</span>
+              <select id="filterStatus" class="form-select form-select-sm ms-3" style="width:auto"><option value="">All statuses</option></select>
+              <select id="filterPriority" class="form-select form-select-sm" style="width:auto"><option value="">All priorities</option></select>
+              <select id="filterType" class="form-select form-select-sm" style="width:auto"><option value="">All types</option></select>
+              <div class="input-icon" style="width:200px">
+                <span class="input-icon-addon"><i class="ti ti-search"></i></span>
+                <input type="text" id="searchInput" class="form-control form-control-sm" placeholder="Search…" />
+              </div>
+              <button class="btn btn-primary btn-sm" id="addIssueBtn"><i class="ti ti-plus me-1"></i>Add issue</button>
+            </div>
+          </div>
+          <div class="table-responsive">
+            <table class="table card-table table-vcenter text-nowrap">
+              <thead>
+                <tr>
+                  <th>Ref</th>
+                  <th>Title</th>
+                  <th>Type</th>
+                  <th>Priority</th>
+                  <th>Status</th>
+                  <th>Reported</th>
+                  <th class="text-end">Actions</th>
+                </tr>
+              </thead>
+              <tbody id="issuesBody">
+                <tr><td colspan="7" class="text-center py-4 text-secondary">
+                  <span class="spinner-border spinner-border-sm me-2"></span>Loading…
+                </td></tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="card-footer d-flex align-items-center justify-content-between flex-wrap gap-2">
+            <p class="text-secondary small mb-0" id="recordCount"></p>
+            <ul class="pagination pagination-sm mb-0" id="paginationControls"></ul>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- Issue modal: two-column, tabbed right panel, matching Risk's layout -->
+  <div class="modal modal-blur fade" id="issueModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered" style="max-width:70vw">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="issueModalTitle">Add issue</h5>
+          <button type="button" class="modal-close-btn" data-bs-dismiss="modal" aria-label="Close"><i class="ti ti-x"></i></button>
+        </div>
+        <div class="modal-body p-0">
+          <div id="issueModalError" class="alert alert-danger d-none py-2 small mb-0 mx-3 mt-3"></div>
+          <input type="hidden" id="issueId" />
+
+          <div class="row g-0">
+            <!-- Left column: core fields, always visible -->
+            <div class="p-3 border-end d-flex flex-column" style="width:40%;flex-shrink:0">
+              <div class="row g-3 flex-fill" style="min-height:0">
+                <div class="col-12">
+                  <label class="form-label">Title <span class="text-danger">*</span></label>
+                  <input type="text" id="issueTitle" class="form-control" placeholder="Short summary of the issue" />
+                </div>
+                <div class="col-12">
+                  <label class="form-label">Description</label>
+                  <textarea id="issueDescription" class="form-control" rows="3" placeholder="What's happening, steps to reproduce, etc."></textarea>
+                </div>
+                <div class="col-md-6">
+                  <label class="form-label">Type</label>
+                  <select id="issueType" class="form-select"></select>
+                </div>
+                <div class="col-md-6">
+                  <label class="form-label">Status</label>
+                  <select id="issueStatus" class="form-select"></select>
+                </div>
+                <div class="col-md-6">
+                  <label class="form-label">Priority</label>
+                  <select id="issuePriority" class="form-select"></select>
+                </div>
+                <div class="col-md-6">
+                  <label class="form-label">Area</label>
+                  <select id="issueArea" class="form-select"><option value="">—</option></select>
+                </div>
+                <div class="col-12">
+                  <label class="form-label">Project</label>
+                  <select id="issueProject" class="form-select"><option value="">—</option></select>
+                </div>
+                <div class="col-12 d-flex flex-column flex-fill mb-3">
+                  <label class="form-label">Notes</label>
+                  <textarea id="issueNotes" class="form-control flex-fill"></textarea>
+                </div>
+              </div>
+            </div>
+
+            <!-- Right column: tabbed -->
+            <div class="p-3 d-flex flex-column" style="width:60%;flex-shrink:0;min-height:520px">
+              <div class="card flex-fill d-flex flex-column">
+                <div class="card-header">
+                  <ul class="nav nav-tabs card-header-tabs" data-bs-toggle="tabs" role="tablist">
+                    <li class="nav-item"><a href="#tab-reported" class="nav-link active" data-bs-toggle="tab">Reported</a></li>
+                    <li class="nav-item"><a href="#tab-assignment" class="nav-link" data-bs-toggle="tab">Assignment</a></li>
+                    <li class="nav-item"><a href="#tab-resolution" class="nav-link" data-bs-toggle="tab">Resolution</a></li>
+                    <li class="nav-item"><a href="#tab-documentation" class="nav-link" data-bs-toggle="tab">Documentation</a></li>
+                  </ul>
+                </div>
+                <div class="card-body flex-fill d-flex flex-column">
+                  <div class="tab-content flex-fill">
+
+                <div class="tab-pane active" id="tab-reported">
+                  <div class="mb-3">
+                    <label class="form-label">Reported By</label>
+                    <select id="issueReportedBy" class="form-select"><option value="">—</option></select>
+                  </div>
+                  <div class="row g-3">
+                    <div class="col-6">
+                      <label class="form-label">Reported Date</label>
+                      <input type="date" id="issueReportedDate" class="form-control" />
+                    </div>
+                    <div class="col-6">
+                      <label class="form-label">Reported Release</label>
+                      <div class="input-group">
+                        <input type="text" id="issueReportedRelease" class="form-control" placeholder="e.g. v1.2.0" />
+                        <button type="button" class="btn btn-outline-secondary use-current-version-btn" data-target="issueReportedRelease" title="Use current published version"><i class="ti ti-clock"></i></button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="tab-pane" id="tab-assignment">
+                  <div class="mb-3">
+                    <label class="form-label">Assigned To</label>
+                    <select id="issueAssignedTo" class="form-select"><option value="">Unassigned</option></select>
+                  </div>
+                  <div class="mb-3">
+                    <label class="form-label">Assigned Date</label>
+                    <input type="date" id="issueAssignedDate" class="form-control" />
+                  </div>
+                </div>
+
+                <div class="tab-pane" id="tab-resolution">
+                  <div class="mb-3">
+                    <label class="form-label">Resolved By</label>
+                    <select id="issueResolvedBy" class="form-select"><option value="">—</option></select>
+                  </div>
+                  <div class="row g-3 mb-3">
+                    <div class="col-4">
+                      <label class="form-label">Resolved Date</label>
+                      <input type="date" id="issueResolvedDate" class="form-control" />
+                    </div>
+                    <div class="col-4">
+                      <label class="form-label">Resolved Release</label>
+                      <div class="input-group">
+                        <input type="text" id="issueResolvedRelease" class="form-control" placeholder="e.g. v1.2.1" />
+                        <button type="button" class="btn btn-outline-secondary use-current-version-btn" data-target="issueResolvedRelease" title="Use current published version"><i class="ti ti-clock"></i></button>
+                      </div>
+                    </div>
+                    <div class="col-4">
+                      <label class="form-label">Related issue</label>
+                      <input type="text" id="issueRelatedDisplay" class="form-control" placeholder="e.g. ISS-042" />
+                      <div class="form-text" id="issueRelatedHint"></div>
+                    </div>
+                  </div>
+                  <div class="mb-3 flex-fill d-flex flex-column">
+                    <label class="form-label">Resolved Comments</label>
+                    <textarea id="issueResolvedComments" class="form-control flex-fill"></textarea>
+                  </div>
+                </div>
+
+                <div class="tab-pane" id="tab-documentation">
+                  <label class="form-label">Documentation Notes</label>
+                  <textarea id="issueDocumentationNotes" class="form-control flex-fill"></textarea>
+                </div>
+
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer justify-content-between">
+          <button type="button" class="btn btn-outline-danger role-hidden" id="deleteIssueFromModalBtn" data-require-role="super_admin">
+            <i class="ti ti-trash me-1"></i>Delete
+          </button>
+          <div class="d-flex gap-2">
+            <button type="button" class="btn" data-bs-dismiss="modal">Cancel</button>
+            <button type="button" class="btn btn-primary" id="saveIssueBtn">
+              <span id="saveIssueLabel">Save issue</span>
+              <span id="saveIssueSpinner" class="spinner-border spinner-border-sm ms-2 d-none"></span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+  <div class="modal modal-blur fade" id="deleteIssueModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered modal-sm">
+      <div class="modal-content">
+        <div class="modal-status bg-danger"></div>
+        <div class="modal-body text-center py-4">
+          <i class="ti ti-trash text-danger mb-2" style="font-size:2.2rem"></i>
+          <h6 class="mb-1">Delete issue?</h6>
+          <p class="text-secondary small mb-0" id="deleteIssueRef"></p>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn" data-bs-dismiss="modal">Cancel</button>
+          <button type="button" class="btn btn-danger" id="confirmDeleteIssueBtn">Delete</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@tabler/core@1.4.0/dist/js/tabler.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="../../assets/js/version.js?r=1clzy8jt"></script>
+  <script src="../../assets/js/supabase-client.js?r=1clzy8jt"></script>
+  <script src="../../assets/js/auth.js?r=1clzy8jt"></script>
+  <script src="../../assets/js/app.js?r=1clzy8jt"></script>
+  <script src="../../assets/js/theme.js?r=1clzy8jt"></script>
+  <script src="../../assets/js/sidebar-html.js?r=1clzy8jt"></script>
+  <script src="../../assets/js/sidebar.js?r=1clzy8jt"></script>
+  <script src="../../assets/js/profile-modal.js?r=1clzy8jt"></script>
+  <script>
+let issueModal, deleteIssueModal;
+let allIssues = [], lookups = { statuses: [], priorities: [], types: [], projects: [], areas: [], users: [] };
+let pendingDeleteId = null;
+let currentPage = 1;
+let pageSize = 10;
+let selectedRelatedIssueId = null;
+let lastIssueSnapshot = null;
+
+(async () => {
+  const session = await Auth.requireAuth();
+  if (!session) return;
+  SidebarHtml.inject('../../');
+  Sidebar.init();
+  Auth.refreshUI();
+
+  // Issues is deliberately global and super_admin-only, see
+  // supabase/03-issues.sql header comment for why.
+  if (!Auth.isSuperAdmin()) {
+    App.toast('You do not have access to this page', 'danger');
+    window.location.href = '../../index.html';
+    return;
+  }
+
+  issueModal              = new bootstrap.Modal(document.getElementById('issueModal'));
+  App.guardModalClose(document.getElementById('issueModal'), issueModal, () => _issueFormSnapshot() !== lastIssueSnapshot);
+  deleteIssueModal        = new bootstrap.Modal(document.getElementById('deleteIssueModal'));
+
+  await loadLookups();
+  await loadIssues();
+
+  document.getElementById('searchInput').addEventListener('input', () => { currentPage = 1; renderTable(); });
+  document.getElementById('filterStatus').addEventListener('change', () => { currentPage = 1; renderTable(); });
+  document.getElementById('filterPriority').addEventListener('change', () => { currentPage = 1; renderTable(); });
+  document.getElementById('filterType').addEventListener('change', () => { currentPage = 1; renderTable(); });
+  document.getElementById('pageSizeSelect').addEventListener('change', e => {
+    pageSize = parseInt(e.target.value, 10);
+    currentPage = 1;
+    renderTable();
+  });
+  document.getElementById('addIssueBtn').addEventListener('click', () => openModal());
+  document.getElementById('saveIssueBtn').addEventListener('click', saveIssue);
+  document.getElementById('confirmDeleteIssueBtn').addEventListener('click', confirmDelete);
+  document.getElementById('deleteIssueFromModalBtn').addEventListener('click', () => {
+    const id = document.getElementById('issueId').value;
+    if (!id) return;
+    pendingDeleteId = id;
+    document.getElementById('deleteIssueRef').textContent = document.getElementById('issueModalTitle').textContent;
+    issueModal.hide();
+    deleteIssueModal.show();
+  });
+  document.getElementById('issueModal').addEventListener('hidden.bs.modal', resetModal);
+
+  // "Use current published version" clock buttons - fills the
+  // adjacent Release field with the live APP_PUBLISHED value (the
+  // same string shown in every page's footer), so whoever's logging
+  // a report/resolution doesn't have to go check and type it by hand.
+  document.querySelectorAll('.use-current-version-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const target = document.getElementById(btn.dataset.target);
+      if (target && typeof APP_PUBLISHED !== 'undefined') {
+        target.value = APP_PUBLISHED;
+      } else {
+        App.toast('No published version available yet', 'warning');
+      }
+    });
+  });
+
+  // Related issue - plain text entry. Look up the typed ref against
+  // the loaded issues list whenever the field loses focus (not on
+  // every keystroke - the user is still typing until then), and
+  // store the matching issue's real UUID in selectedRelatedIssueId.
+  // An empty field is valid (no related issue) and clears the stored
+  // UUID; a typed ref that doesn't match anything is left as-is in
+  // the field with a hint shown, rather than silently discarded, so
+  // the user can see and correct a typo before saving.
+  document.getElementById('issueRelatedDisplay').addEventListener('blur', _lookupRelatedIssue);
+})();
+
+async function loadLookups() {
+  const [statuses, priorities, types, projects, areas, users] = await Promise.all([
+    sb.from('issues_status').select('*').order('sort_order'),
+    sb.from('issues_priority').select('*').order('sort_order'),
+    sb.from('issues_type').select('*').order('sort_order'),
+    sb.from('issues_project').select('*').order('sort_order'),
+    sb.from('issues_area').select('*').order('sort_order'),
+    sb.from('issues_user').select('*').order('sort_order')
+  ]);
+
+  lookups.statuses   = statuses.data || [];
+  lookups.priorities = priorities.data || [];
+  lookups.types      = types.data || [];
+  lookups.projects   = projects.data || [];
+  lookups.areas      = areas.data || [];
+  lookups.users      = users.data || [];
+
+  _populateSelect('filterStatus', lookups.statuses, 'All statuses');
+  _populateSelect('filterPriority', lookups.priorities, 'All priorities');
+  _populateSelect('filterType', lookups.types, 'All types');
+  _populateSelect('issueType', lookups.types, null);
+  _populateSelect('issuePriority', lookups.priorities, null);
+  _populateSelect('issueStatus', lookups.statuses, null);
+
+  const projectSel = document.getElementById('issueProject');
+  lookups.projects.forEach(p => projectSel.appendChild(new Option(p.name, p.id)));
+  const areaSel = document.getElementById('issueArea');
+  lookups.areas.forEach(a => areaSel.appendChild(new Option(a.name, a.id)));
+
+  const userNameOf = u => `${u.first_name} ${u.last_name}`;
+  ['issueReportedBy', 'issueAssignedTo', 'issueResolvedBy'].forEach(id => {
+    const sel = document.getElementById(id);
+    lookups.users.forEach(u => sel.appendChild(new Option(userNameOf(u), u.id)));
+  });
+}
+
+function _populateSelect(id, items, placeholderLabel) {
+  const sel = document.getElementById(id);
+  if (placeholderLabel) sel.innerHTML = `<option value="">${placeholderLabel}</option>`;
+  items.forEach(item => sel.appendChild(new Option(item.name, item.id)));
+}
+
+async function loadIssues() {
+  const { data, error } = await sb.from('issues_issue').select('*').order('created_at', { ascending: false });
+  if (error) { App.toast('Failed to load issues: ' + error.message, 'danger'); return; }
+  allIssues = data || [];
+  renderTable();
+}
+
+function renderTable() {
+  const search   = (document.getElementById('searchInput').value || '').toLowerCase();
+  const status   = document.getElementById('filterStatus').value;
+  const priority = document.getElementById('filterPriority').value;
+  const type     = document.getElementById('filterType').value;
+
+  const filtered = allIssues.filter(i => {
+    if (search && !i.title?.toLowerCase().includes(search) && !i.issue_ref?.toLowerCase().includes(search)) return false;
+    if (status && String(i.status_id) !== status) return false;
+    if (priority && String(i.priority_id) !== priority) return false;
+    if (type && String(i.type_id) !== type) return false;
+    return true;
+  });
+
+  const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize));
+  if (currentPage > totalPages) currentPage = totalPages;
+  const startIdx = (currentPage - 1) * pageSize;
+  const pageItems = filtered.slice(startIdx, startIdx + pageSize);
+
+  const rangeStart = filtered.length ? startIdx + 1 : 0;
+  const rangeEnd = Math.min(startIdx + pageSize, filtered.length);
+  document.getElementById('recordCount').textContent = `Showing ${rangeStart} to ${rangeEnd} of ${filtered.length} entries`;
+
+  const tbody = document.getElementById('issuesBody');
+
+  if (!filtered.length) {
+    tbody.innerHTML = `<tr><td colspan="7" class="text-center py-4 text-secondary"><i class="ti ti-bug-off mb-1 d-block" style="font-size:1.5rem"></i>No issues found</td></tr>`;
+    _renderPagination(1, 1);
+    return;
+  }
+
+  tbody.innerHTML = pageItems.map(i => `
+    <tr>
+      <td class="text-secondary">${App.escHtml(i.issue_ref)}</td>
+      <td>${App.escHtml(i.title)}</td>
+      <td class="text-secondary">${_lookupName(lookups.types, i.type_id)}</td>
+      <td>${_priorityDot(_lookupName(lookups.priorities, i.priority_id))}</td>
+      <td>${_statusDot(_lookupName(lookups.statuses, i.status_id))}</td>
+      <td class="text-secondary">${App.formatDate(i.reported_date)}</td>
+      <td class="text-end">
+        <div class="btn-list flex-nowrap justify-content-end">
+          <button class="btn btn-icon btn-icon-lg edit-btn" data-id="${i.id}" title="Edit"><i class="ti ti-edit"></i></button>
+          <button class="btn btn-icon btn-icon-lg text-danger delete-btn" data-id="${i.id}" data-ref="${App.escHtml(i.issue_ref)}" title="Delete"><i class="ti ti-trash"></i></button>
+        </div>
+      </td>
+    </tr>`).join('');
+
+  tbody.querySelectorAll('.edit-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const issue = allIssues.find(i => i.id === btn.dataset.id);
+      if (issue) openModal(issue);
+    });
+  });
+  tbody.querySelectorAll('.delete-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      pendingDeleteId = btn.dataset.id;
+      document.getElementById('deleteIssueRef').textContent = btn.dataset.ref;
+      deleteIssueModal.show();
+    });
+  });
+
+  _renderPagination(currentPage, totalPages);
+}
+
+function _renderPagination(page, totalPages) {
+  const el = document.getElementById('paginationControls');
+  if (totalPages <= 1) { el.innerHTML = ''; return; }
+
+  let html = `<li class="page-item ${page === 1 ? 'disabled' : ''}"><a class="page-link" href="#" data-page="${page - 1}"><i class="ti ti-chevron-left"></i></a></li>`;
+  for (let p = 1; p <= totalPages; p++) {
+    if (totalPages > 7 && p !== 1 && p !== totalPages && Math.abs(p - page) > 1) {
+      if (p === 2 || p === totalPages - 1) html += `<li class="page-item disabled"><span class="page-link">…</span></li>`;
+      continue;
+    }
+    html += `<li class="page-item ${p === page ? 'active' : ''}"><a class="page-link" href="#" data-page="${p}">${p}</a></li>`;
+  }
+  html += `<li class="page-item ${page === totalPages ? 'disabled' : ''}"><a class="page-link" href="#" data-page="${page + 1}"><i class="ti ti-chevron-right"></i></a></li>`;
+
+  el.innerHTML = html;
+  el.querySelectorAll('a[data-page]').forEach(a => {
+    a.addEventListener('click', e => {
+      e.preventDefault();
+      const target = parseInt(a.dataset.page, 10);
+      if (target >= 1 && target <= totalPages && target !== currentPage) {
+        currentPage = target;
+        renderTable();
+      }
+    });
+  });
+}
+
+function _lookupName(list, id) {
+  return list.find(x => x.id === id)?.name || '—';
+}
+
+function _priorityDot(name) {
+  const map = { Critical: 'var(--tblr-danger)', High: 'var(--tblr-orange)', Medium: 'var(--tblr-warning)', Low: 'var(--tblr-secondary)' };
+  return `<span class="status-dot" style="background:${map[name] || 'var(--tblr-secondary)'}"></span>${App.escHtml(name)}`;
+}
+
+function _statusDot(name) {
+  const map = { Open: 'var(--tblr-blue)', 'In Progress': 'var(--tblr-azure)', 'On Hold': 'var(--tblr-warning)', Resolved: 'var(--tblr-success)', Closed: 'var(--tblr-secondary)', Rejected: 'var(--tblr-danger)' };
+  return `<span class="status-dot" style="background:${map[name] || 'var(--tblr-secondary)'}"></span>${App.escHtml(name)}`;
+}
+
+function openModal(issue = null) {
+  resetModal();
+  // Always return to the first tab when opening, regardless of which
+  // tab was active last time the modal was used.
+  new bootstrap.Tab(document.querySelector('#issueModal .nav-link')).show();
+
+  if (issue) {
+    document.getElementById('issueModalTitle').textContent = `Edit ${issue.issue_ref}`;
+    document.getElementById('saveIssueLabel').textContent  = 'Save Issue';
+    document.getElementById('deleteIssueFromModalBtn').classList.remove('d-none');
+    document.getElementById('issueId').value           = issue.id;
+    document.getElementById('issueTitle').value         = issue.title || '';
+    document.getElementById('issueDescription').value   = issue.description || '';
+    document.getElementById('issueType').value          = issue.type_id || '';
+    document.getElementById('issuePriority').value      = issue.priority_id || '';
+    document.getElementById('issueStatus').value        = issue.status_id || '';
+    document.getElementById('issueProject').value       = issue.project_id || '';
+    document.getElementById('issueArea').value          = issue.area_id || '';
+    document.getElementById('issueNotes').value         = issue.notes || '';
+
+    selectedRelatedIssueId = issue.related_issue_id || null;
+    const related = allIssues.find(i => i.id === selectedRelatedIssueId);
+    document.getElementById('issueRelatedDisplay').value = related ? related.issue_ref : '';
+    const relatedHint = document.getElementById('issueRelatedHint');
+    if (related) {
+      relatedHint.textContent = `✓ ${related.issue_ref} — ${related.title}`;
+      relatedHint.className = 'form-text text-success';
+    } else {
+      relatedHint.textContent = '';
+      relatedHint.className = 'form-text';
+    }
+
+    document.getElementById('issueReportedBy').value      = issue.reported_by_id || '';
+    document.getElementById('issueReportedDate').value    = issue.reported_date || '';
+    document.getElementById('issueReportedRelease').value = issue.reported_release || '';
+
+    document.getElementById('issueAssignedTo').value   = issue.assigned_to_id || '';
+    document.getElementById('issueAssignedDate').value = issue.assigned_date || '';
+
+    document.getElementById('issueResolvedBy').value       = issue.resolved_by_id || '';
+    document.getElementById('issueResolvedDate').value     = issue.resolved_date || '';
+    document.getElementById('issueResolvedRelease').value  = issue.resolved_release || '';
+    document.getElementById('issueResolvedComments').value = issue.resolved_comments || '';
+
+    document.getElementById('issueDocumentationNotes').value = issue.documentation_notes || '';
+  } else {
+    document.getElementById('issueModalTitle').textContent = 'Add issue';
+    document.getElementById('saveIssueLabel').textContent  = 'Save Issue';
+    document.getElementById('deleteIssueFromModalBtn').classList.add('d-none');
+    // Reported Date is required at the database level - default to
+    // today rather than leave it blank, since "now" is correct for
+    // the overwhelming majority of new issues and this removes the
+    // empty-field case entirely for the common path.
+    document.getElementById('issueReportedDate').value = new Date().toISOString().slice(0, 10);
+  }
+  lastIssueSnapshot = _issueFormSnapshot();
+  issueModal.show();
+  setTimeout(() => document.getElementById('issueTitle').focus(), 300);
+}
+
+const ISSUE_FORM_FIELDS = [
+  'issueId','issueTitle','issueDescription','issueType','issuePriority','issueStatus','issueProject','issueArea','issueNotes',
+  'issueRelatedDisplay','issueReportedBy','issueReportedDate','issueReportedRelease',
+  'issueAssignedTo','issueAssignedDate',
+  'issueResolvedBy','issueResolvedDate','issueResolvedRelease','issueResolvedComments',
+  'issueDocumentationNotes'
+];
+
+// Serializes every tracked form field's current value into one
+// comparable string. Used both to capture the "as loaded" baseline
+// when the modal opens, and to check against that baseline on every
+// close attempt - if they differ, something has actually changed.
+function _issueFormSnapshot() {
+  return ISSUE_FORM_FIELDS.map(id => document.getElementById(id).value).join('|');
+}
+
+function resetModal() {
+  document.getElementById('issueModalError').classList.add('d-none');
+  ISSUE_FORM_FIELDS.forEach(id => document.getElementById(id).value = '');
+  document.getElementById('issueRelatedHint').textContent = '';
+  document.getElementById('issueRelatedHint').className = 'form-text';
+  selectedRelatedIssueId = null;
+}
+
+function _lookupRelatedIssue() {
+  const input = document.getElementById('issueRelatedDisplay');
+  const hint  = document.getElementById('issueRelatedHint');
+  const typed = input.value.trim();
+  const currentId = document.getElementById('issueId').value;
+
+  if (!typed) {
+    selectedRelatedIssueId = null;
+    hint.textContent = '';
+    hint.className = 'form-text';
+    return;
+  }
+
+  const match = allIssues.find(i => i.issue_ref?.toLowerCase() === typed.toLowerCase());
+
+  if (!match) {
+    selectedRelatedIssueId = null;
+    hint.textContent = `No issue found with reference "${typed}".`;
+    hint.className = 'form-text text-danger';
+    return;
+  }
+
+  if (match.id === currentId) {
+    selectedRelatedIssueId = null;
+    input.value = '';
+    hint.textContent = 'An issue cannot be related to itself.';
+    hint.className = 'form-text text-danger';
+    return;
+  }
+
+  selectedRelatedIssueId = match.id;
+  hint.textContent = `✓ ${match.issue_ref} — ${match.title}`;
+  hint.className = 'form-text text-success';
+}
+
+async function saveIssue() {
+  const errorEl = document.getElementById('issueModalError');
+  errorEl.classList.add('d-none');
+
+  // Don't rely on the field having lost focus (blur) before Save was
+  // clicked - run the lookup explicitly so selectedRelatedIssueId is
+  // never stale relative to whatever is currently typed in the field.
+  _lookupRelatedIssue();
+
+  const id    = document.getElementById('issueId').value;
+  const title = document.getElementById('issueTitle').value.trim();
+  const reportedDate = document.getElementById('issueReportedDate').value;
+
+  const validationErrors = [];
+  if (!title) validationErrors.push('Title is required.');
+  if (!reportedDate) validationErrors.push('Reported Date is required.');
+
+  if (validationErrors.length) {
+    errorEl.textContent = validationErrors.join(' ');
+    errorEl.classList.remove('d-none');
+    return;
+  }
+
+  const payload = {
+    title:              title,
+    description:        document.getElementById('issueDescription').value.trim() || null,
+    type_id:            document.getElementById('issueType').value || null,
+    priority_id:        document.getElementById('issuePriority').value || null,
+    status_id:          document.getElementById('issueStatus').value || null,
+    project_id:         document.getElementById('issueProject').value || null,
+    area_id:            document.getElementById('issueArea').value || null,
+    related_issue_id:   selectedRelatedIssueId || null,
+    notes:              document.getElementById('issueNotes').value.trim() || null,
+
+    reported_by_id:     document.getElementById('issueReportedBy').value || null,
+    reported_date:      document.getElementById('issueReportedDate').value || null,
+    reported_release:   document.getElementById('issueReportedRelease').value.trim() || null,
+
+    assigned_to_id:     document.getElementById('issueAssignedTo').value || null,
+    assigned_date:      document.getElementById('issueAssignedDate').value || null,
+
+    resolved_by_id:      document.getElementById('issueResolvedBy').value || null,
+    resolved_date:       document.getElementById('issueResolvedDate').value || null,
+    resolved_release:    document.getElementById('issueResolvedRelease').value.trim() || null,
+    resolved_comments:   document.getElementById('issueResolvedComments').value.trim() || null,
+
+    documentation_notes: document.getElementById('issueDocumentationNotes').value.trim() || null
+  };
+
+  document.getElementById('saveIssueLabel').textContent = id ? 'Saving…' : 'Adding…';
+  document.getElementById('saveIssueSpinner').classList.remove('d-none');
+  document.getElementById('saveIssueBtn').disabled = true;
+
+  let error;
+  if (id) {
+    ({ error } = await sb.from('issues_issue').update(payload).eq('id', id));
+  } else {
+    ({ error } = await sb.from('issues_issue').insert(payload));
+  }
+
+  document.getElementById('saveIssueLabel').textContent = 'Save Issue';
+  document.getElementById('saveIssueSpinner').classList.add('d-none');
+  document.getElementById('saveIssueBtn').disabled = false;
+
+  if (error) { errorEl.textContent = 'Save failed: ' + error.message; errorEl.classList.remove('d-none'); return; }
+
+  lastIssueSnapshot = _issueFormSnapshot(); // just saved - this is the new clean baseline
+  issueModal.hide();
+  App.toast(id ? 'Issue updated' : 'Issue added');
+  await loadIssues();
+}
+
+async function confirmDelete() {
+  if (!pendingDeleteId) return;
+  const { error } = await sb.from('issues_issue').delete().eq('id', pendingDeleteId);
+  deleteIssueModal.hide();
+  if (error) { App.toast('Delete failed: ' + error.message, 'danger'); return; }
+  App.toast('Issue deleted');
+  pendingDeleteId = null;
+  await loadIssues();
+}
+  </script>
+</body>
+</html>

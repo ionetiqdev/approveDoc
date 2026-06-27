@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="en" data-bs-theme="light" data-app-root="../../">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Documents - approveDoc</title>
+
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/core@1.4.0/dist/css/tabler.min.css" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.44.0/dist/tabler-icons.min.css" />
+  <link rel="stylesheet" href="../../assets/css/theme.css?r=1clzy8jt" />
+
+  <script>
+    (function() {
+      try {
+        var root = document.documentElement.dataset.appRoot || './';
+        var absoluteRoot = new URL(root, window.location.href).pathname;
+        var suffix = ':' + absoluteRoot;
+        var savedTheme = localStorage.getItem('app_theme');
+        var theme = savedTheme || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+        document.documentElement.setAttribute('data-bs-theme', theme);
+        var accent = localStorage.getItem('app_accent' + suffix);
+        if (accent) {
+          document.documentElement.style.setProperty('--tblr-primary', accent);
+          var ah = accent.replace('#','');
+          if (ah.length === 3) ah = ah.split('').map(function(c){return c+c;}).join('');
+          document.documentElement.style.setProperty('--tblr-primary-rgb', parseInt(ah.slice(0,2),16) + ', ' + parseInt(ah.slice(2,4),16) + ', ' + parseInt(ah.slice(4,6),16));
+        }
+        var sidebarBg = localStorage.getItem('app_sidebar_bg' + suffix);
+        if (sidebarBg) {
+          document.documentElement.style.setProperty('--bg-sidebar', sidebarBg);
+          var hex = sidebarBg.replace('#', '');
+          if (hex.length === 3) hex = hex.split('').map(function(c){return c+c;}).join('');
+          var r = parseInt(hex.slice(0,2),16) / 255, g = parseInt(hex.slice(2,4),16) / 255, b = parseInt(hex.slice(4,6),16) / 255;
+          var toLinear = function(c){ return c <= 0.03928 ? c/12.92 : Math.pow((c+0.055)/1.055, 2.4); };
+          var isLight = (0.2126*toLinear(r) + 0.7152*toLinear(g) + 0.0722*toLinear(b)) > 0.5;
+          document.documentElement.style.setProperty('--sidebar-fg', isLight ? '#0f172a' : '#ffffff');
+          document.documentElement.style.setProperty('--sidebar-fg-rgb', isLight ? '15,23,42' : '255,255,255');
+        }
+      } catch (e) {}
+    })();
+  </script>
+  <style>
+    .doc-list-item {
+      padding: .75rem 1rem;
+      border-bottom: 1px solid var(--tblr-border-color);
+      cursor: pointer;
+      transition: background .15s;
+    }
+    .doc-list-item:last-child { border-bottom: none; }
+    .doc-list-item:hover { background: var(--tblr-bg-surface-secondary, rgba(0,0,0,.03)); }
+    .doc-list-item.active { background: rgba(var(--tblr-primary-rgb), .1); box-shadow: inset 3px 0 0 0 rgb(var(--tblr-primary-rgb)); }
+    .doc-list-title { font-size: .8125rem; }
+    .doc-drop-zone {
+      margin: .75rem;
+      border: 2px dashed var(--tblr-border-color);
+      border-radius: var(--tblr-border-radius, .375rem);
+      padding: 1.25rem .75rem;
+      text-align: center;
+      color: var(--tblr-secondary-color);
+      font-size: .8125rem;
+      cursor: pointer;
+      transition: border-color .15s, background .15s;
+    }
+    .doc-drop-zone:hover,
+    .doc-drop-zone.drag-over { border-color: rgb(var(--tblr-primary-rgb)); background: rgba(var(--tblr-primary-rgb), .05); }
+    .doc-drop-zone i { font-size: 1.5rem; display: block; margin-bottom: .35rem; }
+    .doc-viewer-empty { display:flex; flex-direction:column; align-items:center; justify-content:center; height:100%; color:var(--tblr-secondary-color); }
+    .doc-viewer-empty i { font-size: 2.5rem; opacity: .3; margin-bottom: .75rem; }
+
+    /* Make the body/container/row chain genuinely fill whatever
+       vertical space is actually left in the viewport, rather than
+       guessing a fixed "100vh minus N px" offset (which breaks the
+       moment header/toolbar heights change).
+       .app-content-wrapper only sets min-height:100vh globally (a
+       floor, not a cap), so without an explicit height constraint
+       here, this page's content can grow taller than the viewport
+       and leave trailing empty space below it - which is exactly
+       the bug being fixed. Scoped to this page only, rather than
+       changing the shared global rule and risking other pages. */
+    html, body { height: 100%; }
+    .app-content-wrapper { height: 100vh; }
+    .page-body { flex: 1; display: flex; flex-direction: column; min-height: 0; }
+    .page-body > .container-fluid { flex: 1; display: flex; flex-direction: column; min-height: 0; }
+  </style>
+</head>
+<body>
+
+  <aside id="sidebar"></aside>
+  <div id="sidebarOverlay" class="sidebar-overlay"></div>
+
+  <div class="app-content-wrapper">
+
+    <header class="navbar navbar-expand-md d-print-none border-bottom">
+      <div class="container-fluid">
+        <button id="sidebarToggle" class="btn btn-icon" aria-label="Toggle sidebar" title="Toggle sidebar">
+          <i class="ti ti-menu-2"></i>
+        </button>
+        <h1 class="navbar-brand d-none d-sm-inline-block ms-2 mb-0 fs-5">Documents</h1>
+        <div class="navbar-nav flex-row order-md-last align-items-center gap-2">
+          <div data-active-organisation></div>
+          <button class="btn btn-icon" data-theme-toggle title="Toggle dark mode"><i class="ti ti-moon"></i></button>
+          <button class="btn btn-icon" id="headerPreferencesBtn" title="Preferences">
+            <i class="ti ti-adjustments"></i>
+          </button>
+          <span class="avatar avatar-sm rounded-circle bg-primary-lt" data-user-initials>?</span>
+          <span class="d-none d-xl-block">
+            <span class="d-block fw-semibold" style="font-size:.8125rem" data-user-name>—</span>
+            <span class="d-block text-secondary" style="font-size:.7rem" data-user-email>—</span>
+          </span>
+        </div>
+      </div>
+    </header>
+
+    <div class="page-body">
+      <div class="container-fluid">
+
+        <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-3">
+          <div>
+            <h1 class="h3 fw-bold mb-0">Documents</h1>
+            <p class="text-secondary small mb-0 mt-1">Upload, view, and manage PDF documents</p>
+          </div>
+          <div class="d-flex gap-2">
+            <button class="btn btn-outline-secondary btn-sm" id="docPrefsBtn">
+              <i class="ti ti-adjustments-horizontal me-1"></i>Viewer Settings
+            </button>
+            <button class="btn btn-outline-secondary btn-sm role-hidden" id="manageCategoriesBtn" data-require-role="admin" data-bs-toggle="modal" data-bs-target="#categoriesModal">
+              <i class="ti ti-tags me-1"></i>Categories
+            </button>
+            <button class="btn btn-primary btn-sm role-hidden" id="newDocBtn" data-require-role="user" data-bs-toggle="modal" data-bs-target="#addDocModal">
+              <i class="ti ti-plus me-1"></i>New document
+            </button>
+          </div>
+        </div>
+
+        <div class="row g-3 flex-fill flex-nowrap" id="docPanelsRow" style="min-height:0">
+
+          <!-- Left: document list -->
+          <div class="d-flex flex-column" style="min-height:0;flex:0 0 28%;max-width:28%" id="docSidebarCol">
+            <div class="card flex-grow-1 overflow-hidden d-flex flex-column" style="min-height:0">
+              <div class="card-header py-2 d-flex gap-2" id="docSearchWrap">
+                <input type="search" class="form-control form-control-sm" id="docSearch" placeholder="Search documents…" />
+                <select class="form-select form-select-sm" id="docCategoryFilter" style="width:auto;flex-shrink:0">
+                  <option value="">All</option>
+                </select>
+              </div>
+              <div class="flex-grow-1 overflow-y-auto" id="docList">
+                <div class="text-center text-secondary py-4 small">
+                  <span class="spinner-border spinner-border-sm me-2"></span>Loading…
+                </div>
+              </div>
+              <div id="docDropZoneWrap" class="role-hidden" data-require-role="user">
+                <div class="doc-drop-zone" id="docDropZone">
+                  <i class="ti ti-cloud-upload"></i>
+                  Drop a PDF here or <strong>browse</strong>
+                  <input type="file" id="docFileInput" accept="application/pdf" style="display:none" />
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Right: viewer -->
+          <div class="d-flex flex-column" style="min-height:0;flex:0 0 72%;max-width:72%">
+            <div class="card flex-grow-1 overflow-hidden d-flex flex-column" style="min-height:0">
+              <div class="card-header d-flex align-items-center justify-content-between py-2" id="docViewerToolbar" style="display:none">
+                <span class="fw-semibold small" id="docViewerName">-</span>
+                <button class="btn btn-sm btn-outline-secondary" id="docDownloadBtn">
+                  <i class="ti ti-download me-1"></i>Download
+                </button>
+              </div>
+              <div class="flex-grow-1" style="position:relative;overflow:hidden" id="docCanvasWrap">
+                <div class="doc-viewer-empty" id="docEmptyState">
+                  <i class="ti ti-file-text"></i>
+                  <h6 class="mb-1">No document selected</h6>
+                  <p class="small mb-0">Choose a document from the list or upload a new PDF.</p>
+                </div>
+                <iframe id="docPdfFrame" style="display:none;width:100%;height:100%;border:none"></iframe>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Add Document modal -->
+  <div class="modal fade" id="addDocModal" tabindex="-1">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">New Document</h5>
+          <button type="button" class="modal-close-btn" data-bs-dismiss="modal" aria-label="Close"><i class="ti ti-x"></i></button>
+        </div>
+        <div class="modal-body">
+          <div class="mb-3">
+            <label class="form-label">Description</label>
+            <input type="text" id="docModalDescription" class="form-control" placeholder="e.g. Q2 Board Pack" />
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Category</label>
+            <select id="docModalCategory" class="form-select">
+              <option value="">- No category -</option>
+            </select>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">PDF file</label>
+            <input type="file" id="docModalFile" class="form-control" accept="application/pdf" />
+          </div>
+          <div id="docModalProgress" style="display:none">
+            <div class="progress mb-1" style="height:6px">
+              <div class="progress-bar" id="docUploadProgressBar" style="width:0%"></div>
+            </div>
+            <div class="small text-secondary" id="docUploadStatus"></div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn" data-bs-dismiss="modal">Cancel</button>
+          <button class="btn btn-primary" id="docModalSaveBtn">Upload</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Edit Document modal -->
+  <div class="modal fade" id="editDocModal" tabindex="-1">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Edit Document</h5>
+          <button type="button" class="modal-close-btn" data-bs-dismiss="modal" aria-label="Close"><i class="ti ti-x"></i></button>
+        </div>
+        <div class="modal-body">
+          <input type="hidden" id="editDocId" />
+          <div class="mb-3">
+            <label class="form-label">Description</label>
+            <input type="text" id="editDocDescription" class="form-control" />
+          </div>
+          <div class="mb-0">
+            <label class="form-label">Category</label>
+            <select id="editDocCategory" class="form-select">
+              <option value="">- No category -</option>
+            </select>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn" data-bs-dismiss="modal">Cancel</button>
+          <button class="btn btn-primary" id="editDocSaveBtn">Save</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Drop prompt modal (name/category for drag-and-dropped files) -->
+  <div class="modal fade" id="dropPromptModal" tabindex="-1">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">New Document</h5>
+          <button type="button" class="modal-close-btn" data-bs-dismiss="modal" aria-label="Close"><i class="ti ti-x"></i></button>
+        </div>
+        <div class="modal-body">
+          <p class="text-secondary small mb-3"><i class="ti ti-file-text me-1"></i><span id="dropPromptFileName"></span></p>
+          <div class="mb-3">
+            <label class="form-label">Description</label>
+            <input type="text" id="dropPromptDescription" class="form-control" placeholder="e.g. Q2 Board Pack" />
+          </div>
+          <div class="mb-0">
+            <label class="form-label">Category</label>
+            <select id="dropPromptCategory" class="form-select">
+              <option value="">- No category -</option>
+            </select>
+          </div>
+          <div id="dropPromptProgress" style="display:none" class="mt-3">
+            <div class="progress mb-1" style="height:6px">
+              <div class="progress-bar" id="dropPromptProgressBar" style="width:0%"></div>
+            </div>
+            <div class="small text-secondary" id="dropPromptStatus"></div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn" data-bs-dismiss="modal">Cancel</button>
+          <button class="btn btn-primary" id="dropPromptSaveBtn">Upload</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Viewer settings modal -->
+  <div class="modal fade" id="docPrefsModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title"><i class="ti ti-adjustments-horizontal me-2"></i>Viewer Settings</h5>
+          <button type="button" class="modal-close-btn" data-bs-dismiss="modal" aria-label="Close"><i class="ti ti-x"></i></button>
+        </div>
+        <div class="modal-body">
+          <div class="form-check form-switch mb-2">
+            <input class="form-check-input" type="checkbox" id="docPrefUploadButton">
+            <label class="form-check-label" for="docPrefUploadButton">"New document" button</label>
+          </div>
+          <div class="form-check form-switch mb-2">
+            <input class="form-check-input" type="checkbox" id="docPrefDropZone">
+            <label class="form-check-label" for="docPrefDropZone">Drag-and-drop upload area</label>
+          </div>
+          <div class="form-check form-switch mb-2">
+            <input class="form-check-input" type="checkbox" id="docPrefPromptOnDrop">
+            <label class="form-check-label" for="docPrefPromptOnDrop">Prompt for name &amp; category on drop</label>
+          </div>
+          <div class="form-check form-switch mb-2">
+            <input class="form-check-input" type="checkbox" id="docPrefDeleteEnabled">
+            <label class="form-check-label" for="docPrefDeleteEnabled">Delete button on documents</label>
+          </div>
+        </div>
+        <div class="modal-footer py-2">
+          <button type="button" class="btn btn-sm" data-bs-dismiss="modal">Close</button>
+          <button type="button" class="btn btn-primary btn-sm" id="docPrefSaveBtn">Save</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Categories management modal (admin/super_admin only) -->
+  <div class="modal fade" id="categoriesModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Manage categories</h5>
+          <button type="button" class="modal-close-btn" data-bs-dismiss="modal" aria-label="Close"><i class="ti ti-x"></i></button>
+        </div>
+        <div class="modal-body">
+          <div id="categoriesModalError" class="alert alert-danger d-none py-2 small mb-3"></div>
+          <ul class="list-group mb-3" id="categoriesList" style="max-height:320px;overflow-y:auto"></ul>
+          <div class="input-group">
+            <input type="text" id="newCategoryName" class="form-control" placeholder="New category name" />
+            <button class="btn btn-primary" id="addCategoryBtn"><i class="ti ti-plus"></i></button>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn" data-bs-dismiss="modal">Close</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@tabler/core@1.4.0/dist/js/tabler.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="../../assets/js/version.js?r=1clzy8jt"></script>
+  <script src="../../assets/js/supabase-client.js?r=1clzy8jt"></script>
+  <script src="../../assets/js/auth.js?r=1clzy8jt"></script>
+  <script src="../../assets/js/app.js?r=1clzy8jt"></script>
+  <script src="../../assets/js/theme.js?r=1clzy8jt"></script>
+  <script src="../../assets/js/sidebar-html.js?r=1clzy8jt"></script>
+  <script src="../../assets/js/sidebar.js?r=1clzy8jt"></script>
+  <script src="../../assets/js/profile-modal.js?r=1clzy8jt"></script>
+  <script src="config.js?r=1clzy8jt"></script>
+  <script src="documents.js?r=1clzy8jt"></script>
+</body>
+</html>

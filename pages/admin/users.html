@@ -1,0 +1,734 @@
+<!DOCTYPE html>
+<html lang="en" data-bs-theme="light" data-app-root="../../">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Users - approveDoc</title>
+
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/core@1.4.0/dist/css/tabler.min.css" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.44.0/dist/tabler-icons.min.css" />
+  <link rel="stylesheet" href="../../assets/css/theme.css?r=1clzy8jt" />
+
+  <script>
+    (function() {
+      try {
+        var root = document.documentElement.dataset.appRoot || './';
+        var absoluteRoot = new URL(root, window.location.href).pathname;
+        var suffix = ':' + absoluteRoot;
+        var savedTheme = localStorage.getItem('app_theme');
+        var theme = savedTheme || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+        document.documentElement.setAttribute('data-bs-theme', theme);
+        var accent = localStorage.getItem('app_accent' + suffix);
+        if (accent) {
+          document.documentElement.style.setProperty('--tblr-primary', accent);
+          var ah = accent.replace('#','');
+          if (ah.length === 3) ah = ah.split('').map(function(c){return c+c;}).join('');
+          document.documentElement.style.setProperty('--tblr-primary-rgb', parseInt(ah.slice(0,2),16) + ', ' + parseInt(ah.slice(2,4),16) + ', ' + parseInt(ah.slice(4,6),16));
+        }
+        var sidebarBg = localStorage.getItem('app_sidebar_bg' + suffix);
+        if (sidebarBg) {
+          document.documentElement.style.setProperty('--bg-sidebar', sidebarBg);
+          var hex = sidebarBg.replace('#', '');
+          if (hex.length === 3) hex = hex.split('').map(function(c){return c+c;}).join('');
+          var r = parseInt(hex.slice(0,2),16) / 255, g = parseInt(hex.slice(2,4),16) / 255, b = parseInt(hex.slice(4,6),16) / 255;
+          var toLinear = function(c){ return c <= 0.03928 ? c/12.92 : Math.pow((c+0.055)/1.055, 2.4); };
+          var isLight = (0.2126*toLinear(r) + 0.7152*toLinear(g) + 0.0722*toLinear(b)) > 0.5;
+          document.documentElement.style.setProperty('--sidebar-fg', isLight ? '#0f172a' : '#ffffff');
+          document.documentElement.style.setProperty('--sidebar-fg-rgb', isLight ? '15,23,42' : '255,255,255');
+        }
+      } catch (e) {}
+    })();
+  </script>
+</head>
+<body>
+
+  <aside id="sidebar"></aside>
+  <div id="sidebarOverlay" class="sidebar-overlay"></div>
+
+  <div class="app-content-wrapper">
+
+    <header class="navbar navbar-expand-md d-print-none border-bottom">
+      <div class="container-fluid">
+        <button id="sidebarToggle" class="btn btn-icon" aria-label="Toggle sidebar" title="Toggle sidebar">
+          <i class="ti ti-menu-2"></i>
+        </button>
+        <h1 class="navbar-brand d-none d-sm-inline-block ms-2 mb-0 fs-5">Users</h1>
+        <div class="navbar-nav flex-row order-md-last align-items-center gap-2">
+          <div data-active-organisation></div>
+          <button class="btn btn-icon" data-theme-toggle title="Toggle dark mode"><i class="ti ti-moon"></i></button>
+          <button class="btn btn-icon" id="headerPreferencesBtn" title="Preferences">
+            <i class="ti ti-adjustments"></i>
+          </button>
+          <span class="avatar avatar-sm rounded-circle bg-primary-lt" data-user-initials>?</span>
+          <span class="d-none d-xl-block">
+            <span class="d-block fw-semibold" style="font-size:.8125rem" data-user-name>—</span>
+            <span class="d-block text-secondary" style="font-size:.7rem" data-user-email>—</span>
+          </span>
+        </div>
+      </div>
+    </header>
+
+    <div class="page-body">
+      <div class="container-fluid">
+
+        <div class="card">
+          <div class="card-header d-flex align-items-center justify-content-between flex-wrap gap-2">
+            <h3 class="card-title mb-0">Users</h3>
+            <div class="d-flex align-items-center gap-2 flex-wrap">
+              <span class="text-secondary small">Show</span>
+              <select id="pageSizeSelect" class="form-select form-select-sm" style="width:auto">
+                <option value="10">10</option>
+                <option value="25">25</option>
+                <option value="50">50</option>
+                <option value="100">100</option>
+              </select>
+              <span class="text-secondary small">entries</span>
+              <select id="filterRole" class="form-select form-select-sm ms-3" style="width:auto">
+                <option value="">All roles</option>
+                <option value="super_admin">Super Admin</option>
+                <option value="admin">Admin</option>
+                <option value="user">User</option>
+                <option value="view">View</option>
+              </select>
+              <div class="input-icon" style="width:200px">
+                <span class="input-icon-addon"><i class="ti ti-search"></i></span>
+                <input type="text" id="searchInput" class="form-control form-control-sm" placeholder="Search…" />
+              </div>
+              <button class="btn btn-primary btn-sm" id="addUserBtn">
+                <i class="ti ti-plus me-1"></i>Add user
+              </button>
+            </div>
+          </div>
+          <div class="table-responsive">
+            <table class="table card-table table-vcenter text-nowrap">
+              <thead>
+                <tr>
+                  <th>Name</th>
+                  <th>Email</th>
+                  <th>Role</th>
+                  <th>Organisation</th>
+                  <th class="text-end">Actions</th>
+                </tr>
+              </thead>
+              <tbody id="usersBody">
+                <tr><td colspan="5" class="text-center py-4 text-secondary">
+                  <span class="spinner-border spinner-border-sm me-2"></span>Loading…
+                </td></tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="card-footer d-flex align-items-center justify-content-between flex-wrap gap-2">
+            <p class="text-secondary small mb-0" id="recordCount"></p>
+            <ul class="pagination pagination-sm mb-0" id="paginationControls"></ul>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <div class="modal modal-blur fade" id="userModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="userModalTitle">Add user</h5>
+          <button type="button" class="modal-close-btn" data-bs-dismiss="modal" aria-label="Close"><i class="ti ti-x"></i></button>
+        </div>
+        <div class="modal-body">
+          <div id="userModalError" class="alert alert-danger d-none py-2 small mb-3"></div>
+          <input type="hidden" id="userId" />
+
+          <div class="avatar-upload-wrap">
+            <div class="avatar-preview" id="avatarPreview" onclick="document.getElementById('avatarFileInput').click()">
+              <span id="avatarInitials">?</span>
+              <div class="avatar-overlay"><i class="ti ti-camera"></i></div>
+            </div>
+            <input type="file" id="avatarFileInput" accept="image/*" />
+            <div>
+              <div class="fw-semibold small mb-1">Profile photo</div>
+              <div class="text-secondary small">Click the avatar to upload. JPG, PNG or GIF, max 2MB.</div>
+              <button type="button" class="btn btn-sm btn-outline-secondary mt-2" id="removeAvatarBtn" style="display:none">
+                <i class="ti ti-trash me-1"></i>Remove photo
+              </button>
+            </div>
+          </div>
+
+          <div class="row g-3">
+            <div class="col-md-6">
+              <label class="form-label">Display name <span class="text-danger">*</span></label>
+              <input type="text" id="userDisplayName" class="form-control" placeholder="Full name" />
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Email address <span class="text-danger">*</span></label>
+              <input type="email" id="userEmail" class="form-control" placeholder="user@example.com" />
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Role <span class="text-danger">*</span></label>
+              <select id="userRole" class="form-select">
+                <option value="view">View</option>
+                <option value="user">User</option>
+                <option value="admin">Admin</option>
+                <option value="super_admin" id="superAdminRoleOption">Super Admin</option>
+              </select>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Job title</label>
+              <input type="text" id="userJobTitle" class="form-control" placeholder="e.g. Operations Manager" />
+            </div>
+
+            <div class="col-12" id="organisationAccessWrapper">
+              <label class="form-label">Organisation</label>
+              <select id="organisationAccessSelect" class="form-select">
+                <option value="">Select organisation…</option>
+              </select>
+              <div class="form-text">This user will only see data from the selected organisation.</div>
+            </div>
+
+            <div class="col-12" id="passwordSection">
+              <hr class="my-2" />
+              <div id="newUserInviteInfo" class="alert alert-info py-2 small d-none">
+                <i class="ti ti-info-circle me-1"></i>
+                An invite email will be sent to this address. The user clicks the link to set their own password and activate their account.
+              </div>
+              <div id="changePasswordSection">
+                <label class="form-label" id="passwordLabel">Password <span class="text-danger" id="passwordRequired">*</span></label>
+                <div class="row g-2">
+                  <div class="col-md-6">
+                    <div class="position-relative">
+                      <input type="password" id="userPassword" class="form-control" placeholder="New password" autocomplete="new-password" />
+                      <button type="button" class="pw-toggle-btn" onclick="togglePw('userPassword',this)"><i class="ti ti-eye"></i></button>
+                    </div>
+                  </div>
+                  <div class="col-md-6">
+                    <div class="position-relative">
+                      <input type="password" id="userPasswordConfirm" class="form-control" placeholder="Confirm password" autocomplete="new-password" />
+                      <button type="button" class="pw-toggle-btn" onclick="togglePw('userPasswordConfirm',this)"><i class="ti ti-eye"></i></button>
+                    </div>
+                  </div>
+                </div>
+                <div class="form-text" id="passwordHint">Leave blank to keep current password.</div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn" data-bs-dismiss="modal">Cancel</button>
+          <button type="button" class="btn btn-primary" id="saveUserBtn">
+            <span id="saveUserLabel">Save user</span>
+            <span id="saveUserSpinner" class="spinner-border spinner-border-sm ms-2 d-none"></span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal modal-blur fade" id="deleteUserModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered modal-sm">
+      <div class="modal-content">
+        <div class="modal-status bg-danger"></div>
+        <div class="modal-body text-center py-4">
+          <i class="ti ti-user-x text-danger mb-2" style="font-size:2.2rem"></i>
+          <h6 class="mb-1">Delete user?</h6>
+          <p class="text-secondary small mb-0" id="deleteUserName"></p>
+          <p class="text-danger small mt-2 mb-0">This will remove all their access.</p>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn" data-bs-dismiss="modal">Cancel</button>
+          <button type="button" class="btn btn-danger" id="confirmDeleteUserBtn">Delete</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@tabler/core@1.4.0/dist/js/tabler.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="../../assets/js/version.js?r=1clzy8jt"></script>
+  <script src="../../assets/js/supabase-client.js?r=1clzy8jt"></script>
+  <script src="../../assets/js/auth.js?r=1clzy8jt"></script>
+  <script src="../../assets/js/app.js?r=1clzy8jt"></script>
+  <script src="../../assets/js/theme.js?r=1clzy8jt"></script>
+  <script src="../../assets/js/sidebar-html.js?r=1clzy8jt"></script>
+  <script src="../../assets/js/sidebar.js?r=1clzy8jt"></script>
+  <script src="../../assets/js/profile-modal.js?r=1clzy8jt"></script>
+  <script>
+let userModal, deleteUserModal;
+let allUsers = [], allOrganisations = [];
+let currentPage = 1;
+let pageSize = 10;
+let pendingDeleteId = null;
+let avatarFile = null;
+let avatarRemoved = false;
+
+const AVATAR_COLOURS = ['#206bc4','#7c3aed','#db2777','#ea580c','#16a34a','#0891b2','#9333ea','#dc2626'];
+
+(async () => {
+  const session = await Auth.requireAuth();
+  if (!session) return;
+  SidebarHtml.inject('../../');
+  Sidebar.init();
+  Auth.refreshUI();
+
+  // Admin and above - org-scoped for non-super-admins, see _scopeQueryToCallersOrg()
+  if (!Auth.isAdmin()) {
+    App.toast('You do not have access to this page', 'danger');
+    window.location.href = '../../index.html';
+    return;
+  }
+
+  // Only a super admin may grant the super_admin role itself
+  if (!Auth.isSuperAdmin()) {
+    document.getElementById('superAdminRoleOption').remove();
+  }
+
+  userModal       = new bootstrap.Modal(document.getElementById('userModal'));
+  deleteUserModal = new bootstrap.Modal(document.getElementById('deleteUserModal'));
+
+  // Super admins see every organisation in the picker; org-level admins
+  // only ever see (and can only assign users to) their own organisation -
+  // RLS would block a cross-org assignment anyway, but hiding the option
+  // here avoids a confusing dead-end in the UI.
+  if (Auth.isSuperAdmin()) {
+    const { data: organisations } = await sb.from('organisations').select('id, name').order('name');
+    allOrganisations = organisations || [];
+  } else {
+    const orgId = Auth.getOrganisationId();
+    const { data: org } = await sb.from('organisations').select('id, name').eq('id', orgId).maybeSingle();
+    allOrganisations = org ? [org] : [];
+  }
+
+  await loadUsers();
+
+  document.getElementById('searchInput').addEventListener('input', () => { currentPage = 1; renderTable(); });
+  document.getElementById('filterRole').addEventListener('change', () => { currentPage = 1; renderTable(); });
+  document.getElementById('pageSizeSelect').addEventListener('change', e => {
+    pageSize = parseInt(e.target.value, 10);
+    currentPage = 1;
+    renderTable();
+  });
+  document.getElementById('addUserBtn').addEventListener('click', () => openModal());
+  document.getElementById('saveUserBtn').addEventListener('click', saveUser);
+  document.getElementById('confirmDeleteUserBtn').addEventListener('click', confirmDelete);
+  document.getElementById('userModal').addEventListener('hidden.bs.modal', resetModal);
+
+  document.getElementById('avatarFileInput').addEventListener('change', e => {
+    const file = e.target.files[0];
+    if (!file) return;
+    if (file.size > 2 * 1024 * 1024) { App.toast('Image must be under 2MB', 'warning'); return; }
+    avatarFile = file;
+    const reader = new FileReader();
+    reader.onload = ev => {
+      setAvatarPreviewImage(ev.target.result);
+      document.getElementById('removeAvatarBtn').style.display = '';
+    };
+    reader.readAsDataURL(file);
+  });
+
+  document.getElementById('removeAvatarBtn').addEventListener('click', () => {
+    avatarFile = null;
+    avatarRemoved = true;
+    document.getElementById('removeAvatarBtn').style.display = 'none';
+    setAvatarPreviewInitials(document.getElementById('userDisplayName').value);
+  });
+
+  document.getElementById('userDisplayName').addEventListener('input', e => {
+    if (!avatarFile && !document.querySelector('#avatarPreview img')) {
+      setAvatarPreviewInitials(e.target.value);
+    }
+  });
+
+  document.getElementById('userRole').addEventListener('change', e => {
+    document.getElementById('organisationAccessWrapper').style.display =
+      e.target.value === 'super_admin' ? 'none' : '';
+  });
+})();
+
+// Org-level admins only ever query/see users within their own organisation.
+// Super admins see everyone. This is a UI-layer convenience filter on top
+// of - never a substitute for - the real RLS policy on profiles, which
+// must independently enforce the same boundary.
+function _scopedOrgFilter(query) {
+  if (Auth.isSuperAdmin()) return query;
+  return query.eq('organisation_id', Auth.getOrganisationId());
+}
+
+async function loadUsers() {
+  let query = sb.from('profiles').select('*').order('display_name');
+  query = _scopedOrgFilter(query);
+  const { data: profiles, error } = await query;
+  if (error) { App.toast('Failed to load users: ' + error.message, 'danger'); return; }
+  allUsers = profiles || [];
+  renderTable();
+}
+
+function renderTable() {
+  const search = (document.getElementById('searchInput').value || '').toLowerCase();
+  const role   = document.getElementById('filterRole').value;
+
+  const filtered = allUsers.filter(u => {
+    if (search && !u.display_name?.toLowerCase().includes(search) && !u.email?.toLowerCase().includes(search)) return false;
+    if (role && u.role !== role) return false;
+    return true;
+  });
+
+  const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize));
+  if (currentPage > totalPages) currentPage = totalPages;
+  const startIdx = (currentPage - 1) * pageSize;
+  const pageItems = filtered.slice(startIdx, startIdx + pageSize);
+
+  const rangeStart = filtered.length ? startIdx + 1 : 0;
+  const rangeEnd = Math.min(startIdx + pageSize, filtered.length);
+  document.getElementById('recordCount').textContent = `Showing ${rangeStart} to ${rangeEnd} of ${filtered.length} entries`;
+
+  const tbody = document.getElementById('usersBody');
+
+  if (!filtered.length) {
+    tbody.innerHTML = `<tr><td colspan="5" class="text-center py-4 text-secondary">
+      <i class="ti ti-users mb-1 d-block" style="font-size:1.5rem"></i>No users found
+    </td></tr>`;
+    _renderPagination(1, 1);
+    return;
+  }
+
+  tbody.innerHTML = pageItems.map(u => {
+    const colour   = _avatarColour(u.display_name || '');
+    const initials = _initials(u.display_name || '?');
+    const avatar   = u.avatar_url
+      ? `<span class="avatar rounded-circle me-2" style="width:40px;height:40px;background-image:url('${App.escHtml(u.avatar_url)}')"></span>`
+      : `<span class="avatar rounded-circle me-2" style="width:40px;height:40px;background:${colour};color:#fff;font-size:.9rem">${App.escHtml(initials)}</span>`;
+
+    return `<tr>
+      <td>
+        <div class="d-flex align-items-center">
+          ${avatar}
+          <div>
+            ${App.escHtml(u.display_name || '—')}
+            ${u.job_title ? `<div class="text-secondary small">${App.escHtml(u.job_title)}</div>` : ''}
+          </div>
+        </div>
+      </td>
+      <td class="text-secondary">${App.escHtml(u.email || '—')}</td>
+      <td>${_roleBadge(u.role)}</td>
+      <td class="text-secondary small" id="access-${u.id}"><span class="text-secondary">—</span></td>
+      <td class="text-end">
+        <div class="btn-list flex-nowrap justify-content-end">
+          <button class="btn btn-icon btn-icon-lg edit-btn" data-id="${u.id}" title="Edit"><i class="ti ti-edit"></i></button>
+          <button class="btn btn-icon btn-icon-lg text-danger delete-btn" data-id="${u.id}" data-name="${App.escHtml(u.display_name || '')}" title="Delete"><i class="ti ti-trash"></i></button>
+        </div>
+      </td>
+    </tr>`;
+  }).join('');
+
+  pageItems.forEach(u => loadUserOrganisationAccess(u.id));
+
+  tbody.querySelectorAll('.edit-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const user = allUsers.find(u => u.id === btn.dataset.id);
+      if (user) openModal(user);
+    });
+  });
+
+  tbody.querySelectorAll('.delete-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      pendingDeleteId = btn.dataset.id;
+      document.getElementById('deleteUserName').textContent = btn.dataset.name;
+      deleteUserModal.show();
+    });
+  });
+
+  _renderPagination(currentPage, totalPages);
+}
+
+function _renderPagination(page, totalPages) {
+  const el = document.getElementById('paginationControls');
+  if (totalPages <= 1) { el.innerHTML = ''; return; }
+
+  let html = `<li class="page-item ${page === 1 ? 'disabled' : ''}"><a class="page-link" href="#" data-page="${page - 1}"><i class="ti ti-chevron-left"></i></a></li>`;
+  for (let p = 1; p <= totalPages; p++) {
+    if (totalPages > 7 && p !== 1 && p !== totalPages && Math.abs(p - page) > 1) {
+      if (p === 2 || p === totalPages - 1) html += `<li class="page-item disabled"><span class="page-link">…</span></li>`;
+      continue;
+    }
+    html += `<li class="page-item ${p === page ? 'active' : ''}"><a class="page-link" href="#" data-page="${p}">${p}</a></li>`;
+  }
+  html += `<li class="page-item ${page === totalPages ? 'disabled' : ''}"><a class="page-link" href="#" data-page="${page + 1}"><i class="ti ti-chevron-right"></i></a></li>`;
+
+  el.innerHTML = html;
+  el.querySelectorAll('a[data-page]').forEach(a => {
+    a.addEventListener('click', e => {
+      e.preventDefault();
+      const target = parseInt(a.dataset.page, 10);
+      if (target >= 1 && target <= totalPages && target !== currentPage) {
+        currentPage = target;
+        renderTable();
+      }
+    });
+  });
+}
+
+async function loadUserOrganisationAccess(userId) {
+  const user = allUsers.find(u => u.id === userId);
+  const el = document.getElementById(`access-${userId}`);
+  if (!el) return;
+  if (user?.role === 'super_admin') {
+    el.innerHTML = '<span class="text-secondary small fst-italic">Switches organisation (super admin)</span>';
+    return;
+  }
+  if (!user?.organisation_id) { el.innerHTML = '<span class="text-secondary">None assigned</span>'; return; }
+  const organisation = allOrganisations.find(o => o.id === user.organisation_id);
+  el.innerHTML = `<i class="ti ti-building me-1"></i>${App.escHtml(organisation?.name || '—')}`;
+}
+
+function openModal(user = null) {
+  resetModal();
+  avatarFile = null; avatarRemoved = false;
+
+  const sel = document.getElementById('organisationAccessSelect');
+  sel.innerHTML = '<option value="">Select organisation…</option>';
+  allOrganisations.forEach(o => {
+    const opt = document.createElement('option');
+    opt.value = o.id; opt.textContent = o.name;
+    sel.appendChild(opt);
+  });
+  // Org-level admins can only ever assign their own org - lock the field
+  // rather than just defaulting it, so there's no confusing way to "try"
+  // picking something else that RLS would reject anyway.
+  if (!Auth.isSuperAdmin()) {
+    sel.value = Auth.getOrganisationId();
+    sel.disabled = true;
+  } else {
+    sel.disabled = false;
+  }
+
+  if (user) {
+    document.getElementById('userModalTitle').textContent = 'Edit user';
+    document.getElementById('saveUserLabel').textContent  = 'Update user';
+    document.getElementById('userId').value          = user.id;
+    document.getElementById('userDisplayName').value = user.display_name || '';
+    document.getElementById('userEmail').value        = user.email || '';
+    document.getElementById('userRole').value         = user.role || 'user';
+    document.getElementById('userJobTitle').value     = user.job_title || '';
+    document.getElementById('newUserInviteInfo').classList.add('d-none');
+    document.getElementById('changePasswordSection').style.display = '';
+    document.getElementById('organisationAccessWrapper').style.display = user.role === 'super_admin' ? 'none' : '';
+
+    if (user.avatar_url) {
+      setAvatarPreviewImage(user.avatar_url);
+      document.getElementById('removeAvatarBtn').style.display = '';
+    } else {
+      setAvatarPreviewInitials(user.display_name);
+    }
+
+    if (user.organisation_id && Auth.isSuperAdmin()) {
+      document.getElementById('organisationAccessSelect').value = user.organisation_id;
+    }
+  } else {
+    setAvatarPreviewInitials('');
+    document.getElementById('organisationAccessWrapper').style.display = '';
+    document.getElementById('newUserInviteInfo').classList.remove('d-none');
+    document.getElementById('changePasswordSection').style.display = 'none';
+    document.getElementById('userModalTitle').textContent = 'Add user';
+    document.getElementById('saveUserLabel').textContent  = 'Send invite';
+  }
+
+  userModal.show();
+  setTimeout(() => document.getElementById('userDisplayName').focus(), 300);
+}
+
+function resetModal() {
+  document.getElementById('userModalTitle').textContent = 'Add user';
+  document.getElementById('saveUserLabel').textContent  = 'Save user';
+  document.getElementById('userModalError').classList.add('d-none');
+  document.getElementById('userId').value           = '';
+  document.getElementById('userDisplayName').value  = '';
+  document.getElementById('userEmail').value        = '';
+  document.getElementById('userRole').value         = 'user';
+  document.getElementById('userJobTitle').value     = '';
+  document.getElementById('userPassword').value     = '';
+  document.getElementById('userPasswordConfirm').value = '';
+  document.getElementById('passwordRequired').style.display = '';
+  document.getElementById('passwordHint').textContent = 'Minimum 8 characters.';
+  document.getElementById('removeAvatarBtn').style.display = 'none';
+  document.getElementById('organisationAccessWrapper').style.display = '';
+  document.getElementById('organisationAccessSelect').value = '';
+  document.getElementById('organisationAccessSelect').disabled = false;
+  avatarFile = null; avatarRemoved = false;
+}
+
+async function saveUser() {
+  const errorEl = document.getElementById('userModalError');
+  errorEl.classList.add('d-none');
+
+  const id          = document.getElementById('userId').value;
+  const name        = document.getElementById('userDisplayName').value.trim();
+  const email       = document.getElementById('userEmail').value.trim();
+  const role        = document.getElementById('userRole').value;
+  const jobTitle    = document.getElementById('userJobTitle').value.trim();
+  const password    = document.getElementById('userPassword').value;
+  const passwordCfm = document.getElementById('userPasswordConfirm').value;
+  const organisationId = document.getElementById('organisationAccessSelect').value || null;
+
+  const errors = [];
+  if (!name)  errors.push('Display name is required.');
+  if (!email) errors.push('Email is required.');
+  if (id && password && password.length < 8) errors.push('Password must be at least 8 characters.');
+  if (id && password && password !== passwordCfm) errors.push('Passwords do not match.');
+  if (!id && role !== 'super_admin' && !organisationId) errors.push('Organisation is required for this role.');
+
+  if (errors.length) {
+    errorEl.textContent = errors.join(' ');
+    errorEl.classList.remove('d-none');
+    return;
+  }
+
+  document.getElementById('saveUserLabel').textContent = id ? 'Saving…' : 'Sending invite…';
+  document.getElementById('saveUserSpinner').classList.remove('d-none');
+  document.getElementById('saveUserBtn').disabled = true;
+
+  try {
+    let profileId = id;
+    let avatarUrl = null;
+
+    if (id) {
+      const existing = allUsers.find(u => u.id === id);
+      avatarUrl = avatarRemoved ? null : (existing?.avatar_url || null);
+      if (avatarFile) avatarUrl = await _uploadAvatar(id, avatarFile);
+
+      // Role/org changes go through the same direct update as everything
+      // else here - RLS on profiles is what actually enforces that an
+      // org-level admin can't grant super_admin or touch another org's
+      // user, this client code is not the security boundary.
+      const { error } = await sb.from('profiles').update({
+        display_name:    name,
+        email:           email,
+        role:            role,
+        job_title:       jobTitle || null,
+        avatar_url:      avatarUrl,
+        organisation_id: role === 'super_admin' ? null : organisationId,
+        updated_at:      new Date().toISOString()
+      }).eq('id', id);
+      if (error) throw error;
+
+      if (password) {
+        const res = await _callEdgeFunction({ action: 'update_password', user_id: id, password });
+        if (res.error) throw new Error(res.error);
+      }
+
+    } else {
+      const appRoot = new URL(document.documentElement.dataset.appRoot || './', window.location.href).pathname;
+      const redirectTo = window.location.origin + appRoot + 'pages/auth/reset-password.html';
+
+      const res = await _callEdgeFunction({
+        action: 'create', email, display_name: name, role, job_title: jobTitle || null,
+        redirect_to: redirectTo, organisation_id: organisationId
+      });
+      if (res.error) throw new Error(res.error);
+
+      profileId = res.user_id;
+      if (avatarFile) {
+        avatarUrl = await _uploadAvatar(profileId, avatarFile);
+        await sb.from('profiles').update({ avatar_url: avatarUrl }).eq('id', profileId);
+      }
+    }
+
+    userModal.hide();
+    App.toast(id ? 'User updated' : 'Invite sent');
+    await loadUsers();
+
+  } catch(err) {
+    errorEl.textContent = 'Save failed: ' + (err.message || 'Unknown error');
+    errorEl.classList.remove('d-none');
+  } finally {
+    document.getElementById('saveUserLabel').textContent = id ? 'Update user' : 'Save user';
+    document.getElementById('saveUserSpinner').classList.add('d-none');
+    document.getElementById('saveUserBtn').disabled = false;
+  }
+}
+
+async function _uploadAvatar(userId, file) {
+  const ext  = file.name.split('.').pop();
+  // Path convention must match the storage RLS policy in
+  // 01-core-schema.sql exactly: {user_id}/avatar.{ext} - the user's
+  // own auth.uid() as the top-level folder is what the policy checks.
+  const path = `${userId}/avatar.${ext}`;
+  const { error } = await sb.storage.from('user-avatars').upload(path, file, { upsert: true });
+  if (error) { console.warn('Avatar upload failed:', error.message); return null; }
+  const { data } = sb.storage.from('user-avatars').getPublicUrl(path);
+  return data.publicUrl + '?t=' + Date.now();
+}
+
+async function confirmDelete() {
+  if (!pendingDeleteId) return;
+  const res = await _callEdgeFunction({ action: 'delete', user_id: pendingDeleteId });
+  if (res.error) { deleteUserModal.hide(); App.toast('Delete failed: ' + res.error, 'danger'); return; }
+  await sb.from('profiles').delete().eq('id', pendingDeleteId);
+  deleteUserModal.hide();
+  App.toast('User removed');
+  pendingDeleteId = null;
+  await loadUsers();
+}
+
+function setAvatarPreviewImage(src) {
+  const preview = document.getElementById('avatarPreview');
+  preview.innerHTML = `<img src="${src}" alt="avatar" /><div class="avatar-overlay"><i class="ti ti-camera"></i></div>`;
+  preview.style.background = '';
+}
+
+function setAvatarPreviewInitials(name) {
+  const preview  = document.getElementById('avatarPreview');
+  const initials = _initials(name);
+  const colour   = _avatarColour(name);
+  preview.style.background = colour;
+  preview.innerHTML = `<span id="avatarInitials" style="color:#fff;font-size:1.25rem;font-weight:500">${initials}</span><div class="avatar-overlay"><i class="ti ti-camera"></i></div>`;
+}
+
+function togglePw(inputId, btn) {
+  const inp = document.getElementById(inputId);
+  const icon = btn.querySelector('i');
+  inp.type = inp.type === 'password' ? 'text' : 'password';
+  icon.className = inp.type === 'password' ? 'ti ti-eye' : 'ti ti-eye-off';
+}
+
+async function _callEdgeFunction(body) {
+  const saved = AppSession.load();
+  const token = saved?.access_token;
+  if (!token) throw new Error('No session token available');
+
+  const res = await fetch(SUPABASE_URL + '/functions/v1/manage-user', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': 'Bearer ' + token,
+      'apikey': SUPABASE_ANON_KEY
+    },
+    body: JSON.stringify(body)
+  });
+  const data = await res.json();
+  return data;
+}
+
+function _initials(name) {
+  if (!name) return '?';
+  const words = name.trim().split(/\s+/);
+  return words.length >= 2 ? (words[0][0] + words[words.length-1][0]).toUpperCase() : name.slice(0,2).toUpperCase();
+}
+
+function _avatarColour(name) {
+  let hash = 0;
+  for (let i = 0; i < name.length; i++) hash = name.charCodeAt(i) + ((hash << 5) - hash);
+  return AVATAR_COLOURS[Math.abs(hash) % AVATAR_COLOURS.length];
+}
+
+function _roleBadge(role) {
+  const map = {
+    super_admin: ['Super Admin', 'bg-purple-lt'],
+    admin:       ['Admin',       'bg-blue-lt'],
+    user:        ['User',        'bg-secondary-lt'],
+    view:        ['View',        'bg-azure-lt']
+  };
+  const [label, cls] = map[role] || ['Unknown', 'bg-secondary-lt'];
+  return `<span class="badge ${cls}">${label}</span>`;
+}
+  </script>
+</body>
+</html>

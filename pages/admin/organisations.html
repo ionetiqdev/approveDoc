@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="en" data-bs-theme="light" data-app-root="../../">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Organisations - approveDoc</title>
+
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/core@1.4.0/dist/css/tabler.min.css" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.44.0/dist/tabler-icons.min.css" />
+  <link rel="stylesheet" href="../../assets/css/theme.css?r=1clzy8jt" />
+
+  <script>
+    (function() {
+      try {
+        var root = document.documentElement.dataset.appRoot || './';
+        var absoluteRoot = new URL(root, window.location.href).pathname;
+        var suffix = ':' + absoluteRoot;
+        var savedTheme = localStorage.getItem('app_theme');
+        var theme = savedTheme || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+        document.documentElement.setAttribute('data-bs-theme', theme);
+        var accent = localStorage.getItem('app_accent' + suffix);
+        if (accent) {
+          document.documentElement.style.setProperty('--tblr-primary', accent);
+          var ah = accent.replace('#','');
+          if (ah.length === 3) ah = ah.split('').map(function(c){return c+c;}).join('');
+          document.documentElement.style.setProperty('--tblr-primary-rgb', parseInt(ah.slice(0,2),16) + ', ' + parseInt(ah.slice(2,4),16) + ', ' + parseInt(ah.slice(4,6),16));
+        }
+        var sidebarBg = localStorage.getItem('app_sidebar_bg' + suffix);
+        if (sidebarBg) {
+          document.documentElement.style.setProperty('--bg-sidebar', sidebarBg);
+          var hex = sidebarBg.replace('#', '');
+          if (hex.length === 3) hex = hex.split('').map(function(c){return c+c;}).join('');
+          var r = parseInt(hex.slice(0,2),16) / 255, g = parseInt(hex.slice(2,4),16) / 255, b = parseInt(hex.slice(4,6),16) / 255;
+          var toLinear = function(c){ return c <= 0.03928 ? c/12.92 : Math.pow((c+0.055)/1.055, 2.4); };
+          var isLight = (0.2126*toLinear(r) + 0.7152*toLinear(g) + 0.0722*toLinear(b)) > 0.5;
+          document.documentElement.style.setProperty('--sidebar-fg', isLight ? '#0f172a' : '#ffffff');
+          document.documentElement.style.setProperty('--sidebar-fg-rgb', isLight ? '15,23,42' : '255,255,255');
+        }
+      } catch (e) {}
+    })();
+  </script>
+</head>
+<body>
+
+  <aside id="sidebar"></aside>
+  <div id="sidebarOverlay" class="sidebar-overlay"></div>
+
+  <div class="app-content-wrapper">
+
+    <header class="navbar navbar-expand-md d-print-none border-bottom">
+      <div class="container-fluid">
+        <button id="sidebarToggle" class="btn btn-icon" aria-label="Toggle sidebar" title="Toggle sidebar">
+          <i class="ti ti-menu-2"></i>
+        </button>
+        <h1 class="navbar-brand d-none d-sm-inline-block ms-2 mb-0 fs-5">Organisations</h1>
+        <div class="navbar-nav flex-row order-md-last align-items-center gap-2">
+          <div data-active-organisation></div>
+          <button class="btn btn-icon" data-theme-toggle title="Toggle dark mode"><i class="ti ti-moon"></i></button>
+          <button class="btn btn-icon" id="headerPreferencesBtn" title="Preferences">
+            <i class="ti ti-adjustments"></i>
+          </button>
+          <span class="avatar avatar-sm rounded-circle bg-primary-lt" data-user-initials>?</span>
+          <span class="d-none d-xl-block">
+            <span class="d-block fw-semibold" style="font-size:.8125rem" data-user-name>—</span>
+            <span class="d-block text-secondary" style="font-size:.7rem" data-user-email>—</span>
+          </span>
+        </div>
+      </div>
+    </header>
+
+    <div class="page-body">
+      <div class="container-fluid">
+
+        <div class="card mb-3">
+          <div class="card-body py-2">
+            <div class="d-flex align-items-center gap-3 flex-wrap">
+              <div class="input-icon" style="max-width:280px">
+                <span class="input-icon-addon"><i class="ti ti-search"></i></span>
+                <input type="text" id="searchInput" class="form-control form-control-sm" placeholder="Search organisations…" />
+              </div>
+              <select id="filterStatus" class="form-select form-select-sm" style="width:auto">
+                <option value="">All status</option>
+                <option value="true">Active</option>
+                <option value="false">Inactive</option>
+              </select>
+              <span class="text-secondary small ms-auto" id="recordCount"></span>
+              <button class="btn btn-primary btn-sm" id="addOrganisationBtn">
+                <i class="ti ti-plus me-1"></i>Add organisation
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="table-responsive">
+            <table class="table table-vcenter card-table">
+              <thead>
+                <tr>
+                  <th style="width:48px"></th>
+                  <th>Organisation</th>
+                  <th>Reference</th>
+                  <th>Contact</th>
+                  <th>Status</th>
+                  <th class="w-1"></th>
+                </tr>
+              </thead>
+              <tbody id="organisationsBody">
+                <tr><td colspan="6" class="text-center py-4 text-secondary">
+                  <span class="spinner-border spinner-border-sm me-2"></span>Loading…
+                </td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <div class="modal modal-blur fade" id="organisationModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="organisationModalTitle">Add organisation</h5>
+          <button type="button" class="modal-close-btn" data-bs-dismiss="modal" aria-label="Close"><i class="ti ti-x"></i></button>
+        </div>
+        <div class="modal-body">
+          <div id="organisationModalError" class="alert alert-danger d-none py-2 small mb-3"></div>
+          <input type="hidden" id="organisationId" />
+
+          <div class="row g-3">
+            <div class="col-12">
+              <label class="form-label">Organisation name <span class="text-danger">*</span></label>
+              <input type="text" id="organisationName" class="form-control" placeholder="e.g. Acme Corporation" />
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Reference / code</label>
+              <input type="text" id="organisationRef" class="form-control" placeholder="e.g. ACME" maxlength="20" />
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Contact name</label>
+              <input type="text" id="organisationContactName" class="form-control" placeholder="Primary contact" />
+            </div>
+            <div class="col-12">
+              <label class="form-label">Contact email</label>
+              <input type="email" id="organisationContactEmail" class="form-control" placeholder="contact@organisation.com" />
+            </div>
+            <div class="col-12">
+              <label class="form-label">Description</label>
+              <textarea id="organisationDescription" class="form-control" rows="2" placeholder="Optional notes about this organisation…"></textarea>
+            </div>
+            <div class="col-12">
+              <label class="form-check form-switch">
+                <input class="form-check-input" type="checkbox" id="organisationActive" checked />
+                <span class="form-check-label">Active</span>
+              </label>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn" data-bs-dismiss="modal">Cancel</button>
+          <button type="button" class="btn btn-primary" id="saveOrganisationBtn">
+            <span id="saveOrganisationLabel">Save organisation</span>
+            <span id="saveOrganisationSpinner" class="spinner-border spinner-border-sm ms-2 d-none"></span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal modal-blur fade" id="deleteModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered modal-sm">
+      <div class="modal-content">
+        <div class="modal-status bg-danger"></div>
+        <div class="modal-body text-center py-4">
+          <i class="ti ti-trash text-danger mb-2" style="font-size:2.2rem"></i>
+          <h6 class="mb-1">Delete organisation?</h6>
+          <p class="text-secondary small mb-0" id="deleteOrganisationName"></p>
+          <p class="text-danger small mt-2 mb-0">This may also affect data linked to this organisation.</p>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn" data-bs-dismiss="modal">Cancel</button>
+          <button type="button" class="btn btn-danger" id="confirmDeleteBtn">Delete</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@tabler/core@1.4.0/dist/js/tabler.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="../../assets/js/version.js?r=1clzy8jt"></script>
+  <script src="../../assets/js/supabase-client.js?r=1clzy8jt"></script>
+  <script src="../../assets/js/auth.js?r=1clzy8jt"></script>
+  <script src="../../assets/js/app.js?r=1clzy8jt"></script>
+  <script src="../../assets/js/theme.js?r=1clzy8jt"></script>
+  <script src="../../assets/js/sidebar-html.js?r=1clzy8jt"></script>
+  <script src="../../assets/js/sidebar.js?r=1clzy8jt"></script>
+  <script src="../../assets/js/profile-modal.js?r=1clzy8jt"></script>
+  <script>
+let organisationModal, deleteModal;
+let allOrganisations = [];
+let pendingDeleteId = null;
+
+(async () => {
+  const session = await Auth.requireAuth();
+  if (!session) return;
+  SidebarHtml.inject('../../');
+  Sidebar.init();
+  Auth.refreshUI();
+
+  if (!Auth.isSuperAdmin()) {
+    App.toast('You do not have access to this page', 'danger');
+    window.location.href = '../../index.html';
+    return;
+  }
+
+  organisationModal = new bootstrap.Modal(document.getElementById('organisationModal'));
+  deleteModal        = new bootstrap.Modal(document.getElementById('deleteModal'));
+
+  await loadOrganisations();
+
+  document.getElementById('searchInput').addEventListener('input', renderTable);
+  document.getElementById('filterStatus').addEventListener('change', renderTable);
+  document.getElementById('addOrganisationBtn').addEventListener('click', () => openModal());
+  document.getElementById('saveOrganisationBtn').addEventListener('click', saveOrganisation);
+  document.getElementById('confirmDeleteBtn').addEventListener('click', confirmDelete);
+  document.getElementById('organisationModal').addEventListener('hidden.bs.modal', resetModal);
+})();
+
+async function loadOrganisations() {
+  const { data, error } = await sb.from('organisations').select('*').order('name');
+
+  if (error) {
+    console.error('[Organisations] Load error:', error);
+    App.toast('Failed to load organisations: ' + error.message, 'danger');
+    return;
+  }
+
+  allOrganisations = data || [];
+  renderTable();
+}
+
+function renderTable() {
+  const search = (document.getElementById('searchInput').value || '').toLowerCase();
+  const status = document.getElementById('filterStatus').value;
+
+  const filtered = allOrganisations.filter(o => {
+    if (search && !o.name?.toLowerCase().includes(search) &&
+        !o.reference?.toLowerCase().includes(search) &&
+        !o.contact_name?.toLowerCase().includes(search)) return false;
+    if (status !== '' && String(o.active) !== status) return false;
+    return true;
+  });
+
+  document.getElementById('recordCount').textContent =
+    `${filtered.length} organisation${filtered.length !== 1 ? 's' : ''}`;
+
+  const tbody = document.getElementById('organisationsBody');
+
+  if (!filtered.length) {
+    tbody.innerHTML = `<tr><td colspan="6" class="text-center py-4 text-secondary">
+      <i class="ti ti-building-off mb-1 d-block" style="font-size:1.5rem"></i>No organisations found
+    </td></tr>`;
+    return;
+  }
+
+  tbody.innerHTML = filtered.map(o => {
+    const initials   = (o.name || '?').split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2);
+    const statusBadge = o.active
+      ? `<span class="badge bg-success-lt">Active</span>`
+      : `<span class="badge bg-secondary-lt">Inactive</span>`;
+
+    return `<tr>
+      <td><span class="avatar avatar-sm rounded-circle bg-primary-lt">${App.escHtml(initials)}</span></td>
+      <td>
+        <div class="fw-semibold">${App.escHtml(o.name)}</div>
+        ${o.description ? `<div class="text-secondary small text-truncate" style="max-width:240px">${App.escHtml(o.description)}</div>` : ''}
+      </td>
+      <td class="text-secondary">${o.reference ? `<span class="badge bg-secondary-lt">${App.escHtml(o.reference)}</span>` : '—'}</td>
+      <td>
+        ${o.contact_name ? `<div class="small">${App.escHtml(o.contact_name)}</div>` : ''}
+        ${o.contact_email ? `<div class="text-secondary small">${App.escHtml(o.contact_email)}</div>` : ''}
+        ${!o.contact_name && !o.contact_email ? '<span class="text-secondary small">—</span>' : ''}
+      </td>
+      <td>${statusBadge}</td>
+      <td>
+        <div class="btn-list flex-nowrap">
+          <button class="btn btn-icon btn-sm edit-btn" data-id="${o.id}" title="Edit"><i class="ti ti-edit"></i></button>
+          <button class="btn btn-icon btn-sm text-danger delete-btn" data-id="${o.id}" data-name="${App.escHtml(o.name)}" title="Delete"><i class="ti ti-trash"></i></button>
+        </div>
+      </td>
+    </tr>`;
+  }).join('');
+
+  tbody.querySelectorAll('.edit-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const organisation = allOrganisations.find(o => o.id === btn.dataset.id);
+      if (organisation) openModal(organisation);
+    });
+  });
+
+  tbody.querySelectorAll('.delete-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      pendingDeleteId = btn.dataset.id;
+      document.getElementById('deleteOrganisationName').textContent = btn.dataset.name;
+      deleteModal.show();
+    });
+  });
+}
+
+function openModal(organisation = null) {
+  resetModal();
+  if (organisation) {
+    document.getElementById('organisationModalTitle').textContent = 'Edit organisation';
+    document.getElementById('saveOrganisationLabel').textContent  = 'Update organisation';
+    document.getElementById('organisationId').value           = organisation.id;
+    document.getElementById('organisationName').value         = organisation.name || '';
+    document.getElementById('organisationRef').value          = organisation.reference || '';
+    document.getElementById('organisationContactName').value  = organisation.contact_name || '';
+    document.getElementById('organisationContactEmail').value = organisation.contact_email || '';
+    document.getElementById('organisationDescription').value  = organisation.description || '';
+    document.getElementById('organisationActive').checked     = organisation.active !== false;
+  }
+  organisationModal.show();
+  setTimeout(() => document.getElementById('organisationName').focus(), 300);
+}
+
+function resetModal() {
+  document.getElementById('organisationModalTitle').textContent = 'Add organisation';
+  document.getElementById('saveOrganisationLabel').textContent  = 'Save organisation';
+  document.getElementById('organisationModalError').classList.add('d-none');
+  document.getElementById('organisationId').value           = '';
+  document.getElementById('organisationName').value         = '';
+  document.getElementById('organisationRef').value          = '';
+  document.getElementById('organisationContactName').value  = '';
+  document.getElementById('organisationContactEmail').value = '';
+  document.getElementById('organisationDescription').value  = '';
+  document.getElementById('organisationActive').checked     = true;
+}
+
+async function saveOrganisation() {
+  const errorEl = document.getElementById('organisationModalError');
+  errorEl.classList.add('d-none');
+
+  const id   = document.getElementById('organisationId').value;
+  const name = document.getElementById('organisationName').value.trim();
+
+  if (!name) {
+    errorEl.textContent = 'Organisation name is required.';
+    errorEl.classList.remove('d-none');
+    return;
+  }
+
+  const payload = {
+    name:          name,
+    reference:     document.getElementById('organisationRef').value.trim().toUpperCase() || null,
+    contact_name:  document.getElementById('organisationContactName').value.trim() || null,
+    contact_email: document.getElementById('organisationContactEmail').value.trim() || null,
+    description:   document.getElementById('organisationDescription').value.trim() || null,
+    active:        document.getElementById('organisationActive').checked,
+    updated_at:    new Date().toISOString()
+  };
+
+  document.getElementById('saveOrganisationLabel').textContent = id ? 'Saving…' : 'Adding…';
+  document.getElementById('saveOrganisationSpinner').classList.remove('d-none');
+  document.getElementById('saveOrganisationBtn').disabled = true;
+
+  let error;
+  if (id) {
+    ({ error } = await sb.from('organisations').update(payload).eq('id', id));
+  } else {
+    ({ error } = await sb.from('organisations').insert(payload));
+  }
+
+  document.getElementById('saveOrganisationLabel').textContent = id ? 'Update organisation' : 'Save organisation';
+  document.getElementById('saveOrganisationSpinner').classList.add('d-none');
+  document.getElementById('saveOrganisationBtn').disabled = false;
+
+  if (error) {
+    errorEl.textContent = 'Save failed: ' + (error.message || 'Unknown error');
+    errorEl.classList.remove('d-none');
+    return;
+  }
+
+  organisationModal.hide();
+  App.toast(id ? 'Organisation updated' : 'Organisation added');
+  await loadOrganisations();
+}
+
+async function confirmDelete() {
+  if (!pendingDeleteId) return;
+  const { error } = await sb.from('organisations').delete().eq('id', pendingDeleteId);
+  deleteModal.hide();
+  if (error) { App.toast('Delete failed: ' + error.message, 'danger'); return; }
+  App.toast('Organisation deleted');
+  pendingDeleteId = null;
+  await loadOrganisations();
+}
+  </script>
+</body>
+</html>

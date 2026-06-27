@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en" data-bs-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sign In - approveDoc</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/core@1.4.0/dist/css/tabler.min.css" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.44.0/dist/tabler-icons.min.css" />
+  <link rel="stylesheet" href="../../assets/css/theme.css?r=1clzy8jt" />
+  <style>
+    body { display: flex; align-items: center; justify-content: center; min-height: 100vh; flex-direction: column; gap: .75rem; }
+    .login-card { width: 100%; max-width: 400px; }
+    .login-logo { width: 48px; height: 48px; background: rgb(var(--tblr-primary-rgb)); border-radius: var(--tblr-border-radius, .375rem); display: flex; align-items: center; justify-content: center; font-size: 1.5rem; color: #fff; margin: 0 auto 1rem; }
+    .login-brand { font-weight: 700; font-size: 1.25rem; text-align: center; }
+    .login-sub { text-align: center; color: var(--tblr-secondary-color); font-size: .8125rem; margin-top: .25rem; margin-bottom: 1.75rem; }
+    .pw-wrapper { position: relative; }
+    .pw-toggle { position: absolute; right: .75rem; top: 50%; transform: translateY(-50%); background: none; border: none; color: var(--tblr-secondary-color); cursor: pointer; padding: 0; font-size: 1rem; }
+    .login-footer { font-size: .7rem; color: var(--tblr-secondary-color); text-align: center; }
+  </style>
+</head>
+<body>
+  <div class="login-card p-3">
+    <div class="card">
+      <div class="card-body p-4">
+        <div class="login-logo"><i class="ti ti-apps"></i></div>
+        <div class="login-brand">approveDoc</div>
+        <div class="login-sub">Sign in to your account</div>
+
+        <div id="errorAlert" class="alert alert-danger d-none py-2 small" role="alert"></div>
+
+        <div class="mb-3">
+          <label for="email" class="form-label">Email address</label>
+          <input type="email" id="email" class="form-control" placeholder="you@example.com" autocomplete="email" />
+        </div>
+        <div class="mb-4">
+          <label for="password" class="form-label">Password</label>
+          <div class="pw-wrapper">
+            <input type="password" id="password" class="form-control" placeholder="&bull;&bull;&bull;&bull;&bull;&bull;&bull;&bull;" autocomplete="current-password" />
+            <button type="button" class="pw-toggle" id="pwToggle"><i class="ti ti-eye"></i></button>
+          </div>
+        </div>
+
+        <button id="signInBtn" class="btn btn-primary w-100 mb-3">
+          <span id="signInLabel">Sign In</span>
+          <span id="signInSpinner" class="spinner-border spinner-border-sm ms-2 d-none"></span>
+        </button>
+        <div id="resetSuccess" class="alert alert-success d-none py-2 small mb-0">
+          Password updated successfully. Please sign in.
+        </div>
+        <div class="text-center mt-2">
+          <a href="reset-password.html" class="text-secondary small">Forgot password?</a>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="login-footer">
+    <div>&copy; 2026 ionetiq</div>
+    <div data-published></div>
+  </div>
+
+<script src="https://cdn.jsdelivr.net/npm/@tabler/core@1.4.0/dist/js/tabler.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="../../assets/js/supabase-client.js?r=1clzy8jt"></script>
+<script src="../../assets/js/theme.js?r=1clzy8jt"></script>
+<script src="../../assets/js/version.js?r=1clzy8jt"></script>
+<script>
+(async () => {
+  // Show success message if coming from password reset
+  if (window.location.search.includes('reset=1')) {
+    document.getElementById('resetSuccess').classList.remove('d-none');
+  }
+
+  // Compute the app root correctly regardless of deploy depth (works for
+  // both /{project}/pages/auth/login.html and /{project}/dev/pages/auth/login.html)
+  function _appRoot() {
+    const path = window.location.pathname;
+    const idx = path.indexOf('/pages/auth/login.html');
+    if (idx === -1) return '../../'; // fallback, shouldn't normally happen
+    return path.substring(0, idx + 1); // everything up to and including the trailing slash before "pages/"
+  }
+
+  // If already have a saved session, restore it into Supabase and redirect
+  const saved = AppSession.load();
+  if (saved && saved.access_token) {
+    const { data } = await sb.auth.setSession({
+      access_token:  saved.access_token,
+      refresh_token: saved.refresh_token
+    });
+    if (data.session) {
+      window.location.replace(_appRoot() + 'index.html');
+      return;
+    }
+    // Session expired - clear it and stay on login
+    AppSession.clear();
+  }
+
+  document.getElementById('pwToggle').addEventListener('click', () => {
+    const pw = document.getElementById('password');
+    const icon = document.querySelector('#pwToggle i');
+    pw.type = pw.type === 'password' ? 'text' : 'password';
+    icon.className = pw.type === 'password' ? 'ti ti-eye' : 'ti ti-eye-off';
+  });
+
+  async function doSignIn() {
+    const email    = document.getElementById('email').value.trim();
+    const password = document.getElementById('password').value;
+    const errorEl  = document.getElementById('errorAlert');
+    errorEl.classList.add('d-none');
+
+    if (!email || !password) {
+      errorEl.textContent = 'Please enter your email and password.';
+      errorEl.classList.remove('d-none');
+      return;
+    }
+
+    document.getElementById('signInLabel').textContent = 'Signing in...';
+    document.getElementById('signInSpinner').classList.remove('d-none');
+    document.getElementById('signInBtn').disabled = true;
+
+    const { data, error } = await sb.auth.signInWithPassword({ email, password });
+
+    if (error || !data.session) {
+      errorEl.textContent = error?.message || 'Sign in failed. Please try again.';
+      errorEl.classList.remove('d-none');
+      document.getElementById('signInLabel').textContent = 'Sign In';
+      document.getElementById('signInSpinner').classList.add('d-none');
+      document.getElementById('signInBtn').disabled = false;
+      return;
+    }
+
+    // Save session manually using plain JSON - survives privacy extensions
+    AppSession.save(data.session);
+    window.location.replace(_appRoot() + 'index.html');
+  }
+
+  document.getElementById('signInBtn').addEventListener('click', doSignIn);
+  document.getElementById('password').addEventListener('keydown', e => { if (e.key === 'Enter') doSignIn(); });
+})();
+</script>
+</body>
+</html>

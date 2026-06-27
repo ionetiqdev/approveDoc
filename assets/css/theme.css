@@ -1,0 +1,304 @@
+/* ============================================================
+   approveDoc - theme.css
+
+   This is intentionally THIN. Real @tabler/core handles cards,
+   buttons, forms, tables, badges, dark mode, and colour theming
+   already - this file only covers what Tabler doesn't ship out
+   of the box: the custom collapsible/persisted sidebar (see
+   sidebar.js/sidebar-html.js), role-based UI hiding, and the
+   organisation switcher.
+
+   Uses Tabler's own custom properties (--tblr-*) wherever
+   possible so it inherits accent-colour and dark-mode changes
+   automatically, rather than hardcoding values that would drift
+   out of sync with whatever the user picks in Preferences.
+   ============================================================ */
+
+/* ── Layout shell ── */
+:root {
+  --sidebar-width:           15rem;
+  --sidebar-width-collapsed: 4.5rem;
+  --header-height:           3.5rem;
+  --bg-sidebar:               #182433;
+  --sidebar-fg:                #ffffff;
+  --sidebar-fg-rgb:             255,255,255;
+}
+
+[data-bs-theme="dark"] {
+  --bg-sidebar: #15171c;
+}
+
+body { display: flex; min-height: 100vh; }
+
+/* ── Sidebar ── */
+#sidebar {
+  width: var(--sidebar-width);
+  flex-shrink: 0;
+  background: var(--bg-sidebar);
+  color: var(--sidebar-fg);
+  display: flex;
+  flex-direction: column;
+  position: fixed;
+  top: 0; left: 0; bottom: 0;
+  z-index: 1030;
+  transition: width .2s ease;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+#sidebar.collapsed { width: var(--sidebar-width-collapsed); }
+#sidebar.collapsed .nav-link-text,
+#sidebar.collapsed .sidebar-brand-text,
+#sidebar.collapsed .nav-chevron,
+#sidebar.collapsed .nav-submenu { display: none; }
+#sidebar.collapsed .nav-link { justify-content: center; }
+
+.sidebar-brand {
+  display: flex;
+  align-items: center;
+  gap: .65rem;
+  padding: 1rem 1.1rem;
+  color: var(--sidebar-fg);
+  text-decoration: none;
+  font-weight: 600;
+  flex-shrink: 0;
+}
+.sidebar-brand-icon {
+  width: 2rem; height: 2rem;
+  border-radius: var(--tblr-border-radius, .375rem);
+  background: rgba(var(--tblr-primary-rgb), .9);
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+.brand-main { font-size: .95rem; white-space: nowrap; }
+
+.sidebar-nav { flex: 1; padding: .5rem 0 1rem; }
+.sidebar-nav .nav-item { margin: .1rem .6rem; }
+
+.sidebar-nav .nav-link {
+  display: flex;
+  align-items: center;
+  gap: .75rem;
+  padding: .55rem .65rem;
+  border-radius: var(--tblr-border-radius, .375rem);
+  color: rgba(var(--sidebar-fg-rgb), .75);
+  text-decoration: none;
+  font-size: 1em;
+  white-space: nowrap;
+  transition: background-color .12s ease, color .12s ease;
+}
+.sidebar-nav .nav-link i:first-child { font-size: 1.15rem; flex-shrink: 0; width: 1.15rem; text-align: center; }
+.sidebar-nav .nav-link:hover { background: rgba(var(--sidebar-fg-rgb), .08); color: var(--sidebar-fg); }
+.sidebar-nav .nav-link.active {
+  background: rgba(var(--tblr-primary-rgb), .18);
+  color: #fff;
+  box-shadow: inset 3px 0 0 0 rgb(var(--tblr-primary-rgb));
+}
+.nav-chevron { margin-left: auto; font-size: .85rem; transition: transform .15s ease; }
+.nav-link.submenu-open .nav-chevron { transform: rotate(90deg); }
+
+.nav-submenu {
+  max-height: 0;
+  overflow: hidden;
+  padding-left: 1.9rem;
+  transition: max-height .2s ease;
+}
+.nav-submenu.open { max-height: 50rem; } /* large enough to never visibly clip a real submenu */
+.nav-submenu .nav-link { padding: .45rem .6rem; }
+
+.sidebar-footer {
+  border-top: 1px solid rgba(var(--sidebar-fg-rgb), .1);
+  padding: .5rem .6rem;
+  flex-shrink: 0;
+}
+.sidebar-user-row {
+  display: flex;
+  align-items: center;
+  gap: .6rem;
+  padding: .6rem .65rem;
+}
+.sidebar-user-info {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+}
+.sidebar-user-name {
+  color: var(--sidebar-fg);
+  font-weight: 600;
+  font-size: .8125rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.sidebar-user-role {
+  color: rgba(var(--sidebar-fg-rgb), .55);
+  font-size: .7rem;
+}
+.sidebar-logout-btn {
+  flex-shrink: 0;
+  color: rgba(var(--sidebar-fg-rgb), .6);
+  font-size: 1.1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.75rem;
+  height: 1.75rem;
+}
+.sidebar-logout-btn:hover {
+  color: var(--sidebar-fg);
+}
+.published-message {
+  color: rgba(var(--sidebar-fg-rgb), .4);
+  font-size: .7rem;
+  text-align: left;
+  padding: .4rem .65rem 0;
+}
+
+/* ── Mobile sidebar ── */
+@media (max-width: 991.98px) {
+  #sidebar { transform: translateX(-100%); transition: transform .2s ease; width: var(--sidebar-width) !important; }
+  #sidebar.mobile-open { transform: translateX(0); }
+  .sidebar-overlay {
+    position: fixed; inset: 0; background: rgba(0,0,0,.5);
+    z-index: 1029; opacity: 0; visibility: hidden;
+    transition: opacity .2s ease;
+  }
+  .sidebar-overlay.visible { opacity: 1; visibility: visible; }
+}
+
+/* ── Page wrapper (offset for fixed sidebar) ── */
+.app-content-wrapper {
+  flex: 1;
+  margin-left: var(--sidebar-width);
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  transition: margin-left .2s ease;
+  min-width: 0;
+}
+body:has(#sidebar.collapsed) .app-content-wrapper { margin-left: var(--sidebar-width-collapsed); }
+@media (max-width: 991.98px) {
+  .app-content-wrapper { margin-left: 0 !important; }
+}
+
+/* ── Role-based visibility ── */
+.role-hidden { display: none !important; }
+
+/* ── Organisation switcher (header) ── */
+.org-switcher-btn {
+  display: flex; align-items: center; gap: .5rem;
+  background: none; border: 1px solid var(--tblr-border-color);
+  border-radius: var(--tblr-border-radius, .375rem);
+  padding: .35rem .75rem;
+  font-size: .825rem;
+  color: var(--tblr-body-color);
+}
+.org-switcher-btn:hover { background: var(--tblr-bg-surface-secondary, rgba(0,0,0,.03)); }
+.org-switcher-label { font-size: .825rem; color: var(--tblr-body-color); }
+.org-switcher-warning { color: var(--tblr-warning); }
+
+/* ── Loading overlay (used by App.showLoader/hideLoader) ── */
+.loading-overlay {
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,.35);
+  display: none;
+  align-items: center; justify-content: center;
+  z-index: 1080;
+}
+
+/* ── Data table row actions (Edit/Delete icon buttons) and status
+   dots - shared across every CRUD table page (Customers,
+   Organisations, Users, Issues, Documents) ── */
+.btn-icon-lg {
+  width: 2.25rem;
+  height: 2.25rem;
+}
+.btn-icon-lg i {
+  font-size: 1.25rem;
+}
+.status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  display: inline-block;
+  margin-right: 6px;
+}
+
+/* ── Modal title bars: primary colour, contrasting text - applies
+   to every modal across the app, automatically tracking whatever
+   accent colour the user has picked in Preferences (--tblr-primary) ── */
+.modal-content {
+  border: 1px solid rgb(var(--tblr-primary-rgb));
+}
+.modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding-right: 20px;
+  background: rgb(var(--tblr-primary-rgb));
+  color: #fff;
+  border-bottom: none;
+}
+.modal-header .modal-title { color: #fff; }
+
+/* Custom close button - deliberately NOT using Bootstrap's .btn-close
+   (an SVG background-image inverted via CSS filter), since that
+   approach turned out to be unreliable here. This is a plain button
+   with a real icon font glyph, so its colour is just `color`, with
+   no filter/specificity fight to lose against anything in Tabler's
+   own CSS. */
+.modal-close-btn {
+  background: none;
+  border: none;
+  color: #fff;
+  font-size: 1.25rem;
+  line-height: 1;
+  padding: .25rem;
+  cursor: pointer;
+}
+.modal-close-btn:hover {
+  opacity: .8;
+}
+
+/* ── Issue modal tab panes: only the ACTIVE pane becomes a flex
+   column (needed so its textarea can fill remaining height) -
+   applying flex display unconditionally to every pane via a static
+   utility class breaks Bootstrap's own display:none rule on
+   inactive panes, since !important utility classes win regardless
+   of source order. Scoping to .tab-pane.active avoids that. ── */
+.tab-pane.active {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+/* ── Category reorder list rows - reduced padding from Tabler's
+   default list-group-item (16px top/bottom) down to 10px, since
+   this list can have many rows and the modal should stay compact. ── */
+.category-drag-item {
+  padding-top: 10px;
+  padding-bottom: 10px;
+}
+
+/* ── Avatar upload widget (Edit User modal, shared Profile modal) ── */
+.avatar-upload-wrap { display: flex; align-items: center; gap: 1rem; margin-bottom: 1rem; }
+.avatar-preview {
+  width: 72px; height: 72px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.25rem; font-weight: 500; color: #fff;
+  overflow: hidden; flex-shrink: 0; position: relative; cursor: pointer;
+  border: 2px solid var(--tblr-border-color);
+}
+.avatar-preview img { width: 100%; height: 100%; object-fit: cover; }
+.avatar-preview .avatar-overlay {
+  position: absolute; inset: 0; background: rgba(0,0,0,.45);
+  display: flex; align-items: center; justify-content: center;
+  opacity: 0; transition: opacity .2s; border-radius: 50%; font-size: 1.125rem; color: #fff;
+}
+.avatar-preview:hover .avatar-overlay { opacity: 1; }
+#avatarFileInput, #profileAvatarFileInput { display: none; }
+.pw-toggle-btn {
+  position: absolute; right: .75rem; top: 50%; transform: translateY(-50%);
+  background: none; border: none; color: var(--tblr-secondary-color); cursor: pointer; padding: 0; font-size: 1rem;
+}

@@ -1,0 +1,80 @@
+REM ============================================================
+REM project.conf - copy this file to project.conf (drop .example)
+REM and fill in your values for this specific project.
+REM
+REM project.conf is GITIGNORED - never committed, never pushed,
+REM never uploaded by FTP. It only ever lives on your machine.
+REM
+REM Nothing in this file is a secret. FTP password, FTP username,
+REM Supabase URL, Supabase keys, and any Supabase service-role key
+REM live ONLY as GitHub Actions repo secrets (set once via GitHub's
+REM web UI - see docs/NEW-PROJECT.md) and never appear here or in
+REM git history.
+REM
+REM If you run deploy.bat without filling this in first, it will
+REM ask you for anything missing and save your answers back into
+REM this file - you only get asked once per value.
+REM ============================================================
+
+REM --- Identity ---
+
+REM Full display name, shown in page titles, sidebar brand, login
+REM screen, etc. e.g. Acme Risk Register
+APP_NAME=ionetiq Template
+
+REM Short code - lowercase, no spaces. Used as: the prefix on every
+REM build zip Claude names for you (e.g. PROJECT_CODE=acme means
+REM zips are named acme_DDMMYYYY_HHmm.zip), and the FTP folder name
+REM (public_html/PROJECT_CODE/).
+PROJECT_CODE=template
+
+REM Which version of the template (see TEMPLATE-VERSION.txt and
+REM docs/TEMPLATE-CHANGELOG.md in the template repo) this project was
+REM originally created from. Set once, at project creation, and never
+REM changed afterward - it's a historical record, not something that
+REM auto-updates. Used when deciding whether/what to pull in from a
+REM newer template version later - see docs/UPDATING-PROJECTS.md.
+TEMPLATE_VERSION_AT_CREATION=1.1.0
+
+REM Shown in page footers, e.g. ionetiq
+COMPANY_NAME=ionetiq
+
+REM --- Local paths ---
+
+REM Where Claude's build zips land when you save them. Leave blank
+REM to default to your Windows Downloads folder.
+DOWNLOADS_DIR=C:\Users\mikeb\My Drive\Downloads
+
+REM This project's working directory - where deploy.bat actually
+REM lives and runs from. Leave blank to default to the directory
+REM deploy.bat is currently running in (the normal case - you would
+REM only set this if you run deploy.bat from somewhere else and
+REM point it at a working directory elsewhere).
+WORKING_DIR=C:\inetpub\wwwroot\Template
+
+REM --- GitHub ---
+
+REM e.g. https://github.com/ionetiqdev/acme-risk.git
+GITHUB_REPO_URL=https://github.com/ionetiqdev/ionetiq-template.git
+
+REM --- Supabase / FTP ---
+
+REM Just a reference name so Claude and deploy.bat's reminders can refer
+REM to "your Supabase project" by name in messages - this is NOT used to
+REM connect to anything and is not a secret, just a label, e.g. acme-risk
+SUPABASE_PROJECT_NAME=template
+
+REM Nothing else Supabase/FTP-related lives here. They're set ONCE per
+REM repo as GitHub Actions secrets via GitHub's web UI (Settings >
+REM Secrets and variables > Actions). See docs/NEW-PROJECT.md for the
+REM exact steps. The required secret names are:
+REM   SUPABASE_URL
+REM   SUPABASE_ANON_KEY
+REM   FTP_HOST
+REM   FTP_USERNAME
+REM   FTP_PASSWORD
+REM   SLACK_WEBHOOK_URL          (optional - omit to skip Slack notify)
+REM
+REM deploy.bat will remind you these need to be set in GitHub the
+REM first time you run it for a new project, and won't ask you to
+REM type them here.
