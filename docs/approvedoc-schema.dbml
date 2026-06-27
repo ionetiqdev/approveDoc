@@ -1,0 +1,294 @@
+// ============================================================================
+// approveDoc v1.0 — ERD (DBML)
+// Source: 08-approvedoc-schema.sql
+// Project: nkwpqboslnbeifyaegos (approveDoc v1.0)
+// Generated: 27/06/2026
+//
+// Import this file at https://dbdiagram.io (Import > DBML) to render the ERD.
+//
+// NOTE: `organisations`, `profiles`, and `auth.users` are NOT created by
+// 08-approvedoc-schema.sql — they're assumed to already exist (organisations
+// and profiles from 01-core-schema.sql; auth.users is Supabase's built-in
+// table). They're included below as lightweight stubs, marked [external],
+// purely so dbdiagram can draw the relationship lines to/from them. Do not
+// treat these stub definitions as authoritative — they are not managed by
+// this migration.
+// ============================================================================
+
+Table organisations [headercolor: #888888] {
+  id uuid [pk, note: 'external — defined in 01-core-schema.sql, not this migration']
+  note: 'EXTERNAL: not created by 08-approvedoc-schema.sql. Stub for ERD purposes only.'
+}
+
+Table profiles [headercolor: #888888] {
+  id uuid [pk, note: 'external — references auth.users(id)']
+  avatar text [note: 'avatar/storage-bucket link lives here, NOT on ad_user']
+  note: 'EXTERNAL: not created by 08-approvedoc-schema.sql. Stub for ERD purposes only.'
+}
+
+Table auth.users [headercolor: #888888] {
+  id uuid [pk, note: 'Supabase built-in auth table']
+  note: 'EXTERNAL: Supabase-managed, not part of this migration.'
+}
+
+// ----------------------------------------------------------------------------
+// Lookup / reference tables
+// ----------------------------------------------------------------------------
+
+Table ad_language {
+  locale varchar(5) [pk, note: 'e.g. en-GB']
+  name varchar [not null]
+}
+
+Table ad_country {
+  country_code varchar(3) [pk]
+  organisation_id uuid [not null]
+  name varchar [not null]
+}
+
+Table ad_department {
+  department_id uuid [pk, default: `gen_random_uuid()`]
+  organisation_id uuid [not null]
+  name varchar [not null]
+}
+
+Table ad_location {
+  location_id uuid [pk, default: `gen_random_uuid()`]
+  organisation_id uuid [not null]
+  name varchar [not null]
+}
+
+Table ad_category {
+  category_id uuid [pk, default: `gen_random_uuid()`]
+  organisation_id uuid [not null]
+  name varchar [not null]
+}
+
+Table ad_approval_type {
+  approval_type_id uuid [pk, default: `gen_random_uuid()`]
+  organisation_id uuid [not null]
+  name varchar [not null]
+  sort_order int
+  note: 'NEW table — not in original CSV. Added to support ad_audience.approval_type_id as a proper FK.'
+}
+
+// ----------------------------------------------------------------------------
+// Users
+// ----------------------------------------------------------------------------
+
+Table ad_user {
+  user_id uuid [pk, ref: - auth.users.id, note: 'extends auth.users']
+  organisation_id uuid [not null]
+  first_name varchar
+  last_name varchar
+  known_name varchar
+  email varchar
+  mobile_number varchar
+  mobile_cc varchar
+  status varchar
+  language_id varchar(5)
+  location_id uuid
+  department_id uuid
+  job_title varchar
+  manager_id uuid [note: 'self-referencing FK to ad_user.user_id']
+  senior_manager_id uuid [note: 'self-referencing FK to ad_user.user_id']
+  role_user boolean [default: true]
+  role_admin boolean [default: false]
+  role_reporting boolean [default: false]
+  role_publisher boolean [default: false]
+  role_admin_assistant boolean [default: false]
+  delegated boolean [default: false]
+
+  note: 'approveDoc-specific extension of auth.users. Avatar lives on profiles, NOT here (see profile.avatar).'
+}
+
+// ----------------------------------------------------------------------------
+// Documents & versions
+// ----------------------------------------------------------------------------
+
+Table ad_document {
+  doc_id uuid [pk, default: `gen_random_uuid()`]
+  organisation_id uuid [not null]
+  name varchar [not null]
+  description text
+  category_id uuid
+  helptext varchar
+  current_version_id uuid [note: 'FK to ad_document_version.id, added post-creation to avoid circular dependency']
+
+  note: 'Master document record (a "policy"); version-specific content lives in ad_document_version.'
+}
+
+Table ad_document_version {
+  id uuid [pk, default: `gen_random_uuid()`]
+  document_id uuid [not null]
+  major_version_number int [not null]
+  minor_version_number int [not null, default: 0]
+  source_file_url text [note: 'original uploaded document']
+  pdf_file_url text [note: 'PDF rendition URL']
+  change_summary text
+  created_at timestamptz [not null, default: `now()`]
+
+  note: 'Each upload/revision of a document.'
+}
+
+// ----------------------------------------------------------------------------
+// Audiences & assignment
+// ----------------------------------------------------------------------------
+
+Table ad_audience {
+  audience_id uuid [pk, default: `gen_random_uuid()`]
+  organisation_id uuid [not null]
+  name varchar [not null]
+  approval_type_id uuid
+}
+
+Table ad_audience_member {
+  audience_id uuid [not null]
+  user_id uuid [not null]
+  organisation_id uuid [not null]
+
+  indexes {
+    (audience_id, user_id) [pk]
+  }
+
+  note: 'Join table: membership of users in an audience.'
+}
+
+Table ad_audience_document {
+  audience_id uuid [not null]
+  doc_id uuid [not null]
+  organisation_id uuid [not null]
+
+  indexes {
+    (audience_id, doc_id) [pk]
+  }
+
+  note: 'Join table: documents assigned to an audience.'
+}
+
+Table ad_related_document {
+  doc_id uuid [not null]
+  related_doc_id uuid [not null]
+  organisation_id uuid [not null]
+
+  indexes {
+    (doc_id, related_doc_id) [pk]
+  }
+
+  note: 'Self-referencing link between related documents (e.g. "see also"). Both columns reference ad_document.'
+}
+
+Table ad_assignment {
+  id uuid [pk, default: `gen_random_uuid()`]
+  organisation_id uuid [not null]
+  document_id uuid [not null]
+  audience_id uuid
+  user_id uuid
+  due_at timestamptz [note: 'compliance due date']
+  mandatory boolean [not null, default: true]
+  require_reack_on_update boolean [not null, default: false, note: 'new versions require re-acknowledgement']
+  created_at timestamptz [not null, default: `now()`]
+
+  note: 'A compliance requirement: a document due for a user, optionally arising from an audience.'
+}
+
+Table ad_user_document_state {
+  id uuid [pk, default: `gen_random_uuid()`]
+  user_id uuid [not null]
+  document_id uuid [not null]
+  last_acknowledged_version_id uuid
+  is_compliant boolean [not null, default: false]
+  is_overdue boolean [not null, default: false]
+  last_viewed_at timestamptz
+  acknowledged_at timestamptz
+  updated_at timestamptz [not null, default: `now()`]
+
+  indexes {
+    (user_id, document_id) [unique]
+  }
+
+  note: 'Rolled-up current compliance state per user per document. Scoped via parent ad_document for RLS (no direct organisation_id column).'
+}
+
+// ----------------------------------------------------------------------------
+// Notifications & audit
+// ----------------------------------------------------------------------------
+
+Table ad_notification {
+  id uuid [pk, default: `gen_random_uuid()`]
+  organisation_id uuid [not null]
+  user_id uuid [not null]
+  type varchar [not null, note: 'reminder, overdue, assignment, etc.']
+  payload jsonb [note: 'structured notification data']
+  sent_at timestamptz
+  read_at timestamptz
+}
+
+Table audit_log {
+  id uuid [pk, default: `gen_random_uuid()`]
+  organisation_id uuid [note: 'nullable']
+  user_id uuid [note: 'nullable']
+  action varchar [not null]
+  entity_type varchar [not null, note: 'related entity/table']
+  entity_id uuid
+  metadata jsonb
+  created_at timestamptz [not null, default: `now()`]
+
+  note: 'Generic audit trail across all approveDoc entities.'
+}
+
+// ============================================================================
+// Relationships
+// ============================================================================
+
+// -- organisation_id FKs (multi-tenancy) --
+Ref: ad_country.organisation_id > organisations.id
+Ref: ad_department.organisation_id > organisations.id
+Ref: ad_location.organisation_id > organisations.id
+Ref: ad_category.organisation_id > organisations.id
+Ref: ad_approval_type.organisation_id > organisations.id
+Ref: ad_user.organisation_id > organisations.id
+Ref: ad_document.organisation_id > organisations.id
+Ref: ad_audience.organisation_id > organisations.id
+Ref: ad_audience_member.organisation_id > organisations.id
+Ref: ad_audience_document.organisation_id > organisations.id
+Ref: ad_related_document.organisation_id > organisations.id
+Ref: ad_assignment.organisation_id > organisations.id
+Ref: ad_notification.organisation_id > organisations.id
+Ref: audit_log.organisation_id > organisations.id
+
+// -- ad_user relationships --
+Ref: ad_user.language_id > ad_language.locale
+Ref: ad_user.location_id > ad_location.location_id
+Ref: ad_user.department_id > ad_department.department_id
+Ref: ad_user.manager_id > ad_user.user_id
+Ref: ad_user.senior_manager_id > ad_user.user_id
+
+// -- ad_document / ad_document_version (circular: resolved post-create in SQL) --
+Ref: ad_document.category_id > ad_category.category_id
+Ref: ad_document_version.document_id > ad_document.doc_id
+Ref: ad_document.current_version_id > ad_document_version.id
+
+// -- audiences & assignment --
+Ref: ad_audience.approval_type_id > ad_approval_type.approval_type_id
+Ref: ad_audience_member.audience_id > ad_audience.audience_id
+Ref: ad_audience_member.user_id > ad_user.user_id
+Ref: ad_audience_document.audience_id > ad_audience.audience_id
+Ref: ad_audience_document.doc_id > ad_document.doc_id
+Ref: ad_related_document.doc_id > ad_document.doc_id
+Ref: ad_related_document.related_doc_id > ad_document.doc_id
+
+Ref: ad_assignment.document_id > ad_document.doc_id
+Ref: ad_assignment.audience_id > ad_audience.audience_id
+Ref: ad_assignment.user_id > ad_user.user_id
+
+Ref: ad_user_document_state.user_id > ad_user.user_id
+Ref: ad_user_document_state.document_id > ad_document.doc_id
+Ref: ad_user_document_state.last_acknowledged_version_id > ad_document_version.id
+
+// -- notifications & audit --
+Ref: ad_notification.user_id > ad_user.user_id
+Ref: audit_log.user_id > ad_user.user_id
+
+// -- profile link (informational only, not an FK in the SQL) --
+Ref: profiles.id - auth.users.id
