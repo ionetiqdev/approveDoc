@@ -25,6 +25,17 @@ the start of their bullet point - per `docs/UPDATING-PROJECTS.md`,
 these are the one category worth pulling into every live project
 regardless of how unrelated the rest of that version is.
 
+## 1.1.1 - 27 June 2026
+
+- 🔒 SECURITY: `supabase/03-issues.sql`'s two trigger functions
+  (`issues_set_ref`, `issues_set_updated_at`) were missing
+  `set search_path = public`, unlike every other function in the
+  core schema. Low real-world exploitability (no untrusted input
+  reaches either function), but inconsistent with the hardening
+  already applied everywhere else - found via Supabase's security
+  advisor (`function_search_path_mutable`) while setting up a new
+  project. Both functions now match the existing pattern.
+
 ## 1.1.0 - 27 June 2026
 
 Introduced the versioning/changelog system itself (this file,

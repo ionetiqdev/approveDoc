@@ -137,7 +137,10 @@ create table if not exists public.issues_issue (
 create sequence if not exists public.issues_ref_seq start 1;
 
 create or replace function public.issues_set_ref()
-returns trigger language plpgsql as $$
+returns trigger
+language plpgsql
+set search_path = public
+as $$
 begin
   if new.issue_ref is null or new.issue_ref = '' then
     new.issue_ref := 'ISS-' || lpad(nextval('public.issues_ref_seq')::text, 3, '0');
@@ -155,7 +158,10 @@ create trigger trg_issues_set_ref
 -- ── updated_at trigger ─────────────────────────────────────────
 
 create or replace function public.issues_set_updated_at()
-returns trigger language plpgsql as $$
+returns trigger
+language plpgsql
+set search_path = public
+as $$
 begin
   new.updated_at = now();
   return new;
