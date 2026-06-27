@@ -1,0 +1,50 @@
+-- ============================================================================
+-- approveDoc — ad_language seed data
+-- Standard locale list for user language preference.
+-- Safe to re-run: ON CONFLICT DO NOTHING.
+-- ============================================================================
+
+insert into public.ad_language (locale, name) values
+  ('en-GB', 'English (United Kingdom)'),
+  ('en-US', 'English (United States)'),
+  ('en-AU', 'English (Australia)'),
+  ('en-CA', 'English (Canada)'),
+  ('en-IE', 'English (Ireland)'),
+  ('en-NZ', 'English (New Zealand)'),
+  ('en-ZA', 'English (South Africa)'),
+  ('fr-FR', 'French (France)'),
+  ('fr-CA', 'French (Canada)'),
+  ('fr-BE', 'French (Belgium)'),
+  ('de-DE', 'German (Germany)'),
+  ('de-AT', 'German (Austria)'),
+  ('de-CH', 'German (Switzerland)'),
+  ('es-ES', 'Spanish (Spain)'),
+  ('es-MX', 'Spanish (Mexico)'),
+  ('pt-PT', 'Portuguese (Portugal)'),
+  ('pt-BR', 'Portuguese (Brazil)'),
+  ('it-IT', 'Italian (Italy)'),
+  ('nl-NL', 'Dutch (Netherlands)'),
+  ('nl-BE', 'Dutch (Belgium)'),
+  ('sv-SE', 'Swedish (Sweden)'),
+  ('da-DK', 'Danish (Denmark)'),
+  ('no-NO', 'Norwegian (Norway)'),
+  ('fi-FI', 'Finnish (Finland)'),
+  ('pl-PL', 'Polish (Poland)'),
+  ('cs-CZ', 'Czech (Czech Republic)'),
+  ('el-GR', 'Greek (Greece)'),
+  ('ru-RU', 'Russian (Russia)'),
+  ('tr-TR', 'Turkish (Turkey)'),
+  ('ar-SA', 'Arabic (Saudi Arabia)'),
+  ('ar-AE', 'Arabic (United Arab Emirates)'),
+  ('he-IL', 'Hebrew (Israel)'),
+  ('hi-IN', 'Hindi (India)'),
+  ('zh-CN', 'Chinese, Simplified (China)'),
+  ('zh-TW', 'Chinese, Traditional (Taiwan)'),
+  ('zh-HK', 'Chinese, Traditional (Hong Kong)'),
+  ('ja-JP', 'Japanese (Japan)'),
+  ('ko-KR', 'Korean (South Korea)'),
+  ('vi-VN', 'Vietnamese (Vietnam)'),
+  ('th-TH', 'Thai (Thailand)'),
+  ('id-ID', 'Indonesian (Indonesia)'),
+  ('ms-MY', 'Malay (Malaysia)')
+on conflict (locale) do nothing;
