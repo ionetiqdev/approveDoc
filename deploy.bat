@@ -61,13 +61,7 @@ if errorlevel 1 (
 :: project's folder) - everything downstream would otherwise run
 :: "successfully" against the wrong repo with no error at all.
 if not "%GITHUB_REPO_URL%"=="" (
-  echo [DIAG] About to check git remote. Current dir per cd command:
-  cd
-  echo [DIAG] Running: git config --get remote.origin.url
-  git config --get remote.origin.url
-  echo [DIAG] Direct call exit code: %errorlevel%
   for /f "delims=" %%R in ('git config --get remote.origin.url 2^>nul') do set ACTUAL_REMOTE=%%R
-  echo [DIAG] ACTUAL_REMOTE captured as: [!ACTUAL_REMOTE!]
   if not "!ACTUAL_REMOTE!"=="%GITHUB_REPO_URL%" (
     echo ERROR: WORKING_DIR's git remote does not match project.conf.
     echo   WORKING_DIR:        %WORKING_DIR%
@@ -107,14 +101,18 @@ if errorlevel 1 (
   exit /b 1
 )
 
-echo [CHECK] BUILD_TIMESTAMP.txt immediately after extraction says:
-type BUILD_TIMESTAMP.txt
-echo [CHECK] end of BUILD_TIMESTAMP.txt content
-
 :: ── Step 3: move the zip into Backup\ (gitignored) ──
 if not exist "Backup" mkdir "Backup"
 move /Y "%LATEST_ZIP%" "Backup\" >nul
-echo Moved zip to .\Backup\
+if errorlevel 1 (
+  echo WARNING: Could not move the zip into Backup\ - it may still be
+  echo open in another program (zip viewer, antivirus scan, sync
+  echo client). Extraction already happened, so this is not fatal -
+  echo but the zip wasn't archived this run. Move it manually later
+  echo if you want a record of it.
+) else (
+  echo Moved zip to .\Backup\
+)
 
 :: ── Step 4: regenerate cache-busting strings + version.js ──
 echo Regenerating cache-busting strings and version.js...
