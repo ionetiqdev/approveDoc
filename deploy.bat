@@ -24,16 +24,32 @@ setlocal ENABLEDELAYEDEXPANSION
 ::      missing.
 ::   2. Finds the newest {PROJECT_CODE}_DDMMYYYY_HHmm.zip in your
 ::      downloads folder.
-::   3. Extracts it ON TOP of this working directory (overwrite
-::      in place - files removed from the new build are NOT
-::      deleted automatically, see PROMOTE.md).
+::   3. Extracts it ON TOP of this working directory using 7-Zip
+::      (overwrite in place - files removed from the new build are
+::      NOT deleted automatically, see PROMOTE.md).
 ::   4. Moves that zip into .\Backup\ (gitignored, never pushed -
 ::      kept indefinitely, clear it out by hand if it grows large).
 ::   5. Regenerates the cache-busting query string across every
-::      .html file and writes a fresh version.js.
+::      .html file and writes a fresh version.js (via cache-bust.ps1,
+::      a standalone file - not built inline as a quoted cmd.exe
+::      string, which is fragile to escape correctly).
 ::   6. Commits using CHANGES.txt as the message, then pushes to
 ::      the branch you named.
+::
+:: Extraction uses 7-Zip (7z.exe) rather than PowerShell's
+:: Expand-Archive. Expand-Archive proved unreliable when called from
+:: inside a batch script via -Command with variable substitution -
+:: it could fail with cryptic cmd.exe parsing errors ("X was
+:: unexpected at this time") that had nothing to do with the zip or
+:: destination themselves, and were never fully root-caused despite
+:: extensive debugging. 7-Zip's command-line interface takes plain
+:: positional arguments with no equivalent quoting fragility, and is
+:: the same approach already proven reliable on other ionetiq
+:: projects (e.g. RISK). Requires 7-Zip installed at the path below -
+:: adjust ZIP_EXE if installed elsewhere.
 :: ============================================================
+
+set "ZIP_EXE=C:\Program Files\7-Zip\7z.exe"
 
 if "%~1"=="" (
   echo Usage: deploy.bat ^<branch-name^>
@@ -51,6 +67,14 @@ if "%WORKING_DIR%"=="" set WORKING_DIR=%CD%
 cd /d "%WORKING_DIR%"
 if errorlevel 1 (
   echo ERROR: Could not switch to working directory: %WORKING_DIR%
+  exit /b 1
+)
+
+if not exist "%ZIP_EXE%" (
+  echo ERROR: 7-Zip not found at %ZIP_EXE%
+  echo Install 7-Zip from https://www.7-zip.org/, or edit the
+  echo ZIP_EXE path near the top of this script if it's installed
+  echo somewhere else.
   exit /b 1
 )
 
@@ -93,25 +117,26 @@ if "%LATEST_ZIP%"=="" (
 )
 echo Using: %LATEST_ZIP%
 
-:: ── Step 2: extract on top of the working directory ──
+:: ── Step 2: extract on top of the working directory (7-Zip) ──
 echo Extracting...
-powershell -NoProfile -Command "Expand-Archive -Path '%LATEST_ZIP%' -DestinationPath '%CD%' -Force"
+"%ZIP_EXE%" x "%LATEST_ZIP%" -o"%WORKING_DIR%" -aoa -y >nul
 if errorlevel 1 (
   echo ERROR: Extraction failed.
   exit /b 1
 )
+echo Extraction complete.
 
-:: ── Step 3: move the zip into Backup\ (gitignored) ──
+:: ── Step 3: move the zip into the Backup folder (gitignored) ──
 if not exist "Backup" mkdir "Backup"
 move /Y "%LATEST_ZIP%" "Backup\" >nul
-if errorlevel 1 (
-  echo WARNING: Could not move the zip into Backup\ - it may still be
-  echo open in another program (zip viewer, antivirus scan, sync
-  echo client). Extraction already happened, so this is not fatal -
-  echo but the zip wasn't archived this run. Move it manually later
-  echo if you want a record of it.
+set MOVE_RESULT=%errorlevel%
+if "%MOVE_RESULT%"=="0" (
+  echo Moved zip to Backup folder
 ) else (
-  echo Moved zip to .\Backup\
+  echo WARNING: Could not move the zip into the Backup folder - it
+  echo may still be open in another program. Extraction already
+  echo happened, so this is not fatal, but the zip was not archived
+  echo this run. Move it manually later if you want a record of it.
 )
 
 :: ── Step 4: regenerate cache-busting strings + version.js ──
