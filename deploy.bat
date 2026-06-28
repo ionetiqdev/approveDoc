@@ -54,6 +54,31 @@ if errorlevel 1 (
   exit /b 1
 )
 
+:: Sanity check: does this folder's git remote actually match the
+:: GITHUB_REPO_URL configured for this project? Catches the case
+:: where WORKING_DIR in project.conf points at the wrong project
+:: entirely (e.g. still set to the template clone, or another
+:: project's folder) - everything downstream would otherwise run
+:: "successfully" against the wrong repo with no error at all.
+if not "%GITHUB_REPO_URL%"=="" (
+  echo [DIAG] About to check git remote. Current dir per cd command:
+  cd
+  echo [DIAG] Running: git config --get remote.origin.url
+  git config --get remote.origin.url
+  echo [DIAG] Direct call exit code: %errorlevel%
+  for /f "delims=" %%R in ('git config --get remote.origin.url 2^>nul') do set ACTUAL_REMOTE=%%R
+  echo [DIAG] ACTUAL_REMOTE captured as: [!ACTUAL_REMOTE!]
+  if not "!ACTUAL_REMOTE!"=="%GITHUB_REPO_URL%" (
+    echo ERROR: WORKING_DIR's git remote does not match project.conf.
+    echo   WORKING_DIR:        %WORKING_DIR%
+    echo   Remote here is:     !ACTUAL_REMOTE!
+    echo   project.conf expects: %GITHUB_REPO_URL%
+    echo This usually means WORKING_DIR in project.conf points at the
+    echo wrong project's folder. Fix WORKING_DIR and try again.
+    exit /b 1
+  )
+)
+
 :: ── Step 1: find the newest matching zip ──
 echo Looking for %PROJECT_CODE%_*.zip in %DOWNLOADS_DIR% ...
 
@@ -81,6 +106,10 @@ if errorlevel 1 (
   echo ERROR: Extraction failed.
   exit /b 1
 )
+
+echo [CHECK] BUILD_TIMESTAMP.txt immediately after extraction says:
+type BUILD_TIMESTAMP.txt
+echo [CHECK] end of BUILD_TIMESTAMP.txt content
 
 :: ── Step 3: move the zip into Backup\ (gitignored) ──
 if not exist "Backup" mkdir "Backup"

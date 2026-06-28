@@ -126,9 +126,12 @@ const SidebarHtml = (() => {
                   <i class="ti ti-chevron-right nav-chevron"></i>
                 </a>
                 <ul class="nav-submenu list-unstyled" id="lookupsSubmenu">
-                  <li class="nav-item"><a href="${root}pages/lookups/lookup1.html" class="nav-link"><span class="nav-link-text">Lookup 1</span></a></li>
-                  <li class="nav-item"><a href="${root}pages/lookups/lookup2.html" class="nav-link"><span class="nav-link-text">Lookup 2</span></a></li>
-                  <li class="nav-item"><a href="${root}pages/lookups/lookup3.html" class="nav-link"><span class="nav-link-text">Lookup 3</span></a></li>
+                  <li class="nav-item"><a href="${root}pages/lookups/departments.html" class="nav-link"><span class="nav-link-text">Departments</span></a></li>
+                  <li class="nav-item"><a href="${root}pages/lookups/locations.html" class="nav-link"><span class="nav-link-text">Locations</span></a></li>
+                  <li class="nav-item"><a href="${root}pages/lookups/categories.html" class="nav-link"><span class="nav-link-text">Categories</span></a></li>
+                  <li class="nav-item"><a href="${root}pages/lookups/approval-types.html" class="nav-link"><span class="nav-link-text">Approval Types</span></a></li>
+                  <li class="nav-item"><a href="${root}pages/lookups/countries.html" class="nav-link"><span class="nav-link-text">Countries</span></a></li>
+                  <li class="nav-item"><a href="${root}pages/lookups/languages.html" class="nav-link"><span class="nav-link-text">Languages</span></a></li>
                 </ul>
               </li>
             </ul>

@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="en" data-bs-theme="light" data-app-root="../../">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Locations - approveDoc</title>
+
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/core@1.4.0/dist/css/tabler.min.css" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.44.0/dist/tabler-icons.min.css" />
+  <link rel="stylesheet" href="../../assets/css/theme.css?r=r0xijbdq" />
+
+  <script>
+    (function() {
+      try {
+        var root = document.documentElement.dataset.appRoot || './';
+        var absoluteRoot = new URL(root, window.location.href).pathname;
+        var suffix = ':' + absoluteRoot;
+        var savedTheme = localStorage.getItem('app_theme');
+        var theme = savedTheme || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+        document.documentElement.setAttribute('data-bs-theme', theme);
+        var accent = localStorage.getItem('app_accent' + suffix);
+        if (accent) {
+          document.documentElement.style.setProperty('--tblr-primary', accent);
+          var ah = accent.replace('#','');
+          if (ah.length === 3) ah = ah.split('').map(function(c){return c+c;}).join('');
+          document.documentElement.style.setProperty('--tblr-primary-rgb', parseInt(ah.slice(0,2),16) + ', ' + parseInt(ah.slice(2,4),16) + ', ' + parseInt(ah.slice(4,6),16));
+        }
+        var sidebarBg = localStorage.getItem('app_sidebar_bg' + suffix);
+        if (sidebarBg) {
+          document.documentElement.style.setProperty('--bg-sidebar', sidebarBg);
+          var hex = sidebarBg.replace('#', '');
+          if (hex.length === 3) hex = hex.split('').map(function(c){return c+c;}).join('');
+          var r = parseInt(hex.slice(0,2),16) / 255, g = parseInt(hex.slice(2,4),16) / 255, b = parseInt(hex.slice(4,6),16) / 255;
+          var toLinear = function(c){ return c <= 0.03928 ? c/12.92 : Math.pow((c+0.055)/1.055, 2.4); };
+          var isLight = (0.2126*toLinear(r) + 0.7152*toLinear(g) + 0.0722*toLinear(b)) > 0.5;
+          document.documentElement.style.setProperty('--sidebar-fg', isLight ? '#0f172a' : '#ffffff');
+          document.documentElement.style.setProperty('--sidebar-fg-rgb', isLight ? '15,23,42' : '255,255,255');
+        }
+      } catch (e) {}
+    })();
+  </script>
+</head>
+<body>
+
+  <aside id="sidebar"></aside>
+  <div id="sidebarOverlay" class="sidebar-overlay"></div>
+
+  <div class="app-content-wrapper">
+
+    <header class="navbar navbar-expand-md d-print-none border-bottom">
+      <div class="container-fluid">
+        <button id="sidebarToggle" class="btn btn-icon" aria-label="Toggle sidebar" title="Toggle sidebar">
+          <i class="ti ti-menu-2"></i>
+        </button>
+        <h1 class="navbar-brand d-none d-sm-inline-block ms-2 mb-0 fs-5">Locations</h1>
+        <div class="navbar-nav flex-row order-md-last align-items-center gap-2">
+          <div data-active-organisation></div>
+          <button class="btn btn-icon" data-theme-toggle title="Toggle dark mode"><i class="ti ti-moon"></i></button>
+          <button class="btn btn-icon" id="headerPreferencesBtn" title="Preferences">
+            <i class="ti ti-adjustments"></i>
+          </button>
+          <span class="avatar avatar-sm rounded-circle bg-primary-lt" data-user-initials>?</span>
+          <span class="d-none d-xl-block">
+            <span class="d-block fw-semibold" style="font-size:.8125rem" data-user-name>—</span>
+            <span class="d-block text-secondary" style="font-size:.7rem" data-user-email>—</span>
+          </span>
+        </div>
+      </div>
+    </header>
+
+    <div class="page-body">
+      <div class="container-fluid">
+
+        <div class="card mb-3">
+          <div class="card-body py-2">
+            <div class="d-flex align-items-center gap-3 flex-wrap">
+              <div class="input-icon" style="max-width:280px">
+                <span class="input-icon-addon"><i class="ti ti-search"></i></span>
+                <input type="text" id="searchInput" class="form-control form-control-sm" placeholder="Search locations…" />
+              </div>
+              <span class="text-secondary small ms-auto" id="recordCount"></span>
+              <button class="btn btn-primary btn-sm" id="addItemBtn">
+                <i class="ti ti-plus me-1"></i>Add location
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="table-responsive">
+            <table class="table table-vcenter card-table">
+              <thead>
+                <tr>
+                  <th style="width:48px"></th>
+                  <th>Name</th>
+                  
+                  <th class="w-1"></th>
+                </tr>
+              </thead>
+              <tbody id="itemsBody">
+                <tr><td colspan="4" class="text-center py-4 text-secondary">
+                  <span class="spinner-border spinner-border-sm me-2"></span>Loading…
+                </td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <div class="modal modal-blur fade" id="itemModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="itemModalTitle">Add location</h5>
+          <button type="button" class="modal-close-btn" data-bs-dismiss="modal" aria-label="Close"><i class="ti ti-x"></i></button>
+        </div>
+        <div class="modal-body">
+          <div id="itemModalError" class="alert alert-danger d-none py-2 small mb-3"></div>
+          <input type="hidden" id="itemId" />
+
+          <div class="row g-3">
+            <div class="col-12">
+              <label class="form-label">Name <span class="text-danger">*</span></label>
+              <input type="text" id="itemName" class="form-control" placeholder="e.g. Locations" />
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn" data-bs-dismiss="modal">Cancel</button>
+          <button type="button" class="btn btn-primary" id="saveItemBtn">
+            <span id="saveItemLabel">Save</span>
+            <span id="saveItemSpinner" class="spinner-border spinner-border-sm ms-2 d-none"></span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal modal-blur fade" id="deleteModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered modal-sm">
+      <div class="modal-content">
+        <div class="modal-status bg-danger"></div>
+        <div class="modal-body text-center py-4">
+          <i class="ti ti-trash text-danger mb-2" style="font-size:2.2rem"></i>
+          <h6 class="mb-1">Delete this location?</h6>
+          <p class="text-secondary small mb-0" id="deleteItemName"></p>
+          <p class="text-danger small mt-2 mb-0">This may also affect data linked to this record.</p>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn" data-bs-dismiss="modal">Cancel</button>
+          <button type="button" class="btn btn-danger" id="confirmDeleteBtn">Delete</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@tabler/core@1.4.0/dist/js/tabler.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="../../assets/js/version.js?r=r0xijbdq"></script>
+  <script src="../../assets/js/supabase-client.js?r=r0xijbdq"></script>
+  <script src="../../assets/js/auth.js?r=r0xijbdq"></script>
+  <script src="../../assets/js/app.js?r=r0xijbdq"></script>
+  <script src="../../assets/js/theme.js?r=r0xijbdq"></script>
+  <script src="../../assets/js/sidebar-html.js?r=r0xijbdq"></script>
+  <script src="../../assets/js/sidebar.js?r=r0xijbdq"></script>
+  <script src="../../assets/js/profile-modal.js?r=r0xijbdq"></script>
+  <script>
+let itemModal, deleteModal;
+let allItems = [];
+let pendingDeleteId = null;
+
+(async () => {
+  const session = await Auth.requireAuth();
+  if (!session) return;
+  SidebarHtml.inject('../../');
+  Sidebar.init();
+  Auth.refreshUI();
+
+  if (!Auth.isAdmin()) {
+    App.toast('You do not have access to this page', 'danger');
+    window.location.href = '../../index.html';
+    return;
+  }
+
+  itemModal   = new bootstrap.Modal(document.getElementById('itemModal'));
+  deleteModal = new bootstrap.Modal(document.getElementById('deleteModal'));
+
+  await loadItems();
+
+  document.getElementById('searchInput').addEventListener('input', renderTable);
+  document.getElementById('addItemBtn').addEventListener('click', () => openModal());
+  document.getElementById('saveItemBtn').addEventListener('click', saveItem);
+  document.getElementById('confirmDeleteBtn').addEventListener('click', confirmDelete);
+  document.getElementById('itemModal').addEventListener('hidden.bs.modal', resetModal);
+})();
+
+async function loadItems() {
+  const { data, error } = await sb.from('ad_location').select('*').eq('organisation_id', Auth.getOrganisationId()).order('name');
+
+  if (error) {
+    console.error('[Locations] Load error:', error);
+    App.toast('Failed to load locations: ' + error.message, 'danger');
+    return;
+  }
+
+  allItems = data || [];
+  renderTable();
+}
+
+function renderTable() {
+  const search = (document.getElementById('searchInput').value || '').toLowerCase();
+
+  const filtered = allItems.filter(item => {
+    if (search && !item.name?.toLowerCase().includes(search)) return false;
+    return true;
+  });
+
+  document.getElementById('recordCount').textContent =
+    `${filtered.length} locations`;
+
+  const tbody = document.getElementById('itemsBody');
+
+  if (!filtered.length) {
+    tbody.innerHTML = `<tr><td colspan="4" class="text-center py-4 text-secondary">
+      <i class="ti ti-map-pin mb-1 d-block" style="font-size:1.5rem"></i>No locations found
+    </td></tr>`;
+    return;
+  }
+
+  tbody.innerHTML = filtered.map(item => {
+    const initials = (item.name || '?').split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2);
+
+    return `<tr>
+      <td><span class="avatar avatar-sm rounded-circle bg-primary-lt">${App.escHtml(initials)}</span></td>
+      <td class="fw-semibold">${App.escHtml(item.name)}</td>
+      
+      <td>
+        <div class="btn-list flex-nowrap">
+          <button class="btn btn-icon btn-sm edit-btn" data-id="${item.location_id}" title="Edit"><i class="ti ti-edit"></i></button>
+          <button class="btn btn-icon btn-sm text-danger delete-btn" data-id="${item.location_id}" data-name="${App.escHtml(item.name)}" title="Delete"><i class="ti ti-trash"></i></button>
+        </div>
+      </td>
+    </tr>`;
+  }).join('');
+
+  tbody.querySelectorAll('.edit-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const item = allItems.find(i => String(i.location_id) === btn.dataset.id);
+      if (item) openModal(item);
+    });
+  });
+
+  tbody.querySelectorAll('.delete-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      pendingDeleteId = btn.dataset.id;
+      document.getElementById('deleteItemName').textContent = btn.dataset.name;
+      deleteModal.show();
+    });
+  });
+}
+
+function openModal(item = null) {
+  resetModal();
+  if (item) {
+    document.getElementById('itemModalTitle').textContent = 'Edit location';
+    document.getElementById('saveItemLabel').textContent  = 'Update';
+    document.getElementById('itemId').value   = item.location_id;
+    document.getElementById('itemName').value = item.name || '';
+  }
+  itemModal.show();
+  setTimeout(() => document.getElementById('itemName').focus(), 300);
+}
+
+function resetModal() {
+  document.getElementById('itemModalTitle').textContent = 'Add location';
+  document.getElementById('saveItemLabel').textContent  = 'Save';
+  document.getElementById('itemModalError').classList.add('d-none');
+  document.getElementById('itemId').value   = '';
+  document.getElementById('itemName').value = '';
+}
+
+async function saveItem() {
+  const errorEl = document.getElementById('itemModalError');
+  errorEl.classList.add('d-none');
+
+  const id   = document.getElementById('itemId').value;
+  const name = document.getElementById('itemName').value.trim();
+
+  if (!name) {
+    errorEl.textContent = 'Name is required.';
+    errorEl.classList.remove('d-none');
+    return;
+  }
+
+  const payload = {
+    name: name,
+    organisation_id: Auth.getOrganisationId(),
+  };
+
+  document.getElementById('saveItemLabel').textContent = id ? 'Saving…' : 'Adding…';
+  document.getElementById('saveItemSpinner').classList.remove('d-none');
+  document.getElementById('saveItemBtn').disabled = true;
+
+  let error;
+  if (id) {
+    ({ error } = await sb.from('ad_location').update(payload).eq('location_id', id));
+  } else {
+    ({ error } = await sb.from('ad_location').insert(payload));
+  }
+
+  document.getElementById('saveItemLabel').textContent = id ? 'Update' : 'Save';
+  document.getElementById('saveItemSpinner').classList.add('d-none');
+  document.getElementById('saveItemBtn').disabled = false;
+
+  if (error) {
+    errorEl.textContent = 'Save failed: ' + (error.message || 'Unknown error');
+    errorEl.classList.remove('d-none');
+    return;
+  }
+
+  itemModal.hide();
+  App.toast(id ? 'Updated' : 'Added');
+  await loadItems();
+}
+
+async function confirmDelete() {
+  if (!pendingDeleteId) return;
+  const { error } = await sb.from('ad_location').delete().eq('location_id', pendingDeleteId);
+  deleteModal.hide();
+  if (error) { App.toast('Delete failed: ' + error.message, 'danger'); return; }
+  App.toast('Deleted');
+  pendingDeleteId = null;
+  await loadItems();
+}
+  </script>
+</body>
+</html>

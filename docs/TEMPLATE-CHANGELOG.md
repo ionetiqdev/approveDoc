@@ -25,6 +25,33 @@ the start of their bullet point - per `docs/UPDATING-PROJECTS.md`,
 these are the one category worth pulling into every live project
 regardless of how unrelated the rest of that version is.
 
+## 1.1.3 - 27 June 2026
+
+Two real bugs found the hard way on a live project, both now fixed
+at the source rather than patched per-project:
+
+- The Step 4 cache-busting/`version.js` regeneration used to be a
+  single fragile `powershell -Command "..."` line built from nested
+  quotes and `^` continuations. This could fail silently inside
+  PowerShell while `powershell.exe` itself still exited 0 - so
+  `deploy.bat`'s own `if errorlevel 1` check never caught it, and
+  `version.js` could go stale indefinitely with no error ever shown.
+  Replaced with a real standalone `cache-bust.ps1` file (no quote
+  escaping needed) called via `-File`, plus a new verification step
+  that actually reads `version.js` back afterward and confirms the
+  expected timestamp is really there - if the write fails now, you
+  get a specific, actionable error instead of silence.
+- `deploy.bat` never validated that `WORKING_DIR` in `project.conf`
+  actually pointed at the right project. A wrong value (e.g. still
+  set to the template clone's path, copy-pasted into a new project's
+  config and never corrected) meant every step ran "successfully"
+  against the wrong folder/repo - zip extraction, commit, push, all
+  silently happening somewhere other than intended, with output that
+  looked completely normal. Added a check right after `cd` into
+  `WORKING_DIR`: compares that folder's actual `git remote.origin.url`
+  against `GITHUB_REPO_URL` in the same `project.conf`, and fails
+  loudly with both values shown if they don't match.
+
 ## 1.1.2 - 27 June 2026
 
 - `docs/NEW-PROJECT.md` step 2's check now explicitly calls out
