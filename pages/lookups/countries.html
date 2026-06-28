@@ -7,7 +7,7 @@
 
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/core@1.4.0/dist/css/tabler.min.css" />
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.44.0/dist/tabler-icons.min.css" />
-  <link rel="stylesheet" href="../../assets/css/theme.css?r=laxcmphg" />
+  <link rel="stylesheet" href="../../assets/css/theme.css?r=by26h7dr" />
 
   <script>
     (function() {
@@ -39,6 +39,22 @@
       } catch (e) {}
     })();
   </script>
+
+  <style>
+    /* This page's layout is fixed to the viewport height (header +
+       toolbar + table + pager, no page-level scroll). Only the table
+       body scrolls internally, if a single page's rows ever exceed
+       the available height - normally they won't, since pagination
+       keeps each page short. */
+    html, body { height: 100%; overflow: hidden; }
+    .app-content-wrapper { height: 100vh; display: flex; flex-direction: column; }
+    .page-body { flex: 1; min-height: 0; display: flex; flex-direction: column; padding-top: 1rem; padding-bottom: 1rem; }
+    .page-body > .container-fluid { flex: 1; min-height: 0; display: flex; flex-direction: column; }
+    .countries-card { flex: 1; min-height: 0; display: flex; flex-direction: column; }
+    .countries-table-scroll { flex: 1; min-height: 0; overflow-y: auto; }
+    .flag-cell { width: 64px; }
+    .flag-cell img { width: 32px; height: 24px; border-radius: 3px; display: block; box-shadow: 0 0 0 1px rgba(0,0,0,.08); }
+  </style>
 </head>
 <body>
 
@@ -71,7 +87,7 @@
     <div class="page-body">
       <div class="container-fluid">
 
-        <div class="card mb-3">
+        <div class="card mb-3" style="flex-shrink:0">
           <div class="card-body py-2">
             <div class="d-flex align-items-center gap-3 flex-wrap">
               <div class="input-icon" style="max-width:280px">
@@ -79,89 +95,43 @@
                 <input type="text" id="searchInput" class="form-control form-control-sm" placeholder="Search countries…" />
               </div>
               <span class="text-secondary small ms-auto" id="recordCount"></span>
-              <button class="btn btn-primary btn-sm" id="addItemBtn">
-                <i class="ti ti-plus me-1"></i>Add country
-              </button>
             </div>
           </div>
         </div>
 
-        <div class="card">
-          <div class="table-responsive">
-            <table class="table table-vcenter card-table">
+        <div class="card countries-card">
+          <div class="countries-table-scroll">
+            <table class="table table-vcenter card-table mb-0">
               <thead>
                 <tr>
-                  <th style="width:40px"></th>
+                  <th class="flag-cell"></th>
                   <th>Code</th>
                   <th>Name</th>
-                  <th class="w-1"></th>
                 </tr>
               </thead>
               <tbody id="itemsBody">
-                <tr><td colspan="4" class="text-center py-4 text-secondary">
+                <tr><td colspan="3" class="text-center py-4 text-secondary">
                   <span class="spinner-border spinner-border-sm me-2"></span>Loading…
                 </td></tr>
               </tbody>
             </table>
           </div>
-        </div>
-
-      </div>
-    </div>
-  </div>
-
-  <div class="modal modal-blur fade" id="itemModal" tabindex="-1">
-    <div class="modal-dialog modal-dialog-centered">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h5 class="modal-title" id="itemModalTitle">Add country</h5>
-          <button type="button" class="modal-close-btn" data-bs-dismiss="modal" aria-label="Close"><i class="ti ti-x"></i></button>
-        </div>
-        <div class="modal-body">
-          <div id="itemModalError" class="alert alert-danger d-none py-2 small mb-3"></div>
-
-          <div class="row g-3">
-            <div class="col-md-3">
-              <label class="form-label">Code (alpha-3) <span class="text-danger">*</span></label>
-              <input type="text" id="itemCode" class="form-control" placeholder="e.g. GBR" maxlength="3" style="text-transform:uppercase" />
-              <div class="form-hint">3 letters, cannot be changed once created</div>
-            </div>
-            <div class="col-md-3">
-              <label class="form-label">Code (alpha-2)</label>
-              <input type="text" id="itemAlpha2" class="form-control" placeholder="e.g. GB" maxlength="2" style="text-transform:uppercase" />
-              <div class="form-hint">For the flag icon</div>
-            </div>
-            <div class="col-md-6">
-              <label class="form-label">Name <span class="text-danger">*</span></label>
-              <input type="text" id="itemName" class="form-control" placeholder="e.g. United Kingdom" />
+          <div class="card-footer d-flex align-items-center justify-content-between" style="flex-shrink:0">
+            <div class="text-secondary small" id="pageInfo"></div>
+            <div class="d-flex align-items-center gap-2">
+              <select id="pageSizeSelect" class="form-select form-select-sm" style="width:auto">
+                <option value="25">25 / page</option>
+                <option value="50" selected>50 / page</option>
+                <option value="100">100 / page</option>
+              </select>
+              <div class="btn-group">
+                <button class="btn btn-sm btn-icon" id="prevPageBtn" title="Previous page"><i class="ti ti-chevron-left"></i></button>
+                <button class="btn btn-sm btn-icon" id="nextPageBtn" title="Next page"><i class="ti ti-chevron-right"></i></button>
+              </div>
             </div>
           </div>
         </div>
-        <div class="modal-footer">
-          <button type="button" class="btn" data-bs-dismiss="modal">Cancel</button>
-          <button type="button" class="btn btn-primary" id="saveItemBtn">
-            <span id="saveItemLabel">Save</span>
-            <span id="saveItemSpinner" class="spinner-border spinner-border-sm ms-2 d-none"></span>
-          </button>
-        </div>
-      </div>
-    </div>
-  </div>
 
-  <div class="modal modal-blur fade" id="deleteModal" tabindex="-1">
-    <div class="modal-dialog modal-dialog-centered modal-sm">
-      <div class="modal-content">
-        <div class="modal-status bg-danger"></div>
-        <div class="modal-body text-center py-4">
-          <i class="ti ti-trash text-danger mb-2" style="font-size:2.2rem"></i>
-          <h6 class="mb-1">Delete this country?</h6>
-          <p class="text-secondary small mb-0" id="deleteItemName"></p>
-          <p class="text-danger small mt-2 mb-0">This may also affect data linked to this record.</p>
-        </div>
-        <div class="modal-footer">
-          <button type="button" class="btn" data-bs-dismiss="modal">Cancel</button>
-          <button type="button" class="btn btn-danger" id="confirmDeleteBtn">Delete</button>
-        </div>
       </div>
     </div>
   </div>
@@ -169,18 +139,24 @@
   <script src="https://cdn.jsdelivr.net/npm/@tabler/core@1.4.0/dist/js/tabler.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="../../assets/js/version.js?r=laxcmphg"></script>
-  <script src="../../assets/js/supabase-client.js?r=laxcmphg"></script>
-  <script src="../../assets/js/auth.js?r=laxcmphg"></script>
-  <script src="../../assets/js/app.js?r=laxcmphg"></script>
-  <script src="../../assets/js/theme.js?r=laxcmphg"></script>
-  <script src="../../assets/js/sidebar-html.js?r=laxcmphg"></script>
-  <script src="../../assets/js/sidebar.js?r=laxcmphg"></script>
-  <script src="../../assets/js/profile-modal.js?r=laxcmphg"></script>
+  <script src="../../assets/js/version.js?r=by26h7dr"></script>
+  <script src="../../assets/js/supabase-client.js?r=by26h7dr"></script>
+  <script src="../../assets/js/auth.js?r=by26h7dr"></script>
+  <script src="../../assets/js/app.js?r=by26h7dr"></script>
+  <script src="../../assets/js/theme.js?r=by26h7dr"></script>
+  <script src="../../assets/js/sidebar-html.js?r=by26h7dr"></script>
+  <script src="../../assets/js/sidebar.js?r=by26h7dr"></script>
+  <script src="../../assets/js/profile-modal.js?r=by26h7dr"></script>
   <script>
-let itemModal, deleteModal;
+// Countries is a fixed, view-only ISO 3166-1 reference list - no
+// add/edit/delete. Unlike the other lookup pages, this one is not
+// organisation-scoped (it's shared, global data - see
+// supabase/11-country-remove-org-scope-add-alpha2.sql), so any
+// authenticated user can view it, not just admins.
+
 let allItems = [];
-let pendingDeleteId = null;
+let currentPage = 1;
+let pageSize = 50;
 
 (async () => {
   const session = await Auth.requireAuth();
@@ -189,22 +165,16 @@ let pendingDeleteId = null;
   Sidebar.init();
   Auth.refreshUI();
 
-  if (!Auth.isAdmin()) {
-    App.toast('You do not have access to this page', 'danger');
-    window.location.href = '../../index.html';
-    return;
-  }
-
-  itemModal   = new bootstrap.Modal(document.getElementById('itemModal'));
-  deleteModal = new bootstrap.Modal(document.getElementById('deleteModal'));
-
   await loadItems();
 
-  document.getElementById('searchInput').addEventListener('input', renderTable);
-  document.getElementById('addItemBtn').addEventListener('click', () => openModal());
-  document.getElementById('saveItemBtn').addEventListener('click', saveItem);
-  document.getElementById('confirmDeleteBtn').addEventListener('click', confirmDelete);
-  document.getElementById('itemModal').addEventListener('hidden.bs.modal', resetModal);
+  document.getElementById('searchInput').addEventListener('input', () => { currentPage = 1; renderTable(); });
+  document.getElementById('pageSizeSelect').addEventListener('change', (e) => {
+    pageSize = parseInt(e.target.value, 10);
+    currentPage = 1;
+    renderTable();
+  });
+  document.getElementById('prevPageBtn').addEventListener('click', () => { currentPage--; renderTable(); });
+  document.getElementById('nextPageBtn').addEventListener('click', () => { currentPage++; renderTable(); });
 })();
 
 async function loadItems() {
@@ -220,149 +190,50 @@ async function loadItems() {
   renderTable();
 }
 
-function renderTable() {
+function getFiltered() {
   const search = (document.getElementById('searchInput').value || '').toLowerCase();
-
-  const filtered = allItems.filter(item => {
+  return allItems.filter(item => {
     if (search && !item.name?.toLowerCase().includes(search) && !item.country_code?.toLowerCase().includes(search)) return false;
     return true;
   });
+}
 
-  document.getElementById('recordCount').textContent =
-    `${filtered.length} countries`;
+function renderTable() {
+  const filtered = getFiltered();
+  const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize));
+  currentPage = Math.min(Math.max(1, currentPage), totalPages);
+
+  const start = (currentPage - 1) * pageSize;
+  const pageItems = filtered.slice(start, start + pageSize);
+
+  document.getElementById('recordCount').textContent = `${filtered.length} countries`;
+  document.getElementById('pageInfo').textContent = filtered.length
+    ? `Showing ${start + 1}-${Math.min(start + pageSize, filtered.length)} of ${filtered.length}`
+    : 'No results';
+
+  document.getElementById('prevPageBtn').disabled = currentPage <= 1;
+  document.getElementById('nextPageBtn').disabled = currentPage >= totalPages;
 
   const tbody = document.getElementById('itemsBody');
 
-  if (!filtered.length) {
-    tbody.innerHTML = `<tr><td colspan="4" class="text-center py-4 text-secondary">
+  if (!pageItems.length) {
+    tbody.innerHTML = `<tr><td colspan="3" class="text-center py-4 text-secondary">
       <i class="ti ti-world mb-1 d-block" style="font-size:1.5rem"></i>No countries found
     </td></tr>`;
     return;
   }
 
-  tbody.innerHTML = filtered.map(item => {
+  tbody.innerHTML = pageItems.map(item => {
+    const flag = item.alpha2
+      ? `<img src="https://flagcdn.com/32x24/${item.alpha2.toLowerCase()}.png" alt="" onerror="this.style.visibility='hidden'">`
+      : `<span class="avatar avatar-sm rounded-circle bg-secondary-lt" style="font-size:.6rem">?</span>`;
+
     return `<tr>
-      <td>${item.alpha2
-          ? `<img src="https://flagcdn.com/24x18/${item.alpha2.toLowerCase()}.png" width="24" height="18" alt="" style="border-radius:2px;display:block" onerror="this.style.visibility='hidden'">`
-          : `<span class="avatar avatar-sm rounded-circle bg-secondary-lt" style="font-size:.6rem">?</span>`
-        }</td>
+      <td class="flag-cell">${flag}</td>
       <td><span class="badge bg-secondary-lt">${App.escHtml(item.country_code)}</span></td>
       <td class="fw-semibold">${App.escHtml(item.name)}</td>
-      <td>
-        <div class="btn-list flex-nowrap">
-          <button class="btn btn-icon btn-sm edit-btn" data-id="${item.country_code}" title="Edit"><i class="ti ti-edit"></i></button>
-          <button class="btn btn-icon btn-sm text-danger delete-btn" data-id="${item.country_code}" data-name="${App.escHtml(item.name)}" title="Delete"><i class="ti ti-trash"></i></button>
-        </div>
-      </td>
     </tr>`;
   }).join('');
-
-  tbody.querySelectorAll('.edit-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
-      const item = allItems.find(i => i.country_code === btn.dataset.id);
-      if (item) openModal(item);
-    });
-  });
-
-  tbody.querySelectorAll('.delete-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
-      pendingDeleteId = btn.dataset.id;
-      document.getElementById('deleteItemName').textContent = btn.dataset.name;
-      deleteModal.show();
-    });
-  });
-}
-
-function openModal(item = null) {
-  resetModal();
-  if (item) {
-    document.getElementById('itemModalTitle').textContent = 'Edit country';
-    document.getElementById('saveItemLabel').textContent  = 'Update';
-    document.getElementById('itemCode').value = item.country_code;
-    document.getElementById('itemCode').disabled = true;
-    document.getElementById('itemName').value = item.name || '';
-    document.getElementById('itemAlpha2').value = item.alpha2 || '';
-  }
-  itemModal.show();
-  setTimeout(() => document.getElementById('itemName').focus(), 300);
-}
-
-function resetModal() {
-  document.getElementById('itemModalTitle').textContent = 'Add country';
-  document.getElementById('saveItemLabel').textContent  = 'Save';
-  document.getElementById('itemModalError').classList.add('d-none');
-  document.getElementById('itemCode').value = '';
-  document.getElementById('itemCode').disabled = false;
-  document.getElementById('itemName').value = '';
-  document.getElementById('itemAlpha2').value = '';
-}
-
-async function saveItem() {
-  const errorEl = document.getElementById('itemModalError');
-  errorEl.classList.add('d-none');
-
-  const isEdit = document.getElementById('itemCode').disabled;
-  const code = document.getElementById('itemCode').value.trim().toUpperCase();
-  const name = document.getElementById('itemName').value.trim();
-  const alpha2Raw = document.getElementById('itemAlpha2').value.trim().toUpperCase();
-  const alpha2 = alpha2Raw || null;
-
-  if (!code || code.length !== 3) {
-    errorEl.textContent = 'Code must be exactly 3 letters (ISO 3166-1 alpha-3).';
-    errorEl.classList.remove('d-none');
-    return;
-  }
-  if (alpha2Raw && alpha2Raw.length !== 2) {
-    errorEl.textContent = 'Alpha-2 code must be exactly 2 letters, or left blank.';
-    errorEl.classList.remove('d-none');
-    return;
-  }
-  if (!name) {
-    errorEl.textContent = 'Name is required.';
-    errorEl.classList.remove('d-none');
-    return;
-  }
-
-  const payload = {
-    country_code: code,
-    name: name,
-    alpha2: alpha2,
-  };
-
-  document.getElementById('saveItemLabel').textContent = isEdit ? 'Saving…' : 'Adding…';
-  document.getElementById('saveItemSpinner').classList.remove('d-none');
-  document.getElementById('saveItemBtn').disabled = true;
-
-  let error;
-  if (isEdit) {
-    ({ error } = await sb.from('ad_country').update({ name, alpha2 }).eq('country_code', code));
-  } else {
-    ({ error } = await sb.from('ad_country').insert(payload));
-  }
-
-  document.getElementById('saveItemLabel').textContent = isEdit ? 'Update' : 'Save';
-  document.getElementById('saveItemSpinner').classList.add('d-none');
-  document.getElementById('saveItemBtn').disabled = false;
-
-  if (error) {
-    errorEl.textContent = 'Save failed: ' + (error.message || 'Unknown error');
-    errorEl.classList.remove('d-none');
-    return;
-  }
-
-  itemModal.hide();
-  App.toast(isEdit ? 'Updated' : 'Added');
-  await loadItems();
-}
-
-async function confirmDelete() {
-  if (!pendingDeleteId) return;
-  const { error } = await sb.from('ad_country').delete().eq('country_code', pendingDeleteId);
-  deleteModal.hide();
-  if (error) { App.toast('Delete failed: ' + error.message, 'danger'); return; }
-  App.toast('Deleted');
-  pendingDeleteId = null;
-  await loadItems();
 }
   </script>
 </body>

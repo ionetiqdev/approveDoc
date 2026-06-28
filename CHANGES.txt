@@ -1,1 +1,1 @@
-Remove org-scoping from ad_country, add alpha2 flag column, fix .gitignore
+Make Countries view-only with larger flags; full-height tables with pagination for all lookup pages

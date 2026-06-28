@@ -7,7 +7,7 @@
 
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/core@1.4.0/dist/css/tabler.min.css" />
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.44.0/dist/tabler-icons.min.css" />
-  <link rel="stylesheet" href="../../assets/css/theme.css?r=laxcmphg" />
+  <link rel="stylesheet" href="../../assets/css/theme.css?r=by26h7dr" />
 
   <script>
     (function() {
@@ -39,6 +39,15 @@
       } catch (e) {}
     })();
   </script>
+
+  <style>
+    html, body { height: 100%; overflow: hidden; }
+    .app-content-wrapper { height: 100vh; display: flex; flex-direction: column; }
+    .page-body { flex: 1; min-height: 0; display: flex; flex-direction: column; padding-top: 1rem; padding-bottom: 1rem; }
+    .page-body > .container-fluid { flex: 1; min-height: 0; display: flex; flex-direction: column; }
+    .lookup-card { flex: 1; min-height: 0; display: flex; flex-direction: column; }
+    .lookup-table-scroll { flex: 1; min-height: 0; overflow-y: auto; }
+  </style>
 </head>
 <body>
 
@@ -71,7 +80,7 @@
     <div class="page-body">
       <div class="container-fluid">
 
-        <div class="card mb-3">
+        <div class="card mb-3" style="flex-shrink:0">
           <div class="card-body py-2">
             <div class="d-flex align-items-center gap-3 flex-wrap">
               <div class="input-icon" style="max-width:280px">
@@ -86,9 +95,9 @@
           </div>
         </div>
 
-        <div class="card">
-          <div class="table-responsive">
-            <table class="table table-vcenter card-table">
+        <div class="card lookup-card">
+          <div class="lookup-table-scroll">
+            <table class="table table-vcenter card-table mb-0">
               <thead>
                 <tr>
                   <th style="width:48px"></th>
@@ -103,6 +112,20 @@
                 </td></tr>
               </tbody>
             </table>
+          </div>
+          <div class="card-footer d-flex align-items-center justify-content-between" style="flex-shrink:0">
+            <div class="text-secondary small" id="pageInfo"></div>
+            <div class="d-flex align-items-center gap-2">
+              <select id="pageSizeSelect" class="form-select form-select-sm" style="width:auto">
+                <option value="10">10 / page</option>
+                <option value="25" selected>25 / page</option>
+                <option value="50">50 / page</option>
+              </select>
+              <div class="btn-group">
+                <button class="btn btn-sm btn-icon" id="prevPageBtn" title="Previous page"><i class="ti ti-chevron-left"></i></button>
+                <button class="btn btn-sm btn-icon" id="nextPageBtn" title="Next page"><i class="ti ti-chevron-right"></i></button>
+              </div>
+            </div>
           </div>
         </div>
 
@@ -160,18 +183,20 @@
   <script src="https://cdn.jsdelivr.net/npm/@tabler/core@1.4.0/dist/js/tabler.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="../../assets/js/version.js?r=laxcmphg"></script>
-  <script src="../../assets/js/supabase-client.js?r=laxcmphg"></script>
-  <script src="../../assets/js/auth.js?r=laxcmphg"></script>
-  <script src="../../assets/js/app.js?r=laxcmphg"></script>
-  <script src="../../assets/js/theme.js?r=laxcmphg"></script>
-  <script src="../../assets/js/sidebar-html.js?r=laxcmphg"></script>
-  <script src="../../assets/js/sidebar.js?r=laxcmphg"></script>
-  <script src="../../assets/js/profile-modal.js?r=laxcmphg"></script>
+  <script src="../../assets/js/version.js?r=by26h7dr"></script>
+  <script src="../../assets/js/supabase-client.js?r=by26h7dr"></script>
+  <script src="../../assets/js/auth.js?r=by26h7dr"></script>
+  <script src="../../assets/js/app.js?r=by26h7dr"></script>
+  <script src="../../assets/js/theme.js?r=by26h7dr"></script>
+  <script src="../../assets/js/sidebar-html.js?r=by26h7dr"></script>
+  <script src="../../assets/js/sidebar.js?r=by26h7dr"></script>
+  <script src="../../assets/js/profile-modal.js?r=by26h7dr"></script>
   <script>
 let itemModal, deleteModal;
 let allItems = [];
 let pendingDeleteId = null;
+let currentPage = 1;
+let pageSize = 25;
 
 (async () => {
   const session = await Auth.requireAuth();
@@ -191,7 +216,14 @@ let pendingDeleteId = null;
 
   await loadItems();
 
-  document.getElementById('searchInput').addEventListener('input', renderTable);
+  document.getElementById('searchInput').addEventListener('input', () => { currentPage = 1; renderTable(); });
+  document.getElementById('pageSizeSelect').addEventListener('change', (e) => {
+    pageSize = parseInt(e.target.value, 10);
+    currentPage = 1;
+    renderTable();
+  });
+  document.getElementById('prevPageBtn').addEventListener('click', () => { currentPage--; renderTable(); });
+  document.getElementById('nextPageBtn').addEventListener('click', () => { currentPage++; renderTable(); });
   document.getElementById('addItemBtn').addEventListener('click', () => openModal());
   document.getElementById('saveItemBtn').addEventListener('click', saveItem);
   document.getElementById('confirmDeleteBtn').addEventListener('click', confirmDelete);
@@ -219,19 +251,29 @@ function renderTable() {
     return true;
   });
 
+  const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize));
+  currentPage = Math.min(Math.max(1, currentPage), totalPages);
+  const start = (currentPage - 1) * pageSize;
+  const pageItems = filtered.slice(start, start + pageSize);
+
   document.getElementById('recordCount').textContent =
     `${filtered.length} locations`;
+  document.getElementById('pageInfo').textContent = filtered.length
+    ? `Showing ${start + 1}-${Math.min(start + pageSize, filtered.length)} of ${filtered.length}`
+    : 'No results';
+  document.getElementById('prevPageBtn').disabled = currentPage <= 1;
+  document.getElementById('nextPageBtn').disabled = currentPage >= totalPages;
 
   const tbody = document.getElementById('itemsBody');
 
-  if (!filtered.length) {
+  if (!pageItems.length) {
     tbody.innerHTML = `<tr><td colspan="4" class="text-center py-4 text-secondary">
       <i class="ti ti-map-pin mb-1 d-block" style="font-size:1.5rem"></i>No locations found
     </td></tr>`;
     return;
   }
 
-  tbody.innerHTML = filtered.map(item => {
+  tbody.innerHTML = pageItems.map(item => {
     const initials = (item.name || '?').split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2);
 
     return `<tr>
