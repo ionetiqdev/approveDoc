@@ -7,7 +7,7 @@
 
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/core@1.4.0/dist/css/tabler.min.css" />
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.44.0/dist/tabler-icons.min.css" />
-  <link rel="stylesheet" href="../../assets/css/theme.css?r=by26h7dr" />
+  <link rel="stylesheet" href="../../assets/css/theme.css?r=ug85nma7" />
 
   <script>
     (function() {
@@ -41,17 +41,15 @@
   </script>
 
   <style>
-    /* This page's layout is fixed to the viewport height (header +
-       toolbar + table + pager, no page-level scroll). Only the table
-       body scrolls internally, if a single page's rows ever exceed
-       the available height - normally they won't, since pagination
-       keeps each page short. */
+    /* Fixed to the viewport height (header + toolbar + table + pager,
+       no page-level scroll). Only the table body scrolls internally
+       if a single page's rows ever exceed available height. */
     html, body { height: 100%; overflow: hidden; }
     .app-content-wrapper { height: 100vh; display: flex; flex-direction: column; }
     .page-body { flex: 1; min-height: 0; display: flex; flex-direction: column; padding-top: 1rem; padding-bottom: 1rem; }
     .page-body > .container-fluid { flex: 1; min-height: 0; display: flex; flex-direction: column; }
-    .countries-card { flex: 1; min-height: 0; display: flex; flex-direction: column; }
-    .countries-table-scroll { flex: 1; min-height: 0; overflow-y: auto; }
+    .lookup-card { flex: 1; min-height: 0; display: flex; flex-direction: column; }
+    .lookup-table-scroll { flex: 1; min-height: 0; overflow-y: auto; }
     .flag-cell { width: 64px; }
     .flag-cell img { width: 32px; height: 24px; border-radius: 3px; display: block; box-shadow: 0 0 0 1px rgba(0,0,0,.08); }
   </style>
@@ -87,21 +85,22 @@
     <div class="page-body">
       <div class="container-fluid">
 
-        <div class="card mb-3" style="flex-shrink:0">
-          <div class="card-body py-2">
-            <div class="d-flex align-items-center gap-3 flex-wrap">
-              <div class="input-icon" style="max-width:280px">
-                <span class="input-icon-addon"><i class="ti ti-search"></i></span>
-                <input type="text" id="searchInput" class="form-control form-control-sm" placeholder="Search countries…" />
-              </div>
-              <span class="text-secondary small ms-auto" id="recordCount"></span>
+        <div class="card lookup-card">
+          <div class="card-header">
+            <div class="d-flex align-items-center gap-2">
+              <span>Show</span>
+              <select id="pageSizeSelect" class="form-select form-select-sm" style="width:auto">
+                <option value="25">25</option>
+                <option value="50" selected>50</option>
+                <option value="100">100</option>
+              </select>
+              <span>entries</span>
             </div>
+            <div class="ms-auto text-secondary me-2">Search:</div>
+            <input type="text" id="searchInput" class="form-control form-control-sm" style="max-width:200px" />
           </div>
-        </div>
-
-        <div class="card countries-card">
-          <div class="countries-table-scroll">
-            <table class="table table-vcenter card-table mb-0">
+          <div class="lookup-table-scroll">
+            <table class="table table-vcenter card-table table-hover">
               <thead>
                 <tr>
                   <th class="flag-cell"></th>
@@ -116,19 +115,9 @@
               </tbody>
             </table>
           </div>
-          <div class="card-footer d-flex align-items-center justify-content-between" style="flex-shrink:0">
-            <div class="text-secondary small" id="pageInfo"></div>
-            <div class="d-flex align-items-center gap-2">
-              <select id="pageSizeSelect" class="form-select form-select-sm" style="width:auto">
-                <option value="25">25 / page</option>
-                <option value="50" selected>50 / page</option>
-                <option value="100">100 / page</option>
-              </select>
-              <div class="btn-group">
-                <button class="btn btn-sm btn-icon" id="prevPageBtn" title="Previous page"><i class="ti ti-chevron-left"></i></button>
-                <button class="btn btn-sm btn-icon" id="nextPageBtn" title="Next page"><i class="ti ti-chevron-right"></i></button>
-              </div>
-            </div>
+          <div class="card-footer d-flex align-items-center" style="flex-shrink:0">
+            <p class="m-0 text-secondary" id="pageInfo"></p>
+            <ul class="pagination m-0 ms-auto" id="pagerList"></ul>
           </div>
         </div>
 
@@ -139,14 +128,14 @@
   <script src="https://cdn.jsdelivr.net/npm/@tabler/core@1.4.0/dist/js/tabler.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="../../assets/js/version.js?r=by26h7dr"></script>
-  <script src="../../assets/js/supabase-client.js?r=by26h7dr"></script>
-  <script src="../../assets/js/auth.js?r=by26h7dr"></script>
-  <script src="../../assets/js/app.js?r=by26h7dr"></script>
-  <script src="../../assets/js/theme.js?r=by26h7dr"></script>
-  <script src="../../assets/js/sidebar-html.js?r=by26h7dr"></script>
-  <script src="../../assets/js/sidebar.js?r=by26h7dr"></script>
-  <script src="../../assets/js/profile-modal.js?r=by26h7dr"></script>
+  <script src="../../assets/js/version.js?r=ug85nma7"></script>
+  <script src="../../assets/js/supabase-client.js?r=ug85nma7"></script>
+  <script src="../../assets/js/auth.js?r=ug85nma7"></script>
+  <script src="../../assets/js/app.js?r=ug85nma7"></script>
+  <script src="../../assets/js/theme.js?r=ug85nma7"></script>
+  <script src="../../assets/js/sidebar-html.js?r=ug85nma7"></script>
+  <script src="../../assets/js/sidebar.js?r=ug85nma7"></script>
+  <script src="../../assets/js/profile-modal.js?r=ug85nma7"></script>
   <script>
 // Countries is a fixed, view-only ISO 3166-1 reference list - no
 // add/edit/delete. Unlike the other lookup pages, this one is not
@@ -173,8 +162,6 @@ let pageSize = 50;
     currentPage = 1;
     renderTable();
   });
-  document.getElementById('prevPageBtn').addEventListener('click', () => { currentPage--; renderTable(); });
-  document.getElementById('nextPageBtn').addEventListener('click', () => { currentPage++; renderTable(); });
 })();
 
 async function loadItems() {
@@ -198,6 +185,48 @@ function getFiltered() {
   });
 }
 
+// Builds a Tabler-style <ul class="pagination"> with prev/next arrows
+// and up to 5 numbered page links, matching the standard Tabler
+// pagination component (see preview.tabler.io/pagination.html).
+function renderPager(totalPages) {
+  const pagerList = document.getElementById('pagerList');
+  const items = [];
+
+  items.push(`<li class="page-item ${currentPage <= 1 ? 'disabled' : ''}">
+    <a class="page-link" href="#" data-page="${currentPage - 1}" aria-label="Previous">
+      <i class="ti ti-chevron-left"></i> prev
+    </a>
+  </li>`);
+
+  let start = Math.max(1, currentPage - 2);
+  let end = Math.min(totalPages, start + 4);
+  start = Math.max(1, end - 4);
+
+  for (let p = start; p <= end; p++) {
+    items.push(`<li class="page-item ${p === currentPage ? 'active' : ''}">
+      <a class="page-link" href="#" data-page="${p}">${p}</a>
+    </li>`);
+  }
+
+  items.push(`<li class="page-item ${currentPage >= totalPages ? 'disabled' : ''}">
+    <a class="page-link" href="#" data-page="${currentPage + 1}" aria-label="Next">
+      next <i class="ti ti-chevron-right"></i>
+    </a>
+  </li>`);
+
+  pagerList.innerHTML = items.join('');
+
+  pagerList.querySelectorAll('a[data-page]').forEach(a => {
+    a.addEventListener('click', (e) => {
+      e.preventDefault();
+      const page = parseInt(a.dataset.page, 10);
+      if (page < 1 || page > totalPages || page === currentPage) return;
+      currentPage = page;
+      renderTable();
+    });
+  });
+}
+
 function renderTable() {
   const filtered = getFiltered();
   const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize));
@@ -206,13 +235,11 @@ function renderTable() {
   const start = (currentPage - 1) * pageSize;
   const pageItems = filtered.slice(start, start + pageSize);
 
-  document.getElementById('recordCount').textContent = `${filtered.length} countries`;
   document.getElementById('pageInfo').textContent = filtered.length
-    ? `Showing ${start + 1}-${Math.min(start + pageSize, filtered.length)} of ${filtered.length}`
-    : 'No results';
+    ? `Showing ${start + 1} to ${Math.min(start + pageSize, filtered.length)} of ${filtered.length} entries`
+    : 'No matching entries found';
 
-  document.getElementById('prevPageBtn').disabled = currentPage <= 1;
-  document.getElementById('nextPageBtn').disabled = currentPage >= totalPages;
+  renderPager(totalPages);
 
   const tbody = document.getElementById('itemsBody');
 

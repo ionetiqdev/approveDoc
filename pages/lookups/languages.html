@@ -7,7 +7,7 @@
 
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/core@1.4.0/dist/css/tabler.min.css" />
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.44.0/dist/tabler-icons.min.css" />
-  <link rel="stylesheet" href="../../assets/css/theme.css?r=by26h7dr" />
+  <link rel="stylesheet" href="../../assets/css/theme.css?r=ug85nma7" />
 
   <script>
     (function() {
@@ -39,6 +39,15 @@
       } catch (e) {}
     })();
   </script>
+
+  <style>
+    html, body { height: 100%; overflow: hidden; }
+    .app-content-wrapper { height: 100vh; display: flex; flex-direction: column; }
+    .page-body { flex: 1; min-height: 0; display: flex; flex-direction: column; padding-top: 1rem; padding-bottom: 1rem; }
+    .page-body > .container-fluid { flex: 1; min-height: 0; display: flex; flex-direction: column; }
+    .lookup-card { flex: 1; min-height: 0; display: flex; flex-direction: column; }
+    .lookup-table-scroll { flex: 1; min-height: 0; overflow-y: auto; }
+  </style>
 </head>
 <body>
 
@@ -71,92 +80,42 @@
     <div class="page-body">
       <div class="container-fluid">
 
-        <div class="card mb-3">
-          <div class="card-body py-2">
-            <div class="d-flex align-items-center gap-3 flex-wrap">
-              <div class="input-icon" style="max-width:280px">
-                <span class="input-icon-addon"><i class="ti ti-search"></i></span>
-                <input type="text" id="searchInput" class="form-control form-control-sm" placeholder="Search languages…" />
-              </div>
-              <span class="text-secondary small ms-auto" id="recordCount"></span>
-              <button class="btn btn-primary btn-sm" id="addItemBtn">
-                <i class="ti ti-plus me-1"></i>Add language
-              </button>
+        <div class="card lookup-card">
+          <div class="card-header">
+            <div class="d-flex align-items-center gap-2">
+              <span>Show</span>
+              <select id="pageSizeSelect" class="form-select form-select-sm" style="width:auto">
+                <option value="25" selected>25</option>
+                <option value="50">50</option>
+                <option value="100">100</option>
+              </select>
+              <span>entries</span>
             </div>
+            <div class="ms-auto text-secondary me-2">Search:</div>
+            <input type="text" id="searchInput" class="form-control form-control-sm" style="max-width:200px" />
           </div>
-        </div>
-
-        <div class="card">
-          <div class="table-responsive">
-            <table class="table table-vcenter card-table">
+          <div class="lookup-table-scroll">
+            <table class="table table-vcenter card-table table-hover">
               <thead>
                 <tr>
                   <th style="width:48px"></th>
                   <th>Locale</th>
                   <th>Name</th>
-                  <th class="w-1"></th>
                 </tr>
               </thead>
               <tbody id="itemsBody">
-                <tr><td colspan="4" class="text-center py-4 text-secondary">
+                <tr><td colspan="3" class="text-center py-4 text-secondary">
                   <span class="spinner-border spinner-border-sm me-2"></span>Loading…
                 </td></tr>
               </tbody>
             </table>
           </div>
-        </div>
-
-      </div>
-    </div>
-  </div>
-
-  <div class="modal modal-blur fade" id="itemModal" tabindex="-1">
-    <div class="modal-dialog modal-dialog-centered">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h5 class="modal-title" id="itemModalTitle">Add language</h5>
-          <button type="button" class="modal-close-btn" data-bs-dismiss="modal" aria-label="Close"><i class="ti ti-x"></i></button>
-        </div>
-        <div class="modal-body">
-          <div id="itemModalError" class="alert alert-danger d-none py-2 small mb-3"></div>
-
-          <div class="row g-3">
-            <div class="col-md-4">
-              <label class="form-label">Locale <span class="text-danger">*</span></label>
-              <input type="text" id="itemCode" class="form-control" placeholder="e.g. en-GB" maxlength="5" />
-              <div class="form-hint">Up to 5 chars, cannot be changed once created</div>
-            </div>
-            <div class="col-md-8">
-              <label class="form-label">Name <span class="text-danger">*</span></label>
-              <input type="text" id="itemName" class="form-control" placeholder="e.g. English (United Kingdom)" />
-            </div>
+          <div class="card-footer d-flex align-items-center" style="flex-shrink:0">
+            <p class="m-0 text-secondary" id="pageInfo"></p>
+            <ul class="pagination m-0 ms-auto" id="pagerList"></ul>
           </div>
         </div>
-        <div class="modal-footer">
-          <button type="button" class="btn" data-bs-dismiss="modal">Cancel</button>
-          <button type="button" class="btn btn-primary" id="saveItemBtn">
-            <span id="saveItemLabel">Save</span>
-            <span id="saveItemSpinner" class="spinner-border spinner-border-sm ms-2 d-none"></span>
-          </button>
-        </div>
-      </div>
-    </div>
-  </div>
 
-  <div class="modal modal-blur fade" id="deleteModal" tabindex="-1">
-    <div class="modal-dialog modal-dialog-centered modal-sm">
-      <div class="modal-content">
-        <div class="modal-status bg-danger"></div>
-        <div class="modal-body text-center py-4">
-          <i class="ti ti-trash text-danger mb-2" style="font-size:2.2rem"></i>
-          <h6 class="mb-1">Delete this language?</h6>
-          <p class="text-secondary small mb-0" id="deleteItemName"></p>
-          <p class="text-danger small mt-2 mb-0">This may also affect data linked to this record.</p>
-        </div>
-        <div class="modal-footer">
-          <button type="button" class="btn" data-bs-dismiss="modal">Cancel</button>
-          <button type="button" class="btn btn-danger" id="confirmDeleteBtn">Delete</button>
-        </div>
       </div>
     </div>
   </div>
@@ -164,18 +123,23 @@
   <script src="https://cdn.jsdelivr.net/npm/@tabler/core@1.4.0/dist/js/tabler.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="../../assets/js/version.js?r=by26h7dr"></script>
-  <script src="../../assets/js/supabase-client.js?r=by26h7dr"></script>
-  <script src="../../assets/js/auth.js?r=by26h7dr"></script>
-  <script src="../../assets/js/app.js?r=by26h7dr"></script>
-  <script src="../../assets/js/theme.js?r=by26h7dr"></script>
-  <script src="../../assets/js/sidebar-html.js?r=by26h7dr"></script>
-  <script src="../../assets/js/sidebar.js?r=by26h7dr"></script>
-  <script src="../../assets/js/profile-modal.js?r=by26h7dr"></script>
+  <script src="../../assets/js/version.js?r=ug85nma7"></script>
+  <script src="../../assets/js/supabase-client.js?r=ug85nma7"></script>
+  <script src="../../assets/js/auth.js?r=ug85nma7"></script>
+  <script src="../../assets/js/app.js?r=ug85nma7"></script>
+  <script src="../../assets/js/theme.js?r=ug85nma7"></script>
+  <script src="../../assets/js/sidebar-html.js?r=ug85nma7"></script>
+  <script src="../../assets/js/sidebar.js?r=ug85nma7"></script>
+  <script src="../../assets/js/profile-modal.js?r=ug85nma7"></script>
   <script>
-let itemModal, deleteModal;
+// Languages is a fixed, view-only locale reference list - no
+// add/edit/delete, same reasoning as Countries: this is shared,
+// global data with no organisation_id, not something to edit
+// per-org. Any authenticated user can view it.
+
 let allItems = [];
-let pendingDeleteId = null;
+let currentPage = 1;
+let pageSize = 25;
 
 (async () => {
   const session = await Auth.requireAuth();
@@ -184,28 +148,17 @@ let pendingDeleteId = null;
   Sidebar.init();
   Auth.refreshUI();
 
-  if (!Auth.isAdmin()) {
-    App.toast('You do not have access to this page', 'danger');
-    window.location.href = '../../index.html';
-    return;
-  }
-
-  itemModal   = new bootstrap.Modal(document.getElementById('itemModal'));
-  deleteModal = new bootstrap.Modal(document.getElementById('deleteModal'));
-
   await loadItems();
 
-  document.getElementById('searchInput').addEventListener('input', renderTable);
-  document.getElementById('addItemBtn').addEventListener('click', () => openModal());
-  document.getElementById('saveItemBtn').addEventListener('click', saveItem);
-  document.getElementById('confirmDeleteBtn').addEventListener('click', confirmDelete);
-  document.getElementById('itemModal').addEventListener('hidden.bs.modal', resetModal);
+  document.getElementById('searchInput').addEventListener('input', () => { currentPage = 1; renderTable(); });
+  document.getElementById('pageSizeSelect').addEventListener('change', (e) => {
+    pageSize = parseInt(e.target.value, 10);
+    currentPage = 1;
+    renderTable();
+  });
 })();
 
 async function loadItems() {
-  // ad_language is a shared, global lookup - not organisation-scoped,
-  // so no .eq('organisation_id', ...) filter here. Any authenticated
-  // admin/super_admin can manage it; see APPROVEDOC_SCHEMA.md.
   const { data, error } = await sb.from('ad_language').select('*').order('name');
 
   if (error) {
@@ -218,131 +171,83 @@ async function loadItems() {
   renderTable();
 }
 
-function renderTable() {
+function getFiltered() {
   const search = (document.getElementById('searchInput').value || '').toLowerCase();
-
-  const filtered = allItems.filter(item => {
+  return allItems.filter(item => {
     if (search && !item.name?.toLowerCase().includes(search) && !item.locale?.toLowerCase().includes(search)) return false;
     return true;
   });
+}
 
-  document.getElementById('recordCount').textContent =
-    `${filtered.length} languages`;
+function renderPager(totalPages) {
+  const pagerList = document.getElementById('pagerList');
+  const items = [];
+
+  items.push(`<li class="page-item ${currentPage <= 1 ? 'disabled' : ''}">
+    <a class="page-link" href="#" data-page="${currentPage - 1}" aria-label="Previous">
+      <i class="ti ti-chevron-left"></i> prev
+    </a>
+  </li>`);
+
+  let start = Math.max(1, currentPage - 2);
+  let end = Math.min(totalPages, start + 4);
+  start = Math.max(1, end - 4);
+
+  for (let p = start; p <= end; p++) {
+    items.push(`<li class="page-item ${p === currentPage ? 'active' : ''}">
+      <a class="page-link" href="#" data-page="${p}">${p}</a>
+    </li>`);
+  }
+
+  items.push(`<li class="page-item ${currentPage >= totalPages ? 'disabled' : ''}">
+    <a class="page-link" href="#" data-page="${currentPage + 1}" aria-label="Next">
+      next <i class="ti ti-chevron-right"></i>
+    </a>
+  </li>`);
+
+  pagerList.innerHTML = items.join('');
+
+  pagerList.querySelectorAll('a[data-page]').forEach(a => {
+    a.addEventListener('click', (e) => {
+      e.preventDefault();
+      const page = parseInt(a.dataset.page, 10);
+      if (page < 1 || page > totalPages || page === currentPage) return;
+      currentPage = page;
+      renderTable();
+    });
+  });
+}
+
+function renderTable() {
+  const filtered = getFiltered();
+  const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize));
+  currentPage = Math.min(Math.max(1, currentPage), totalPages);
+
+  const start = (currentPage - 1) * pageSize;
+  const pageItems = filtered.slice(start, start + pageSize);
+
+  document.getElementById('pageInfo').textContent = filtered.length
+    ? `Showing ${start + 1} to ${Math.min(start + pageSize, filtered.length)} of ${filtered.length} entries`
+    : 'No matching entries found';
+
+  renderPager(totalPages);
 
   const tbody = document.getElementById('itemsBody');
 
-  if (!filtered.length) {
-    tbody.innerHTML = `<tr><td colspan="4" class="text-center py-4 text-secondary">
+  if (!pageItems.length) {
+    tbody.innerHTML = `<tr><td colspan="3" class="text-center py-4 text-secondary">
       <i class="ti ti-language mb-1 d-block" style="font-size:1.5rem"></i>No languages found
     </td></tr>`;
     return;
   }
 
-  tbody.innerHTML = filtered.map(item => {
+  tbody.innerHTML = pageItems.map(item => {
     return `<tr>
-      <td><span class="avatar avatar-sm rounded-circle bg-primary-lt" style="font-size:.65rem">${App.escHtml(item.locale)}</span></td>
+      <td><span class="avatar avatar-sm rounded-circle bg-primary-lt" style="font-size:.6rem">${App.escHtml(item.locale)}</span></td>
       <td><span class="badge bg-secondary-lt">${App.escHtml(item.locale)}</span></td>
       <td class="fw-semibold">${App.escHtml(item.name)}</td>
-      <td>
-        <div class="btn-list flex-nowrap">
-          <button class="btn btn-icon btn-sm edit-btn" data-id="${item.locale}" title="Edit"><i class="ti ti-edit"></i></button>
-          <button class="btn btn-icon btn-sm text-danger delete-btn" data-id="${item.locale}" data-name="${App.escHtml(item.name)}" title="Delete"><i class="ti ti-trash"></i></button>
-        </div>
-      </td>
     </tr>`;
   }).join('');
-
-  tbody.querySelectorAll('.edit-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
-      const item = allItems.find(i => i.locale === btn.dataset.id);
-      if (item) openModal(item);
-    });
-  });
-
-  tbody.querySelectorAll('.delete-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
-      pendingDeleteId = btn.dataset.id;
-      document.getElementById('deleteItemName').textContent = btn.dataset.name;
-      deleteModal.show();
-    });
-  });
-}
-
-function openModal(item = null) {
-  resetModal();
-  if (item) {
-    document.getElementById('itemModalTitle').textContent = 'Edit language';
-    document.getElementById('saveItemLabel').textContent  = 'Update';
-    document.getElementById('itemCode').value = item.locale;
-    document.getElementById('itemCode').disabled = true;
-    document.getElementById('itemName').value = item.name || '';
-  }
-  itemModal.show();
-  setTimeout(() => document.getElementById('itemName').focus(), 300);
-}
-
-function resetModal() {
-  document.getElementById('itemModalTitle').textContent = 'Add language';
-  document.getElementById('saveItemLabel').textContent  = 'Save';
-  document.getElementById('itemModalError').classList.add('d-none');
-  document.getElementById('itemCode').value = '';
-  document.getElementById('itemCode').disabled = false;
-  document.getElementById('itemName').value = '';
-}
-
-async function saveItem() {
-  const errorEl = document.getElementById('itemModalError');
-  errorEl.classList.add('d-none');
-
-  const isEdit = document.getElementById('itemCode').disabled;
-  const code = document.getElementById('itemCode').value.trim();
-  const name = document.getElementById('itemName').value.trim();
-
-  if (!code) {
-    errorEl.textContent = 'Locale is required (e.g. en-GB).';
-    errorEl.classList.remove('d-none');
-    return;
-  }
-  if (!name) {
-    errorEl.textContent = 'Name is required.';
-    errorEl.classList.remove('d-none');
-    return;
-  }
-
-  document.getElementById('saveItemLabel').textContent = isEdit ? 'Saving…' : 'Adding…';
-  document.getElementById('saveItemSpinner').classList.remove('d-none');
-  document.getElementById('saveItemBtn').disabled = true;
-
-  let error;
-  if (isEdit) {
-    ({ error } = await sb.from('ad_language').update({ name }).eq('locale', code));
-  } else {
-    ({ error } = await sb.from('ad_language').insert({ locale: code, name: name }));
-  }
-
-  document.getElementById('saveItemLabel').textContent = isEdit ? 'Update' : 'Save';
-  document.getElementById('saveItemSpinner').classList.add('d-none');
-  document.getElementById('saveItemBtn').disabled = false;
-
-  if (error) {
-    errorEl.textContent = 'Save failed: ' + (error.message || 'Unknown error');
-    errorEl.classList.remove('d-none');
-    return;
-  }
-
-  itemModal.hide();
-  App.toast(isEdit ? 'Updated' : 'Added');
-  await loadItems();
-}
-
-async function confirmDelete() {
-  if (!pendingDeleteId) return;
-  const { error } = await sb.from('ad_language').delete().eq('locale', pendingDeleteId);
-  deleteModal.hide();
-  if (error) { App.toast('Delete failed: ' + error.message, 'danger'); return; }
-  App.toast('Deleted');
-  pendingDeleteId = null;
-  await loadItems();
 }
   </script>
 </body>

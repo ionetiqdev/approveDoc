@@ -1,1 +1,1 @@
-Make Countries view-only with larger flags; full-height tables with pagination for all lookup pages
+Fix lookup table pagination to match Tabler's actual component; make Languages view-only
