@@ -1,1 +1,1 @@
-Add lookup-data seed script (supabase/07-lookup-data.sql), the versioning/changelog system (TEMPLATE-VERSION.txt, docs/TEMPLATE-CHANGELOG.md), rewrite NEW-PROJECT.md as an ordered step-by-step checklist, add docs/UPDATING-PROJECTS.md and docs/SUBSYSTEMS.md
+Remove org-scoping from ad_country, add alpha2 flag column, fix .gitignore

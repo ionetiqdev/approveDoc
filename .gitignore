@@ -1,1 +1,11 @@
-"*.zip" 
+project.conf
+Backup/
+BUILD_TIMESTAMP.txt
+.DS_Store
+Thumbs.db
+*.log
+*.zip
+debug.html
+node_modules/
+package.json
+package-lock.json

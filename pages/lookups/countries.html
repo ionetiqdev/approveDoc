@@ -7,7 +7,7 @@
 
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/core@1.4.0/dist/css/tabler.min.css" />
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.44.0/dist/tabler-icons.min.css" />
-  <link rel="stylesheet" href="../../assets/css/theme.css?r=ph3y6oew" />
+  <link rel="stylesheet" href="../../assets/css/theme.css?r=laxcmphg" />
 
   <script>
     (function() {
@@ -91,7 +91,7 @@
             <table class="table table-vcenter card-table">
               <thead>
                 <tr>
-                  <th style="width:48px"></th>
+                  <th style="width:40px"></th>
                   <th>Code</th>
                   <th>Name</th>
                   <th class="w-1"></th>
@@ -121,12 +121,17 @@
           <div id="itemModalError" class="alert alert-danger d-none py-2 small mb-3"></div>
 
           <div class="row g-3">
-            <div class="col-md-4">
-              <label class="form-label">Code (ISO 3166-1 alpha-3) <span class="text-danger">*</span></label>
+            <div class="col-md-3">
+              <label class="form-label">Code (alpha-3) <span class="text-danger">*</span></label>
               <input type="text" id="itemCode" class="form-control" placeholder="e.g. GBR" maxlength="3" style="text-transform:uppercase" />
               <div class="form-hint">3 letters, cannot be changed once created</div>
             </div>
-            <div class="col-md-8">
+            <div class="col-md-3">
+              <label class="form-label">Code (alpha-2)</label>
+              <input type="text" id="itemAlpha2" class="form-control" placeholder="e.g. GB" maxlength="2" style="text-transform:uppercase" />
+              <div class="form-hint">For the flag icon</div>
+            </div>
+            <div class="col-md-6">
               <label class="form-label">Name <span class="text-danger">*</span></label>
               <input type="text" id="itemName" class="form-control" placeholder="e.g. United Kingdom" />
             </div>
@@ -164,14 +169,14 @@
   <script src="https://cdn.jsdelivr.net/npm/@tabler/core@1.4.0/dist/js/tabler.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="../../assets/js/version.js?r=ph3y6oew"></script>
-  <script src="../../assets/js/supabase-client.js?r=ph3y6oew"></script>
-  <script src="../../assets/js/auth.js?r=ph3y6oew"></script>
-  <script src="../../assets/js/app.js?r=ph3y6oew"></script>
-  <script src="../../assets/js/theme.js?r=ph3y6oew"></script>
-  <script src="../../assets/js/sidebar-html.js?r=ph3y6oew"></script>
-  <script src="../../assets/js/sidebar.js?r=ph3y6oew"></script>
-  <script src="../../assets/js/profile-modal.js?r=ph3y6oew"></script>
+  <script src="../../assets/js/version.js?r=laxcmphg"></script>
+  <script src="../../assets/js/supabase-client.js?r=laxcmphg"></script>
+  <script src="../../assets/js/auth.js?r=laxcmphg"></script>
+  <script src="../../assets/js/app.js?r=laxcmphg"></script>
+  <script src="../../assets/js/theme.js?r=laxcmphg"></script>
+  <script src="../../assets/js/sidebar-html.js?r=laxcmphg"></script>
+  <script src="../../assets/js/sidebar.js?r=laxcmphg"></script>
+  <script src="../../assets/js/profile-modal.js?r=laxcmphg"></script>
   <script>
 let itemModal, deleteModal;
 let allItems = [];
@@ -203,7 +208,7 @@ let pendingDeleteId = null;
 })();
 
 async function loadItems() {
-  const { data, error } = await sb.from('ad_country').select('*').eq('organisation_id', Auth.getOrganisationId()).order('name');
+  const { data, error } = await sb.from('ad_country').select('*').order('name');
 
   if (error) {
     console.error('[Countries] Load error:', error);
@@ -237,7 +242,10 @@ function renderTable() {
 
   tbody.innerHTML = filtered.map(item => {
     return `<tr>
-      <td><span class="avatar avatar-sm rounded-circle bg-primary-lt" style="font-size:.65rem">${App.escHtml(item.country_code)}</span></td>
+      <td>${item.alpha2
+          ? `<img src="https://flagcdn.com/24x18/${item.alpha2.toLowerCase()}.png" width="24" height="18" alt="" style="border-radius:2px;display:block" onerror="this.style.visibility='hidden'">`
+          : `<span class="avatar avatar-sm rounded-circle bg-secondary-lt" style="font-size:.6rem">?</span>`
+        }</td>
       <td><span class="badge bg-secondary-lt">${App.escHtml(item.country_code)}</span></td>
       <td class="fw-semibold">${App.escHtml(item.name)}</td>
       <td>
@@ -273,6 +281,7 @@ function openModal(item = null) {
     document.getElementById('itemCode').value = item.country_code;
     document.getElementById('itemCode').disabled = true;
     document.getElementById('itemName').value = item.name || '';
+    document.getElementById('itemAlpha2').value = item.alpha2 || '';
   }
   itemModal.show();
   setTimeout(() => document.getElementById('itemName').focus(), 300);
@@ -285,6 +294,7 @@ function resetModal() {
   document.getElementById('itemCode').value = '';
   document.getElementById('itemCode').disabled = false;
   document.getElementById('itemName').value = '';
+  document.getElementById('itemAlpha2').value = '';
 }
 
 async function saveItem() {
@@ -294,9 +304,16 @@ async function saveItem() {
   const isEdit = document.getElementById('itemCode').disabled;
   const code = document.getElementById('itemCode').value.trim().toUpperCase();
   const name = document.getElementById('itemName').value.trim();
+  const alpha2Raw = document.getElementById('itemAlpha2').value.trim().toUpperCase();
+  const alpha2 = alpha2Raw || null;
 
   if (!code || code.length !== 3) {
     errorEl.textContent = 'Code must be exactly 3 letters (ISO 3166-1 alpha-3).';
+    errorEl.classList.remove('d-none');
+    return;
+  }
+  if (alpha2Raw && alpha2Raw.length !== 2) {
+    errorEl.textContent = 'Alpha-2 code must be exactly 2 letters, or left blank.';
     errorEl.classList.remove('d-none');
     return;
   }
@@ -309,7 +326,7 @@ async function saveItem() {
   const payload = {
     country_code: code,
     name: name,
-    organisation_id: Auth.getOrganisationId(),
+    alpha2: alpha2,
   };
 
   document.getElementById('saveItemLabel').textContent = isEdit ? 'Saving…' : 'Adding…';
@@ -318,7 +335,7 @@ async function saveItem() {
 
   let error;
   if (isEdit) {
-    ({ error } = await sb.from('ad_country').update({ name }).eq('country_code', code));
+    ({ error } = await sb.from('ad_country').update({ name, alpha2 }).eq('country_code', code));
   } else {
     ({ error } = await sb.from('ad_country').insert(payload));
   }
