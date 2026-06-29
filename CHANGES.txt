@@ -1,1 +1,1 @@
-Audiences Advanced: criteria selection moved to searchable modal pickers (Select all/Clear all), flags shown for Country, all 248 countries available
+Add Audiences (Combined) - radio toggle between manual member selection and criteria-based building, third page alongside the existing two

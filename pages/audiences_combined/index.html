@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Audiences (Advanced) - approveDoc</title>
+  <title>Audiences - approveDoc</title>
 
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/core@1.4.0/dist/css/tabler.min.css" />
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.44.0/dist/tabler-icons.min.css" />
@@ -41,11 +41,19 @@
   </script>
 
   <style>
+    /* Two stacked halves, each roughly half the viewport height,
+       each internally scrollable rather than the whole page
+       scrolling - consistent with the lookup pages' fixed-height
+       approach. */
     html, body { height: 100%; overflow: hidden; }
     .app-content-wrapper { height: 100vh; display: flex; flex-direction: column; }
     .page-body { flex: 1; min-height: 0; display: flex; flex-direction: column; padding-top: 1rem; padding-bottom: 1rem; }
     .page-body > .container-fluid { flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 1rem; }
 
+    /* Top half is 1/3 of the available height, bottom is the
+       remaining 2/3 - achieved via flex-grow ratio (1:2) rather than
+       a fixed percentage, so it still adapts to different viewport
+       heights. */
     .audiences-top { flex: 1 1 0; min-height: 0; display: flex; gap: 1rem; }
     .audiences-bottom { flex: 2 1 0; min-height: 0; display: flex; gap: 1rem; }
     .audiences-top > .card, .audiences-bottom > .card { flex: 1; min-height: 0; display: flex; flex-direction: column; overflow: hidden; }
@@ -56,8 +64,12 @@
     .audience-row.active { background: var(--tblr-primary-lt); }
     .audience-row:hover { background: var(--tblr-bg-surface-secondary); }
 
-    .member-list-item { display: flex; align-items: center; gap: .6rem; padding: .5rem .75rem; border-bottom: 1px solid var(--tblr-border-color); }
+    .member-list-item { display: flex; align-items: center; gap: .6rem; padding: .5rem .75rem; border-bottom: 1px solid var(--tblr-border-color); cursor: grab; }
     .member-list-item:last-child { border-bottom: none; }
+    .member-list-item.dragging { opacity: .4; }
+    .member-list-item input[type="checkbox"] { flex-shrink: 0; width: 1rem; height: 1rem; margin-right: 10px; }
+
+    .member-list-pane.drag-over { background: var(--tblr-primary-lt); outline: 2px dashed var(--tblr-primary); outline-offset: -2px; }
 
     .audiences-top .card-header, .audiences-bottom .card-header {
       background: var(--tblr-bg-surface-secondary);
@@ -68,11 +80,22 @@
       font-size: 14px;
     }
 
+    /* The detail/edit panel's body needs to actually be a flex
+       column with real height, not just auto-sized to content - so
+       the Description textarea can grow to fill remaining space and
+       the Save/Delete buttons can sit pinned at the bottom. */
     #detailCardBody { display: flex; flex-direction: column; height: 100%; }
 
-    /* Criteria builder: one block per criterion, each a checkbox
-       multi-select list. Kept visually distinct from a plain form so
-       it's clear this is a query, not a single field. */
+    /* Mode toggle - two radio buttons in the top-right card's header,
+       switching which bottom-half markup is visible. Only one of
+       #manualBottomHalf / #criteriaBottomHalf is shown at a time;
+       the other stays in the DOM (display:none) rather than being
+       rebuilt, so its own JS state isn't lost switching back and
+       forth before a save. */
+    .audience-mode-toggle { display: flex; gap: 1rem; align-items: center; }
+    .audience-mode-toggle label { display: flex; align-items: center; gap: .35rem; font-weight: 400; font-size: .8125rem; margin: 0; cursor: pointer; }
+
+    /* Criteria builder (from Audiences Advanced) */
     .criteria-block { border: 1px solid var(--tblr-border-color); border-radius: var(--tblr-border-radius); padding: .65rem .75rem; margin-bottom: .75rem; }
     .criteria-block-title { font-weight: 600; font-size: .8125rem; margin-bottom: .4rem; display: flex; align-items: center; gap: .4rem; }
     .criteria-and-divider { text-align: center; font-size: .7rem; color: var(--tblr-secondary-color); font-weight: 600; letter-spacing: .05em; margin: -.25rem 0 .5rem; }
@@ -98,7 +121,7 @@
         <button id="sidebarToggle" class="btn btn-icon" aria-label="Toggle sidebar" title="Toggle sidebar">
           <i class="ti ti-menu-2"></i>
         </button>
-        <h1 class="navbar-brand d-none d-sm-inline-block ms-2 mb-0 page-title-lg">Audiences (Advanced)</h1>
+        <h1 class="navbar-brand d-none d-sm-inline-block ms-2 mb-0 page-title-lg">Audiences</h1>
         <div class="navbar-nav flex-row order-md-last align-items-center gap-2">
           <div data-active-organisation></div>
           <button class="btn btn-icon" data-theme-toggle title="Toggle dark mode"><i class="ti ti-moon"></i></button>
@@ -117,7 +140,7 @@
     <div class="page-body">
       <div class="container-fluid">
 
-        <!-- ── Top half: audience list (left) + name/description form (right) ── -->
+        <!-- ── Top half: audience list (left) + detail/create form (right) ── -->
         <div class="audiences-top">
 
           <div class="card">
@@ -139,6 +162,10 @@
           <div class="card">
             <div class="card-header">
               <h3 class="card-title" id="detailCardTitle">Select an audience</h3>
+              <div class="audience-mode-toggle ms-auto">
+                <label><input type="radio" name="audienceMode" value="manual" class="form-check-input" checked /> Select users</label>
+                <label><input type="radio" name="audienceMode" value="criteria" class="form-check-input" /> Build audience based on criteria</label>
+              </div>
             </div>
             <div class="scroll-pane">
               <div class="card-body" id="detailCardBody">
@@ -149,11 +176,37 @@
 
         </div>
 
-        <!-- ── Bottom half: criteria builder (left) + read-only
-             preview of matching users (right). Preview updates live
-             as criteria checkboxes change, before anything is
-             saved. ── -->
-        <div class="audiences-bottom">
+        <!-- ── Bottom half: two alternate layouts, toggled by the
+             "audienceMode" radio buttons above. Only one is visible
+             at a time (#manualBottomHalf / #criteriaBottomHalf), but
+             both stay in the DOM so neither's JS/render state is
+             lost switching back and forth. ── -->
+
+        <div class="audiences-bottom" id="manualBottomHalf">
+
+          <div class="card">
+            <div class="card-header">
+              <h3 class="card-title">Not in this audience</h3>
+              <span class="text-secondary ms-auto small" id="notInCount"></span>
+            </div>
+            <div class="scroll-pane member-list-pane" id="notInListBody" data-side="notIn">
+              <div class="text-center py-4 text-secondary small">Select an audience above</div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-header">
+              <h3 class="card-title">In this audience</h3>
+              <span class="text-secondary ms-auto small" id="inCount"></span>
+            </div>
+            <div class="scroll-pane member-list-pane" id="inListBody" data-side="in">
+              <div class="text-center py-4 text-secondary small">Select an audience above</div>
+            </div>
+          </div>
+
+        </div>
+
+        <div class="audiences-bottom" id="criteriaBottomHalf" style="display:none">
 
           <div class="card">
             <div class="card-header">
@@ -178,35 +231,6 @@
 
         </div>
 
-      </div>
-    </div>
-  </div>
-
-  <div class="modal modal-blur fade" id="newAudienceModal" tabindex="-1">
-    <div class="modal-dialog modal-dialog-centered">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h5 class="modal-title">New audience</h5>
-          <button type="button" class="modal-close-btn" data-bs-dismiss="modal" aria-label="Close"><i class="ti ti-x"></i></button>
-        </div>
-        <div class="modal-body">
-          <div id="newAudienceError" class="alert alert-danger d-none py-2 small mb-3"></div>
-          <div class="mb-3">
-            <label class="form-label">Name <span class="text-danger">*</span></label>
-            <input type="text" id="newAudienceName" class="form-control" placeholder="e.g. UK Sales Team" />
-          </div>
-          <div class="mb-3">
-            <label class="form-label">Description</label>
-            <textarea id="newAudienceDescription" class="form-control" rows="3" placeholder="What this audience represents, who it's for, etc."></textarea>
-          </div>
-        </div>
-        <div class="modal-footer">
-          <button type="button" class="btn" data-bs-dismiss="modal">Cancel</button>
-          <button type="button" class="btn btn-primary" id="saveNewAudienceBtn">
-            <span id="saveNewAudienceLabel">Save</span>
-            <span id="saveNewAudienceSpinner" class="spinner-border spinner-border-sm ms-2 d-none"></span>
-          </button>
-        </div>
       </div>
     </div>
   </div>
@@ -241,6 +265,35 @@
     </div>
   </div>
 
+  <div class="modal modal-blur fade" id="newAudienceModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">New audience</h5>
+          <button type="button" class="modal-close-btn" data-bs-dismiss="modal" aria-label="Close"><i class="ti ti-x"></i></button>
+        </div>
+        <div class="modal-body">
+          <div id="newAudienceError" class="alert alert-danger d-none py-2 small mb-3"></div>
+          <div class="mb-3">
+            <label class="form-label">Name <span class="text-danger">*</span></label>
+            <input type="text" id="newAudienceName" class="form-control" placeholder="e.g. All UK Staff" />
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Description</label>
+            <textarea id="newAudienceDescription" class="form-control" rows="3" placeholder="What this audience represents, who it's for, etc."></textarea>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn" data-bs-dismiss="modal">Cancel</button>
+          <button type="button" class="btn btn-primary" id="saveNewAudienceBtn">
+            <span id="saveNewAudienceLabel">Save</span>
+            <span id="saveNewAudienceSpinner" class="spinner-border spinner-border-sm ms-2 d-none"></span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <script src="https://cdn.jsdelivr.net/npm/@tabler/core@1.4.0/dist/js/tabler.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -253,25 +306,29 @@
   <script src="../../assets/js/sidebar.js?r=32zgc1yu"></script>
   <script src="../../assets/js/profile-modal.js?r=32zgc1yu"></script>
   <script>
-// Audiences (Advanced): same ad_audience / ad_audience_member tables
-// as the basic Audiences page, but membership here is derived from a
-// saved query (ad_audience_criteria) rather than manually picked.
-// Criteria of the SAME type are OR'd (country=GBR OR country=FRA);
-// DIFFERENT types are AND'd (country IN (...) AND department IN (...)).
-// Confirming the query writes ad_audience_criteria, recomputes who
-// matches, and replaces ad_audience_member with exactly that set.
-
-const CRITERIA_TYPES = ['country', 'location', 'department'];
+// Audiences: top half is a master/detail pair (audience list + its
+// details/create form), bottom half is a two-list view of which
+// ad_user rows are/aren't members of the currently selected audience
+// (via ad_audience_member). Per the brief, the bottom two lists are
+// layout/display only for now - no add/remove wiring yet.
 
 let allAudiences = [];
-let allUsers = [];           // ad_user rows for this org, enriched with country/location/department names
-let countryOptions = [];     // { value: country_code, label: name }
-let locationOptions = [];    // { value: location_id, label: name }
-let departmentOptions = [];  // { value: department_id, label: name }
+let allUsers = [];
+let currentMemberIds = new Set();
 let selectedAudienceId = null;
-let selectedCriteria = { country: new Set(), location: new Set(), department: new Set() };
 let newAudienceModal;
+let checkedUserIds = new Set(); // checkbox selection, cleared whenever membership changes
+
+// Criteria mode (from Audiences Advanced)
+let currentMode = 'manual'; // 'manual' or 'criteria' - mirrors the audienceMode radio buttons
+let countryOptions = [];
+let locationOptions = [];
+let departmentOptions = [];
+let selectedCriteria = { country: new Set(), location: new Set(), department: new Set() };
 let criteriaPickerModal;
+let pickerType = null;
+let pickerOptions = [];
+let pickerWorkingSet = new Set();
 
 (async () => {
   const session = await Auth.requireAuth();
@@ -288,13 +345,84 @@ let criteriaPickerModal;
 
   newAudienceModal = new bootstrap.Modal(document.getElementById('newAudienceModal'));
   criteriaPickerModal = new bootstrap.Modal(document.getElementById('criteriaPickerModal'));
+  setupDropZones();
 
   await Promise.all([loadLookups(), loadUsers(), loadAudiences()]);
 
   document.getElementById('newAudienceBtn').addEventListener('click', openNewAudienceModal);
   document.getElementById('saveNewAudienceBtn').addEventListener('click', saveNewAudience);
   document.getElementById('newAudienceModal').addEventListener('hidden.bs.modal', resetNewAudienceModal);
+
+  document.querySelectorAll('input[name="audienceMode"]').forEach(radio => {
+    radio.addEventListener('change', () => {
+      if (!radio.checked) return;
+      currentMode = radio.value;
+      document.getElementById('manualBottomHalf').style.display = currentMode === 'manual' ? '' : 'none';
+      document.getElementById('criteriaBottomHalf').style.display = currentMode === 'criteria' ? '' : 'none';
+      // Re-render whichever half just became visible, using whatever
+      // audience is currently selected (or its empty state if none).
+      if (selectedAudienceId) {
+        const audience = allAudiences.find(a => a.audience_id === selectedAudienceId);
+        if (audience) refreshBottomHalf(audience);
+      }
+    });
+  });
 })();
+
+function openNewAudienceModal() {
+  resetNewAudienceModal();
+  newAudienceModal.show();
+  setTimeout(() => document.getElementById('newAudienceName').focus(), 300);
+}
+
+function resetNewAudienceModal() {
+  document.getElementById('newAudienceError').classList.add('d-none');
+  document.getElementById('newAudienceName').value = '';
+  document.getElementById('newAudienceDescription').value = '';
+}
+
+async function saveNewAudience() {
+  const errorEl = document.getElementById('newAudienceError');
+  errorEl.classList.add('d-none');
+
+  const name = document.getElementById('newAudienceName').value.trim();
+  const description = document.getElementById('newAudienceDescription').value.trim() || null;
+
+  if (!name) {
+    errorEl.textContent = 'Name is required.';
+    errorEl.classList.remove('d-none');
+    return;
+  }
+
+  document.getElementById('saveNewAudienceLabel').textContent = 'Saving…';
+  document.getElementById('saveNewAudienceSpinner').classList.remove('d-none');
+  document.getElementById('saveNewAudienceBtn').disabled = true;
+
+  const { data, error } = await sb.from('ad_audience').insert({
+    name,
+    description,
+    organisation_id: Auth.getOrganisationId(),
+  }).select().single();
+
+  document.getElementById('saveNewAudienceLabel').textContent = 'Save';
+  document.getElementById('saveNewAudienceSpinner').classList.add('d-none');
+  document.getElementById('saveNewAudienceBtn').disabled = false;
+
+  if (error) {
+    errorEl.textContent = 'Save failed: ' + (error.message || 'Unknown error');
+    errorEl.classList.remove('d-none');
+    return;
+  }
+
+  newAudienceModal.hide();
+  App.toast('Added');
+  await loadAudiences();
+
+  if (data) {
+    const fresh = allAudiences.find(a => a.audience_id === data.audience_id);
+    if (fresh) selectAudience(fresh);
+  }
+}
 
 async function loadLookups() {
   const orgId = Auth.getOrganisationId();
@@ -305,9 +433,9 @@ async function loadLookups() {
     sb.from('ad_department').select('department_id, name').eq('organisation_id', orgId).order('name'),
   ]);
 
-  if (countriesRes.error) console.error('[Audiences Adv] countries load error:', countriesRes.error);
-  if (locationsRes.error) console.error('[Audiences Adv] locations load error:', locationsRes.error);
-  if (departmentsRes.error) console.error('[Audiences Adv] departments load error:', departmentsRes.error);
+  if (countriesRes.error) console.error('[Audiences] countries load error:', countriesRes.error);
+  if (locationsRes.error) console.error('[Audiences] locations load error:', locationsRes.error);
+  if (departmentsRes.error) console.error('[Audiences] departments load error:', departmentsRes.error);
 
   countryOptions = (countriesRes.data || []).map(c => ({ value: c.country_code, label: c.name, alpha2: c.alpha2 }));
   locationOptions = (locationsRes.data || []).map(l => ({ value: l.location_id, label: l.name }));
@@ -315,18 +443,19 @@ async function loadLookups() {
 }
 
 async function loadUsers() {
-  const orgId = Auth.getOrganisationId();
-  const { data, error } = await sb.from('ad_user').select('*').eq('organisation_id', orgId).order('first_name');
-  if (error) { console.error('[Audiences Adv] users load error:', error); return; }
+  const { data, error } = await sb.from('ad_user').select('*').eq('organisation_id', Auth.getOrganisationId()).order('first_name');
+  if (error) { console.error('[Audiences] users load error:', error); return; }
   allUsers = data || [];
 
-  // Avatars live on profiles, not ad_user - sibling tables on the
-  // same auth.users row (profiles owns the avatar/storage link).
+  // Avatars live on profiles, not ad_user - they're sibling tables on
+  // the same auth.users row (profiles owns the avatar/storage link).
+  // Fetch separately and merge in, rather than failing the whole user
+  // list if this lookup has an issue.
   const userIds = allUsers.map(u => u.user_id);
   if (userIds.length) {
     const { data: profilesData, error: profilesError } = await sb.from('profiles').select('id, avatar_url').in('id', userIds);
     if (profilesError) {
-      console.error('[Audiences Adv] profiles/avatar load error:', profilesError);
+      console.error('[Audiences] profiles/avatar load error:', profilesError);
     } else {
       const avatarById = new Map((profilesData || []).map(p => [p.id, p.avatar_url]));
       allUsers = allUsers.map(u => ({ ...u, avatar_url: avatarById.get(u.user_id) || null }));
@@ -335,11 +464,10 @@ async function loadUsers() {
 }
 
 async function loadAudiences() {
-  const orgId = Auth.getOrganisationId();
-  const { data, error } = await sb.from('ad_audience').select('*').eq('organisation_id', orgId).order('name');
+  const { data, error } = await sb.from('ad_audience').select('*').eq('organisation_id', Auth.getOrganisationId()).order('name');
 
   if (error) {
-    console.error('[Audiences Adv] Load error:', error);
+    console.error('[Audiences] Load error:', error);
     App.toast('Failed to load audiences: ' + error.message, 'danger');
     return;
   }
@@ -364,7 +492,6 @@ function renderAudienceList() {
       <div>
         <div class="fw-semibold">${App.escHtml(a.name)}</div>
         ${a.description ? `<div class="text-secondary small">${App.escHtml(a.description)}</div>` : ''}
-        ${a.is_criteria_built ? `<div class="text-secondary small"><i class="ti ti-filter" style="font-size:.75rem"></i> Criteria-built</div>` : ''}
       </div>
     </div>`;
   }).join('');
@@ -379,35 +506,56 @@ function renderAudienceList() {
 
 async function selectAudience(audience) {
   selectedAudienceId = audience.audience_id;
+  checkedUserIds.clear();
   renderAudienceList();
   showDetailForm(audience);
-  await loadCriteria(audience.audience_id);
-  showCriteriaBuilder(audience);
+  await refreshBottomHalf(audience);
+}
+
+// Loads and renders whichever bottom half is currently active for
+// this audience - called both when an audience is first selected
+// and again if the user flips the mode radio while one's already
+// selected, so the newly-visible half has real data rather than
+// showing stale/empty state.
+async function refreshBottomHalf(audience) {
+  if (currentMode === 'manual') {
+    await loadMembership(audience.audience_id);
+  } else {
+    await loadCriteria(audience.audience_id);
+    showCriteriaBuilder(audience);
+  }
 }
 
 function showDetailForm(audience) {
-  document.getElementById('detailCardTitle').textContent = audience.name;
+  const isEdit = !!audience;
+  document.getElementById('detailCardTitle').textContent = isEdit ? 'Edit audience' : 'New audience';
 
   document.getElementById('detailCardBody').innerHTML = `
     <div id="audienceFormError" class="alert alert-danger d-none py-2 small mb-3"></div>
     <div class="mb-3">
       <label class="form-label">Name <span class="text-danger">*</span></label>
-      <input type="text" id="audienceName" class="form-control" value="${App.escHtml(audience.name)}" />
+      <input type="text" id="audienceName" class="form-control" placeholder="e.g. All UK Staff" value="${audience ? App.escHtml(audience.name) : ''}" />
     </div>
-    <div class="mb-3">
+    <div class="mb-3 d-flex flex-column flex-grow-1">
       <label class="form-label">Description</label>
-      <textarea id="audienceDescription" class="form-control" rows="4" placeholder="What this audience represents, who it's for, etc.">${audience.description ? App.escHtml(audience.description) : ''}</textarea>
+      <textarea id="audienceDescription" class="form-control flex-grow-1" style="resize:none" placeholder="What this audience represents, who it's for, etc.">${audience?.description ? App.escHtml(audience.description) : ''}</textarea>
     </div>
-    <button class="btn btn-primary btn-sm" id="saveAudienceBtn">
-      <span id="saveAudienceLabel">Update</span>
-      <span id="saveAudienceSpinner" class="spinner-border spinner-border-sm ms-2 d-none"></span>
-    </button>
+    <div class="d-flex gap-2 mt-auto">
+      <button class="btn btn-primary btn-sm" id="saveAudienceBtn">
+        <span id="saveAudienceLabel">${isEdit ? 'Update' : 'Save'}</span>
+        <span id="saveAudienceSpinner" class="spinner-border spinner-border-sm ms-2 d-none"></span>
+      </button>
+      ${isEdit ? `<button class="btn btn-outline-danger btn-sm" id="deleteAudienceBtn"><i class="ti ti-trash me-1"></i>Delete</button>` : ''}
+    </div>
   `;
 
-  document.getElementById('saveAudienceBtn').addEventListener('click', () => saveAudienceDetails(audience));
+  document.getElementById('saveAudienceBtn').addEventListener('click', () => saveAudience(audience));
+  if (isEdit) {
+    document.getElementById('deleteAudienceBtn').addEventListener('click', () => deleteAudience(audience));
+  }
 }
 
-async function saveAudienceDetails(audience) {
+async function saveAudience(existing) {
   const errorEl = document.getElementById('audienceFormError');
   errorEl.classList.add('d-none');
 
@@ -420,10 +568,21 @@ async function saveAudienceDetails(audience) {
     return;
   }
 
+  const payload = {
+    name,
+    description,
+    organisation_id: Auth.getOrganisationId(),
+  };
+
   document.getElementById('saveAudienceSpinner').classList.remove('d-none');
   document.getElementById('saveAudienceBtn').disabled = true;
 
-  const { error } = await sb.from('ad_audience').update({ name, description }).eq('audience_id', audience.audience_id);
+  let error, data;
+  if (existing) {
+    ({ error } = await sb.from('ad_audience').update(payload).eq('audience_id', existing.audience_id));
+  } else {
+    ({ data, error } = await sb.from('ad_audience').insert(payload).select().single());
+  }
 
   document.getElementById('saveAudienceSpinner').classList.add('d-none');
   document.getElementById('saveAudienceBtn').disabled = false;
@@ -434,13 +593,196 @@ async function saveAudienceDetails(audience) {
     return;
   }
 
-  App.toast('Updated');
+  App.toast(existing ? 'Updated' : 'Added');
   await loadAudiences();
-  const fresh = allAudiences.find(a => a.audience_id === audience.audience_id);
-  if (fresh) {
-    document.getElementById('detailCardTitle').textContent = fresh.name;
+
+  const justSaved = existing || data;
+  if (justSaved) {
+    const fresh = allAudiences.find(a => a.audience_id === justSaved.audience_id);
+    if (fresh) selectAudience(fresh);
   }
 }
+
+async function deleteAudience(audience) {
+  if (!confirm(`Delete "${audience.name}"? This cannot be undone.`)) return;
+
+  const { error } = await sb.from('ad_audience').delete().eq('audience_id', audience.audience_id);
+  if (error) { App.toast('Delete failed: ' + error.message, 'danger'); return; }
+
+  App.toast('Deleted');
+  selectedAudienceId = null;
+  document.getElementById('detailCardTitle').textContent = 'Select an audience';
+  document.getElementById('detailCardBody').innerHTML = `<p class="text-secondary">Choose an audience from the list on the left to see and edit its details here.</p>`;
+  resetMemberLists();
+  document.getElementById('criteriaCardTitle').textContent = 'Criteria';
+  document.getElementById('criteriaCardBody').innerHTML = `<p class="text-secondary">Choose an audience above to build or edit its criteria here.</p>`;
+  document.getElementById('matchListBody').innerHTML = `<div class="text-center py-4 text-secondary small">Select an audience above</div>`;
+  document.getElementById('matchCount').textContent = '';
+  await loadAudiences();
+}
+
+async function loadMembership(audienceId) {
+  const { data, error } = await sb.from('ad_audience_member').select('user_id').eq('audience_id', audienceId).eq('organisation_id', Auth.getOrganisationId());
+
+  if (error) {
+    console.error('[Audiences] membership load error:', error);
+    return;
+  }
+
+  currentMemberIds = new Set((data || []).map(r => r.user_id));
+  renderMemberLists();
+}
+
+function resetMemberLists() {
+  currentMemberIds = new Set();
+  checkedUserIds.clear();
+  document.getElementById('notInListBody').innerHTML = `<div class="text-center py-4 text-secondary small">Select an audience above</div>`;
+  document.getElementById('inListBody').innerHTML = `<div class="text-center py-4 text-secondary small">Select an audience above</div>`;
+  document.getElementById('notInCount').textContent = '';
+  document.getElementById('inCount').textContent = '';
+}
+
+function userRowHtml(user) {
+  const displayName = (user.known_name || user.first_name || '').trim() || user.email || 'Unnamed';
+  const fullName = [user.first_name, user.last_name].filter(Boolean).join(' ') || displayName;
+  const initials = fullName.split(' ').map(w => w[0]).filter(Boolean).join('').toUpperCase().slice(0, 2) || '?';
+
+  const avatar = user.avatar_url
+    ? `<span class="avatar avatar-sm rounded-circle" style="background-image:url('${App.escHtml(user.avatar_url)}')"></span>`
+    : `<span class="avatar avatar-sm rounded-circle bg-primary-lt">${App.escHtml(initials)}</span>`;
+
+  const checked = checkedUserIds.has(user.user_id) ? 'checked' : '';
+
+  return `<div class="member-list-item" draggable="true" data-user-id="${user.user_id}">
+    <input type="checkbox" class="form-check-input member-checkbox" data-user-id="${user.user_id}" draggable="false" ${checked} />
+    ${avatar}
+    <div>
+      <div class="fw-semibold">${App.escHtml(fullName)}</div>
+      <div class="text-secondary small">${App.escHtml(user.email || '')}</div>
+    </div>
+  </div>`;
+}
+
+function renderMemberLists() {
+  const notIn = allUsers.filter(u => !currentMemberIds.has(u.user_id));
+  const inAud = allUsers.filter(u => currentMemberIds.has(u.user_id));
+
+  document.getElementById('notInCount').textContent = `${notIn.length} user${notIn.length === 1 ? '' : 's'}`;
+  document.getElementById('inCount').textContent = `${inAud.length} user${inAud.length === 1 ? '' : 's'}`;
+
+  const notInPane = document.getElementById('notInListBody');
+  const inPane = document.getElementById('inListBody');
+
+  notInPane.innerHTML = notIn.length
+    ? notIn.map(userRowHtml).join('')
+    : `<div class="text-center py-4 text-secondary small">No users outside this audience</div>`;
+
+  inPane.innerHTML = inAud.length
+    ? inAud.map(userRowHtml).join('')
+    : `<div class="text-center py-4 text-secondary small">No members yet</div>`;
+
+  wireUpRowInteractions(notInPane, 'notIn');
+  wireUpRowInteractions(inPane, 'in');
+}
+
+// Wires checkbox toggling, double-click transfer, and drag-start on
+// every row within one pane. Called fresh after every render, since
+// renderMemberLists() always rebuilds the DOM from scratch.
+function wireUpRowInteractions(pane, side) {
+  pane.querySelectorAll('.member-checkbox').forEach(cb => {
+    cb.addEventListener('change', () => {
+      if (cb.checked) checkedUserIds.add(cb.dataset.userId);
+      else checkedUserIds.delete(cb.dataset.userId);
+    });
+    // Clicking the checkbox shouldn't also trigger the row's own
+    // drag-start/double-click handlers.
+    cb.addEventListener('click', e => e.stopPropagation());
+  });
+
+  pane.querySelectorAll('.member-list-item').forEach(row => {
+    row.addEventListener('dblclick', () => {
+      transferUsers([row.dataset.userId], side === 'notIn' ? 'in' : 'notIn');
+    });
+
+    row.addEventListener('dragstart', (e) => {
+      // If this row is checked, drag the whole checked set (within
+      // this same pane); otherwise drag just this one row, same as
+      // a double-click would.
+      const idsInThisPane = new Set(
+        Array.from(pane.querySelectorAll('.member-checkbox:checked')).map(c => c.dataset.userId)
+      );
+      const draggingIds = idsInThisPane.has(row.dataset.userId)
+        ? Array.from(idsInThisPane)
+        : [row.dataset.userId];
+
+      e.dataTransfer.setData('text/plain', JSON.stringify({ userIds: draggingIds, fromSide: side }));
+      e.dataTransfer.effectAllowed = 'move';
+      row.classList.add('dragging');
+    });
+
+    row.addEventListener('dragend', () => row.classList.remove('dragging'));
+  });
+}
+
+// Drop-zone handlers, attached once (not re-attached on every
+// render, since the pane elements themselves are stable - only
+// their innerHTML changes).
+function setupDropZones() {
+  document.querySelectorAll('.member-list-pane').forEach(pane => {
+    pane.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      pane.classList.add('drag-over');
+    });
+    pane.addEventListener('dragleave', () => pane.classList.remove('drag-over'));
+    pane.addEventListener('drop', (e) => {
+      e.preventDefault();
+      pane.classList.remove('drag-over');
+
+      let payload;
+      try { payload = JSON.parse(e.dataTransfer.getData('text/plain')); }
+      catch { return; }
+
+      const targetSide = pane.dataset.side;
+      if (!payload?.userIds?.length || payload.fromSide === targetSide) return;
+
+      transferUsers(payload.userIds, targetSide);
+    });
+  });
+}
+
+// Moves one or more users into ('in') or out of ('notIn') the
+// currently selected audience, via real ad_audience_member
+// insert/delete calls, then reloads membership from the database so
+// the UI always reflects what's actually saved (rather than
+// optimistically updating local state and risking drift on error).
+async function transferUsers(userIds, targetSide) {
+  if (!selectedAudienceId || !userIds.length) return;
+
+  const orgId = Auth.getOrganisationId();
+
+  if (targetSide === 'in') {
+    const rows = userIds.map(user_id => ({ audience_id: selectedAudienceId, user_id, organisation_id: orgId }));
+    const { error } = await sb.from('ad_audience_member').upsert(rows, { onConflict: 'audience_id,user_id' });
+    if (error) { App.toast('Failed to add: ' + error.message, 'danger'); return; }
+  } else {
+    const { error } = await sb.from('ad_audience_member')
+      .delete()
+      .eq('audience_id', selectedAudienceId)
+      .in('user_id', userIds);
+    if (error) { App.toast('Failed to remove: ' + error.message, 'danger'); return; }
+  }
+
+  checkedUserIds.clear();
+  App.toast(targetSide === 'in' ? 'Added to audience' : 'Removed from audience');
+  await loadMembership(selectedAudienceId);
+}
+
+// ───────────────────────── Criteria mode ─────────────────────────
+// Everything below is from Audiences Advanced - the criteria builder,
+// its picker modal, and the live match preview. Shares allUsers,
+// allAudiences, selectedAudienceId, and the deleteAudience/
+// userRowHtml functions above with manual mode; nothing here
+// duplicates those.
 
 async function loadCriteria(audienceId) {
   selectedCriteria = { country: new Set(), location: new Set(), department: new Set() };
@@ -448,7 +790,7 @@ async function loadCriteria(audienceId) {
   const { data, error } = await sb.from('ad_audience_criteria').select('criteria_type, criteria_value').eq('audience_id', audienceId).eq('organisation_id', Auth.getOrganisationId());
 
   if (error) {
-    console.error('[Audiences Adv] criteria load error:', error);
+    console.error('[Audiences] criteria load error:', error);
     return;
   }
 
@@ -478,13 +820,6 @@ function criteriaBlockHtml(type, title, options) {
     <div class="criteria-summary">${summary}</div>
   </div>`;
 }
-
-// Picker modal state - a working copy of the selection for whichever
-// criterion is currently open, so Cancel can discard changes without
-// having touched the real selectedCriteria set.
-let pickerType = null;
-let pickerOptions = [];
-let pickerWorkingSet = new Set();
 
 function getPickerOptions(type) {
   if (type === 'country') return countryOptions;
@@ -550,10 +885,6 @@ function renderPickerList(search) {
 
   list.querySelectorAll('.criteria-picker-item').forEach(item => {
     item.addEventListener('click', (e) => {
-      // Let a direct checkbox click toggle itself naturally - this
-      // handler still needs to run either way to keep pickerWorkingSet
-      // in sync, but we avoid double-toggling when the click target
-      // IS the checkbox by reading its post-click state directly.
       const checkbox = item.querySelector('input[type="checkbox"]');
       if (e.target !== checkbox) checkbox.checked = !checkbox.checked;
 
@@ -588,7 +919,7 @@ function showCriteriaBuilder(audience) {
         <span id="confirmCriteriaLabel">Confirm &amp; build audience</span>
         <span id="confirmCriteriaSpinner" class="spinner-border spinner-border-sm ms-2 d-none"></span>
       </button>
-      <button class="btn btn-outline-danger btn-sm" id="deleteAudienceBtn"><i class="ti ti-trash me-1"></i>Delete audience</button>
+      <button class="btn btn-outline-danger btn-sm" id="deleteAudienceBtnCriteria"><i class="ti ti-trash me-1"></i>Delete audience</button>
     </div>
   `;
 
@@ -597,16 +928,11 @@ function showCriteriaBuilder(audience) {
   });
 
   document.getElementById('confirmCriteriaBtn').addEventListener('click', () => confirmCriteria(audience));
-  document.getElementById('deleteAudienceBtn').addEventListener('click', () => deleteAudience(audience));
+  document.getElementById('deleteAudienceBtnCriteria').addEventListener('click', () => deleteAudience(audience));
 
   renderMatchPreview();
 }
 
-// Returns the ad_user rows that currently match the in-progress
-// (not-yet-saved) criteria selection - used for the live preview.
-// A criterion type with nothing selected is skipped entirely
-// (doesn't restrict the result at all), matching normal "no filter
-// applied" expectations rather than matching zero users.
 function getMatchingUsers() {
   return allUsers.filter(u => {
     if (selectedCriteria.country.size && !selectedCriteria.country.has(u.country_code)) return false;
@@ -614,24 +940,6 @@ function getMatchingUsers() {
     if (selectedCriteria.department.size && !selectedCriteria.department.has(String(u.department_id))) return false;
     return true;
   });
-}
-
-function userRowHtml(user) {
-  const displayName = (user.known_name || user.first_name || '').trim() || user.email || 'Unnamed';
-  const fullName = [user.first_name, user.last_name].filter(Boolean).join(' ') || displayName;
-  const initials = fullName.split(' ').map(w => w[0]).filter(Boolean).join('').toUpperCase().slice(0, 2) || '?';
-
-  const avatar = user.avatar_url
-    ? `<span class="avatar avatar-sm rounded-circle" style="background-image:url('${App.escHtml(user.avatar_url)}')"></span>`
-    : `<span class="avatar avatar-sm rounded-circle bg-primary-lt">${App.escHtml(initials)}</span>`;
-
-  return `<div class="member-list-item">
-    ${avatar}
-    <div>
-      <div class="fw-semibold">${App.escHtml(fullName)}</div>
-      <div class="text-secondary small">${App.escHtml(user.email || '')}</div>
-    </div>
-  </div>`;
 }
 
 function renderMatchPreview() {
@@ -650,15 +958,32 @@ function renderMatchPreview() {
   }
 
   body.innerHTML = matched.length
-    ? matched.map(userRowHtml).join('')
+    ? matched.map(userRowHtmlPlain).join('')
     : `<div class="text-center py-4 text-secondary small">No users match the current criteria</div>`;
 }
 
-// Saves the criteria selection to ad_audience_criteria (replacing
-// whatever was there before), marks the audience as criteria-built,
-// then replaces ad_audience_member with exactly the matching set -
-// confirming is what actually moves this from "a draft query" to
-// "real membership", same idea as the brief described.
+// Same row markup as the manual mode's userRowHtml, but without the
+// checkbox/drag attributes - the match preview is read-only, no
+// transfer interaction here (criteria, not manual picking, is what
+// builds membership in this mode).
+function userRowHtmlPlain(user) {
+  const displayName = (user.known_name || user.first_name || '').trim() || user.email || 'Unnamed';
+  const fullName = [user.first_name, user.last_name].filter(Boolean).join(' ') || displayName;
+  const initials = fullName.split(' ').map(w => w[0]).filter(Boolean).join('').toUpperCase().slice(0, 2) || '?';
+
+  const avatar = user.avatar_url
+    ? `<span class="avatar avatar-sm rounded-circle" style="background-image:url('${App.escHtml(user.avatar_url)}')"></span>`
+    : `<span class="avatar avatar-sm rounded-circle bg-primary-lt">${App.escHtml(initials)}</span>`;
+
+  return `<div class="member-list-item">
+    ${avatar}
+    <div>
+      <div class="fw-semibold">${App.escHtml(fullName)}</div>
+      <div class="text-secondary small">${App.escHtml(user.email || '')}</div>
+    </div>
+  </div>`;
+}
+
 async function confirmCriteria(audience) {
   const errorEl = document.getElementById('criteriaError');
   errorEl.classList.add('d-none');
@@ -677,9 +1002,6 @@ async function confirmCriteria(audience) {
   const orgId = Auth.getOrganisationId();
   const matched = getMatchingUsers();
 
-  // Replace criteria rows wholesale - simpler and less error-prone
-  // than diffing old vs new selections, and this table is small
-  // (a handful of rows per audience).
   const { error: deleteCriteriaError } = await sb.from('ad_audience_criteria').delete().eq('audience_id', audience.audience_id);
   if (deleteCriteriaError) {
     showCriteriaError('Failed to update criteria: ' + deleteCriteriaError.message);
@@ -687,7 +1009,7 @@ async function confirmCriteria(audience) {
   }
 
   const criteriaRows = [];
-  CRITERIA_TYPES.forEach(type => {
+  ['country', 'location', 'department'].forEach(type => {
     selectedCriteria[type].forEach(value => {
       criteriaRows.push({ audience_id: audience.audience_id, organisation_id: orgId, criteria_type: type, criteria_value: value });
     });
@@ -707,8 +1029,6 @@ async function confirmCriteria(audience) {
     return;
   }
 
-  // Replace membership wholesale with exactly the matched set -
-  // same reasoning as criteria rows above.
   const { error: deleteMembersError } = await sb.from('ad_audience_member').delete().eq('audience_id', audience.audience_id);
   if (deleteMembersError) {
     showCriteriaError('Failed to update membership: ' + deleteMembersError.message);
@@ -739,78 +1059,6 @@ function showCriteriaError(message) {
   document.getElementById('confirmCriteriaLabel').textContent = 'Confirm & build audience';
   document.getElementById('confirmCriteriaSpinner').classList.add('d-none');
   document.getElementById('confirmCriteriaBtn').disabled = false;
-}
-
-async function deleteAudience(audience) {
-  if (!confirm(`Delete "${audience.name}"? This cannot be undone.`)) return;
-
-  const { error } = await sb.from('ad_audience').delete().eq('audience_id', audience.audience_id);
-  if (error) { App.toast('Delete failed: ' + error.message, 'danger'); return; }
-
-  App.toast('Deleted');
-  selectedAudienceId = null;
-  document.getElementById('detailCardTitle').textContent = 'Select an audience';
-  document.getElementById('detailCardBody').innerHTML = `<p class="text-secondary">Choose an audience from the list on the left to see and edit its details here.</p>`;
-  document.getElementById('criteriaCardTitle').textContent = 'Criteria';
-  document.getElementById('criteriaCardBody').innerHTML = `<p class="text-secondary">Choose an audience above to build or edit its criteria here.</p>`;
-  document.getElementById('matchListBody').innerHTML = `<div class="text-center py-4 text-secondary small">Select an audience above</div>`;
-  document.getElementById('matchCount').textContent = '';
-  await loadAudiences();
-}
-
-function openNewAudienceModal() {
-  resetNewAudienceModal();
-  newAudienceModal.show();
-  setTimeout(() => document.getElementById('newAudienceName').focus(), 300);
-}
-
-function resetNewAudienceModal() {
-  document.getElementById('newAudienceError').classList.add('d-none');
-  document.getElementById('newAudienceName').value = '';
-  document.getElementById('newAudienceDescription').value = '';
-}
-
-async function saveNewAudience() {
-  const errorEl = document.getElementById('newAudienceError');
-  errorEl.classList.add('d-none');
-
-  const name = document.getElementById('newAudienceName').value.trim();
-  const description = document.getElementById('newAudienceDescription').value.trim() || null;
-
-  if (!name) {
-    errorEl.textContent = 'Name is required.';
-    errorEl.classList.remove('d-none');
-    return;
-  }
-
-  document.getElementById('saveNewAudienceLabel').textContent = 'Saving…';
-  document.getElementById('saveNewAudienceSpinner').classList.remove('d-none');
-  document.getElementById('saveNewAudienceBtn').disabled = true;
-
-  const { data, error } = await sb.from('ad_audience').insert({
-    name,
-    description,
-    organisation_id: Auth.getOrganisationId(),
-  }).select().single();
-
-  document.getElementById('saveNewAudienceLabel').textContent = 'Save';
-  document.getElementById('saveNewAudienceSpinner').classList.add('d-none');
-  document.getElementById('saveNewAudienceBtn').disabled = false;
-
-  if (error) {
-    errorEl.textContent = 'Save failed: ' + (error.message || 'Unknown error');
-    errorEl.classList.remove('d-none');
-    return;
-  }
-
-  newAudienceModal.hide();
-  App.toast('Added');
-  await loadAudiences();
-
-  if (data) {
-    const fresh = allAudiences.find(a => a.audience_id === data.audience_id);
-    if (fresh) selectAudience(fresh);
-  }
 }
   </script>
 </body>
