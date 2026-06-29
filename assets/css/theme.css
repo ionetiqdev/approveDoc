@@ -347,7 +347,11 @@ header .navbar-brand.page-title-lg {
   width: auto !important;
   max-width: none !important;
   margin: 0 0 0 .35rem !important;
+  padding: 10px !important;
   font-size: 1.25rem !important;
   font-weight: 600 !important;
   text-align: left !important;
+}
+header [data-user-initials] {
+  margin-left: 10px !important;
 }

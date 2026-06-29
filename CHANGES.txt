@@ -1,1 +1,1 @@
-Fix header layout - explicit justify-content: flex-start on the container, with the right-side nav block pushed right via its own margin-left auto (DevTools-confirmed root cause: container had no justify-content override, so Tabler default was spacing children apart)
+Add 10px left margin to header avatar, between preferences icon and avatar (app-wide via shared theme.css)
