@@ -1,1 +1,1 @@
-Audiences Combined: fix mode sync when selecting an existing audience; add mode radios to New Audience dialog, correct panel loads after creation
+Audiences Combined: audience-row top/bottom padding 10px, text-secondary font-size .8em
