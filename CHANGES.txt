@@ -1,1 +1,1 @@
-Add Audiences (Combined) - radio toggle between manual member selection and criteria-based building, third page alongside the existing two
+Audiences Combined: move mode radios below Description, Update/Delete buttons right-aligned, type pill on audience list rows
