@@ -7,7 +7,7 @@
 
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/core@1.4.0/dist/css/tabler.min.css" />
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.44.0/dist/tabler-icons.min.css" />
-  <link rel="stylesheet" href="../../assets/css/theme.css?r=8w51lxna" />
+  <link rel="stylesheet" href="../../assets/css/theme.css?r=n1596scy" />
 
   <script>
     (function() {
@@ -52,6 +52,7 @@
     .lookup-card { flex: 1; min-height: 0; display: flex; flex-direction: column; overflow: hidden; }
     .col-10pct { width: 5%; }
     .col-80pct { width: 90%; }
+    table.table-fixed { table-layout: fixed; }
     .col-10pct img { width: 32px; height: 24px; border-radius: 3px; display: block; box-shadow: 0 0 0 1px rgba(0,0,0,.08); }
   </style>
 </head>
@@ -88,11 +89,11 @@
 
         <div class="card lookup-card">
           <div class="card-header">
-            <div class="ms-auto text-secondary me-2">Search:</div>
-            <input type="text" id="searchInput" class="form-control form-control-sm" style="max-width:200px" />
+            <div class="text-secondary me-2">Search:</div>
+            <input type="text" id="searchInput" class="form-control form-control-sm" style="max-width:400px" />
           </div>
           <div style="flex:1; min-height:0; overflow:hidden">
-            <table class="table table-vcenter card-table table-hover mb-0">
+            <table class="table table-vcenter card-table table-hover table-fixed mb-0">
               <thead>
                 <tr>
                   <th class="col-10pct"></th>
@@ -120,14 +121,14 @@
   <script src="https://cdn.jsdelivr.net/npm/@tabler/core@1.4.0/dist/js/tabler.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="../../assets/js/version.js?r=8w51lxna"></script>
-  <script src="../../assets/js/supabase-client.js?r=8w51lxna"></script>
-  <script src="../../assets/js/auth.js?r=8w51lxna"></script>
-  <script src="../../assets/js/app.js?r=8w51lxna"></script>
-  <script src="../../assets/js/theme.js?r=8w51lxna"></script>
-  <script src="../../assets/js/sidebar-html.js?r=8w51lxna"></script>
-  <script src="../../assets/js/sidebar.js?r=8w51lxna"></script>
-  <script src="../../assets/js/profile-modal.js?r=8w51lxna"></script>
+  <script src="../../assets/js/version.js?r=n1596scy"></script>
+  <script src="../../assets/js/supabase-client.js?r=n1596scy"></script>
+  <script src="../../assets/js/auth.js?r=n1596scy"></script>
+  <script src="../../assets/js/app.js?r=n1596scy"></script>
+  <script src="../../assets/js/theme.js?r=n1596scy"></script>
+  <script src="../../assets/js/sidebar-html.js?r=n1596scy"></script>
+  <script src="../../assets/js/sidebar.js?r=n1596scy"></script>
+  <script src="../../assets/js/profile-modal.js?r=n1596scy"></script>
   <script>
 // Countries is a fixed, view-only ISO 3166-1 reference list - no
 // add/edit/delete. Unlike the other lookup pages, this one is not
@@ -235,7 +236,7 @@ function renderTable() {
   const pageItems = filtered.slice(start, start + rowsPerPage);
 
   document.getElementById('pageInfo').textContent = filtered.length
-    ? `Showing ${start + 1} to ${Math.min(start + rowsPerPage, filtered.length)} of ${filtered.length} entries`
+    ? ''
     : 'No matching entries found';
 
   renderPager(totalPages);

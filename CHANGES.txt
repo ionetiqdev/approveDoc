@@ -1,1 +1,1 @@
-Remove redundant per-page title CSS so the global theme.css rule applies consistently everywhere
+Move Search to left of header on all lookup pages; remove entries-count text from Countries/Languages pagination footer

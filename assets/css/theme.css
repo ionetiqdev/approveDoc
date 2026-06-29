@@ -318,14 +318,11 @@ body:has(#sidebar.collapsed) .app-content-wrapper { margin-left: var(--sidebar-w
   background: none; border: none; color: var(--tblr-secondary-color); cursor: pointer; padding: 0; font-size: 1rem;
 }
 
-/* Page titles in the header bar - bigger and explicitly left-aligned
-   (Tabler's default .navbar-brand is fine for a logo/brand context,
-   but undersized for a page title used as the primary heading).
-   !important needed to reliably beat Bootstrap's fs-5 utility class,
-   which several pages still carry alongside .navbar-brand. */
-header .navbar-brand.fs-5,
-header .navbar-brand.page-title-lg,
-header .navbar-brand {
+/* Page titles in the header bar - bigger and explicitly left-aligned.
+   Every page uses the same .page-title-lg class on its <h1> now
+   (standardised from a mix of .fs-5 and .page-title-lg, which could
+   render inconsistently depending on class order/specificity). */
+header .navbar-brand.page-title-lg {
   font-size: 1.25rem !important;
   font-weight: 600 !important;
   text-align: left !important;
