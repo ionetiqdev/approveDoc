@@ -1,1 +1,1 @@
-Add ad_audience.description and ad_user.country_code (FK to ad_country); remove Approval Type from Audiences UI (column stays in DB)
+Audiences: 33/67 top/bottom split, 'n user(s)' counts, New Audience moved to modal, avatars added to audience list rows
