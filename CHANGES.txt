@@ -1,1 +1,1 @@
-Fix lookup table pagination to match Tabler's actual component; make Languages view-only
+Remove pagination, fit table to viewport with internal scroll; add flags to Languages via locale
