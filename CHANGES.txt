@@ -1,1 +1,1 @@
-Audiences Combined: move mode radios below Description, Update/Delete buttons right-aligned, type pill on audience list rows
+Audiences Combined: fix mode sync when selecting an existing audience; add mode radios to New Audience dialog, correct panel loads after creation
