@@ -89,6 +89,13 @@ const SidebarHtml = (() => {
             </a>
           </li>
 
+          <li class="nav-item">
+            <a href="${root}pages/audiences_adv/index.html" class="nav-link">
+              <i class="ti ti-users-group"></i>
+              <span class="nav-link-text">Audiences (Advanced)</span>
+            </a>
+          </li>
+
           <!-- SUBSYSTEM:documents:start -->
           <li class="nav-item">
             <a href="${root}pages/documents/index.html" class="nav-link">
