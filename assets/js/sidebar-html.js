@@ -83,9 +83,9 @@ const SidebarHtml = (() => {
           </li>
 
           <li class="nav-item">
-            <a href="${root}pages/customers/index.html" class="nav-link">
-              <i class="ti ti-building-store"></i>
-              <span class="nav-link-text">Customers</span>
+            <a href="${root}pages/audiences/index.html" class="nav-link">
+              <i class="ti ti-users-group"></i>
+              <span class="nav-link-text">Audiences</span>
             </a>
           </li>
 

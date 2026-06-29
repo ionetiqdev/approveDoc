@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html lang="en" data-bs-theme="light" data-app-root="../../">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Audiences - approveDoc</title>
+
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/core@1.4.0/dist/css/tabler.min.css" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.44.0/dist/tabler-icons.min.css" />
+  <link rel="stylesheet" href="../../assets/css/theme.css?r=bvczg92q" />
+
+  <script>
+    (function() {
+      try {
+        var root = document.documentElement.dataset.appRoot || './';
+        var absoluteRoot = new URL(root, window.location.href).pathname;
+        var suffix = ':' + absoluteRoot;
+        var savedTheme = localStorage.getItem('app_theme');
+        var theme = savedTheme || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+        document.documentElement.setAttribute('data-bs-theme', theme);
+        var accent = localStorage.getItem('app_accent' + suffix);
+        if (accent) {
+          document.documentElement.style.setProperty('--tblr-primary', accent);
+          var ah = accent.replace('#','');
+          if (ah.length === 3) ah = ah.split('').map(function(c){return c+c;}).join('');
+          document.documentElement.style.setProperty('--tblr-primary-rgb', parseInt(ah.slice(0,2),16) + ', ' + parseInt(ah.slice(2,4),16) + ', ' + parseInt(ah.slice(4,6),16));
+        }
+        var sidebarBg = localStorage.getItem('app_sidebar_bg' + suffix);
+        if (sidebarBg) {
+          document.documentElement.style.setProperty('--bg-sidebar', sidebarBg);
+          var hex = sidebarBg.replace('#', '');
+          if (hex.length === 3) hex = hex.split('').map(function(c){return c+c;}).join('');
+          var r = parseInt(hex.slice(0,2),16) / 255, g = parseInt(hex.slice(2,4),16) / 255, b = parseInt(hex.slice(4,6),16) / 255;
+          var toLinear = function(c){ return c <= 0.03928 ? c/12.92 : Math.pow((c+0.055)/1.055, 2.4); };
+          var isLight = (0.2126*toLinear(r) + 0.7152*toLinear(g) + 0.0722*toLinear(b)) > 0.5;
+          document.documentElement.style.setProperty('--sidebar-fg', isLight ? '#0f172a' : '#ffffff');
+          document.documentElement.style.setProperty('--sidebar-fg-rgb', isLight ? '15,23,42' : '255,255,255');
+        }
+      } catch (e) {}
+    })();
+  </script>
+
+  <style>
+    /* Two stacked halves, each roughly half the viewport height,
+       each internally scrollable rather than the whole page
+       scrolling - consistent with the lookup pages' fixed-height
+       approach. */
+    html, body { height: 100%; overflow: hidden; }
+    .app-content-wrapper { height: 100vh; display: flex; flex-direction: column; }
+    .page-body { flex: 1; min-height: 0; display: flex; flex-direction: column; padding-top: 1rem; padding-bottom: 1rem; }
+    .page-body > .container-fluid { flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 1rem; }
+
+    .audiences-top, .audiences-bottom { flex: 1; min-height: 0; display: flex; gap: 1rem; }
+    .audiences-top > .card, .audiences-bottom > .card { flex: 1; min-height: 0; display: flex; flex-direction: column; overflow: hidden; }
+
+    .scroll-pane { flex: 1; min-height: 0; overflow-y: auto; }
+
+    .audience-row { cursor: pointer; }
+    .audience-row.active { background: var(--tblr-primary-lt); }
+    .audience-row:hover { background: var(--tblr-bg-surface-secondary); }
+
+    .member-list-item { display: flex; align-items: center; gap: .6rem; padding: .5rem .75rem; border-bottom: 1px solid var(--tblr-border-color); }
+    .member-list-item:last-child { border-bottom: none; }
+  </style>
+</head>
+<body>
+
+  <aside id="sidebar"></aside>
+  <div id="sidebarOverlay" class="sidebar-overlay"></div>
+
+  <div class="app-content-wrapper">
+
+    <header class="navbar navbar-expand-md d-print-none border-bottom">
+      <div class="container-fluid">
+        <button id="sidebarToggle" class="btn btn-icon" aria-label="Toggle sidebar" title="Toggle sidebar">
+          <i class="ti ti-menu-2"></i>
+        </button>
+        <h1 class="navbar-brand d-none d-sm-inline-block ms-2 mb-0 page-title-lg">Audiences</h1>
+        <div class="navbar-nav flex-row order-md-last align-items-center gap-2">
+          <div data-active-organisation></div>
+          <button class="btn btn-icon" data-theme-toggle title="Toggle dark mode"><i class="ti ti-moon"></i></button>
+          <button class="btn btn-icon" id="headerPreferencesBtn" title="Preferences">
+            <i class="ti ti-adjustments"></i>
+          </button>
+          <span class="avatar avatar-sm rounded-circle bg-primary-lt" data-user-initials>?</span>
+          <span class="d-none d-xl-block">
+            <span class="d-block fw-semibold" style="font-size:.8125rem" data-user-name>—</span>
+            <span class="d-block text-secondary" style="font-size:.7rem" data-user-email>—</span>
+          </span>
+        </div>
+      </div>
+    </header>
+
+    <div class="page-body">
+      <div class="container-fluid">
+
+        <!-- ── Top half: audience list (left) + detail/create form (right) ── -->
+        <div class="audiences-top">
+
+          <div class="card">
+            <div class="card-header">
+              <h3 class="card-title">Audiences</h3>
+              <button class="btn btn-primary btn-sm ms-auto" id="newAudienceBtn">
+                <i class="ti ti-plus me-1"></i>New audience
+              </button>
+            </div>
+            <div class="scroll-pane">
+              <div class="list-group list-group-flush" id="audienceListBody">
+                <div class="text-center py-4 text-secondary">
+                  <span class="spinner-border spinner-border-sm me-2"></span>Loading…
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-header">
+              <h3 class="card-title" id="detailCardTitle">Select an audience</h3>
+            </div>
+            <div class="scroll-pane">
+              <div class="card-body" id="detailCardBody">
+                <p class="text-secondary">Choose an audience from the list on the left, or create a new one, to see and edit its details here.</p>
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- ── Bottom half: members not-in (left) / in (right) ──
+             Layout only for now - add/remove interaction (moving users
+             between the two lists) is intentionally not wired up yet. -->
+        <div class="audiences-bottom">
+
+          <div class="card">
+            <div class="card-header">
+              <h3 class="card-title">Not in this audience</h3>
+              <span class="text-secondary ms-auto small" id="notInCount"></span>
+            </div>
+            <div class="scroll-pane" id="notInListBody">
+              <div class="text-center py-4 text-secondary small">Select an audience above</div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-header">
+              <h3 class="card-title">In this audience</h3>
+              <span class="text-secondary ms-auto small" id="inCount"></span>
+            </div>
+            <div class="scroll-pane" id="inListBody">
+              <div class="text-center py-4 text-secondary small">Select an audience above</div>
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@tabler/core@1.4.0/dist/js/tabler.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="../../assets/js/version.js?r=bvczg92q"></script>
+  <script src="../../assets/js/supabase-client.js?r=bvczg92q"></script>
+  <script src="../../assets/js/auth.js?r=bvczg92q"></script>
+  <script src="../../assets/js/app.js?r=bvczg92q"></script>
+  <script src="../../assets/js/theme.js?r=bvczg92q"></script>
+  <script src="../../assets/js/sidebar-html.js?r=bvczg92q"></script>
+  <script src="../../assets/js/sidebar.js?r=bvczg92q"></script>
+  <script src="../../assets/js/profile-modal.js?r=bvczg92q"></script>
+  <script>
+// Audiences: top half is a master/detail pair (audience list + its
+// details/create form), bottom half is a two-list view of which
+// ad_user rows are/aren't members of the currently selected audience
+// (via ad_audience_member). Per the brief, the bottom two lists are
+// layout/display only for now - no add/remove wiring yet.
+
+let allAudiences = [];
+let allUsers = [];
+let approvalTypes = [];
+let currentMemberIds = new Set();
+let selectedAudienceId = null;
+
+(async () => {
+  const session = await Auth.requireAuth();
+  if (!session) return;
+  SidebarHtml.inject('../../');
+  Sidebar.init();
+  Auth.refreshUI();
+
+  if (!Auth.isAdmin()) {
+    App.toast('You do not have access to this page', 'danger');
+    window.location.href = '../../index.html';
+    return;
+  }
+
+  await Promise.all([loadApprovalTypes(), loadUsers(), loadAudiences()]);
+
+  document.getElementById('newAudienceBtn').addEventListener('click', () => showDetailForm(null));
+})();
+
+async function loadApprovalTypes() {
+  const { data, error } = await sb.from('ad_approval_type').select('*').eq('organisation_id', Auth.getOrganisationId()).order('sort_order');
+  if (error) { console.error('[Audiences] approval types load error:', error); return; }
+  approvalTypes = data || [];
+}
+
+async function loadUsers() {
+  const { data, error } = await sb.from('ad_user').select('*').eq('organisation_id', Auth.getOrganisationId()).order('first_name');
+  if (error) { console.error('[Audiences] users load error:', error); return; }
+  allUsers = data || [];
+}
+
+async function loadAudiences() {
+  const { data, error } = await sb.from('ad_audience').select('*').eq('organisation_id', Auth.getOrganisationId()).order('name');
+
+  if (error) {
+    console.error('[Audiences] Load error:', error);
+    App.toast('Failed to load audiences: ' + error.message, 'danger');
+    return;
+  }
+
+  allAudiences = data || [];
+  renderAudienceList();
+}
+
+function renderAudienceList() {
+  const body = document.getElementById('audienceListBody');
+
+  if (!allAudiences.length) {
+    body.innerHTML = `<div class="text-center py-4 text-secondary">
+      <i class="ti ti-users-group mb-1 d-block" style="font-size:1.5rem"></i>No audiences yet
+    </div>`;
+    return;
+  }
+
+  body.innerHTML = allAudiences.map(a => {
+    const approvalType = approvalTypes.find(t => t.approval_type_id === a.approval_type_id);
+    return `<div class="list-group-item audience-row ${a.audience_id === selectedAudienceId ? 'active' : ''}" data-id="${a.audience_id}">
+      <div class="fw-semibold">${App.escHtml(a.name)}</div>
+      ${approvalType ? `<div class="text-secondary small">${App.escHtml(approvalType.name)}</div>` : ''}
+    </div>`;
+  }).join('');
+
+  body.querySelectorAll('.audience-row').forEach(row => {
+    row.addEventListener('click', () => {
+      const audience = allAudiences.find(a => a.audience_id === row.dataset.id);
+      if (audience) selectAudience(audience);
+    });
+  });
+}
+
+function selectAudience(audience) {
+  selectedAudienceId = audience.audience_id;
+  renderAudienceList();
+  showDetailForm(audience);
+  loadMembership(audience.audience_id);
+}
+
+function showDetailForm(audience) {
+  const isEdit = !!audience;
+  document.getElementById('detailCardTitle').textContent = isEdit ? 'Edit audience' : 'New audience';
+
+  const approvalOptions = approvalTypes.map(t =>
+    `<option value="${t.approval_type_id}" ${audience?.approval_type_id === t.approval_type_id ? 'selected' : ''}>${App.escHtml(t.name)}</option>`
+  ).join('');
+
+  document.getElementById('detailCardBody').innerHTML = `
+    <div id="audienceFormError" class="alert alert-danger d-none py-2 small mb-3"></div>
+    <div class="mb-3">
+      <label class="form-label">Name <span class="text-danger">*</span></label>
+      <input type="text" id="audienceName" class="form-control" placeholder="e.g. All UK Staff" value="${audience ? App.escHtml(audience.name) : ''}" />
+    </div>
+    <div class="mb-3">
+      <label class="form-label">Approval type</label>
+      <select id="audienceApprovalType" class="form-select">
+        <option value="">— None —</option>
+        ${approvalOptions}
+      </select>
+    </div>
+    <div class="d-flex gap-2">
+      <button class="btn btn-primary" id="saveAudienceBtn">
+        <span id="saveAudienceLabel">${isEdit ? 'Update' : 'Save'}</span>
+        <span id="saveAudienceSpinner" class="spinner-border spinner-border-sm ms-2 d-none"></span>
+      </button>
+      ${isEdit ? `<button class="btn btn-outline-danger" id="deleteAudienceBtn"><i class="ti ti-trash me-1"></i>Delete</button>` : ''}
+    </div>
+  `;
+
+  document.getElementById('saveAudienceBtn').addEventListener('click', () => saveAudience(audience));
+  if (isEdit) {
+    document.getElementById('deleteAudienceBtn').addEventListener('click', () => deleteAudience(audience));
+  }
+}
+
+async function saveAudience(existing) {
+  const errorEl = document.getElementById('audienceFormError');
+  errorEl.classList.add('d-none');
+
+  const name = document.getElementById('audienceName').value.trim();
+  const approvalTypeId = document.getElementById('audienceApprovalType').value || null;
+
+  if (!name) {
+    errorEl.textContent = 'Name is required.';
+    errorEl.classList.remove('d-none');
+    return;
+  }
+
+  const payload = {
+    name,
+    approval_type_id: approvalTypeId,
+    organisation_id: Auth.getOrganisationId(),
+  };
+
+  document.getElementById('saveAudienceSpinner').classList.remove('d-none');
+  document.getElementById('saveAudienceBtn').disabled = true;
+
+  let error, data;
+  if (existing) {
+    ({ error } = await sb.from('ad_audience').update(payload).eq('audience_id', existing.audience_id));
+  } else {
+    ({ data, error } = await sb.from('ad_audience').insert(payload).select().single());
+  }
+
+  document.getElementById('saveAudienceSpinner').classList.add('d-none');
+  document.getElementById('saveAudienceBtn').disabled = false;
+
+  if (error) {
+    errorEl.textContent = 'Save failed: ' + (error.message || 'Unknown error');
+    errorEl.classList.remove('d-none');
+    return;
+  }
+
+  App.toast(existing ? 'Updated' : 'Added');
+  await loadAudiences();
+
+  const justSaved = existing || data;
+  if (justSaved) {
+    const fresh = allAudiences.find(a => a.audience_id === justSaved.audience_id);
+    if (fresh) selectAudience(fresh);
+  }
+}
+
+async function deleteAudience(audience) {
+  if (!confirm(`Delete "${audience.name}"? This cannot be undone.`)) return;
+
+  const { error } = await sb.from('ad_audience').delete().eq('audience_id', audience.audience_id);
+  if (error) { App.toast('Delete failed: ' + error.message, 'danger'); return; }
+
+  App.toast('Deleted');
+  selectedAudienceId = null;
+  document.getElementById('detailCardTitle').textContent = 'Select an audience';
+  document.getElementById('detailCardBody').innerHTML = `<p class="text-secondary">Choose an audience from the list on the left, or create a new one, to see and edit its details here.</p>`;
+  resetMemberLists();
+  await loadAudiences();
+}
+
+async function loadMembership(audienceId) {
+  const { data, error } = await sb.from('ad_audience_member').select('user_id').eq('audience_id', audienceId).eq('organisation_id', Auth.getOrganisationId());
+
+  if (error) {
+    console.error('[Audiences] membership load error:', error);
+    return;
+  }
+
+  currentMemberIds = new Set((data || []).map(r => r.user_id));
+  renderMemberLists();
+}
+
+function resetMemberLists() {
+  currentMemberIds = new Set();
+  document.getElementById('notInListBody').innerHTML = `<div class="text-center py-4 text-secondary small">Select an audience above</div>`;
+  document.getElementById('inListBody').innerHTML = `<div class="text-center py-4 text-secondary small">Select an audience above</div>`;
+  document.getElementById('notInCount').textContent = '';
+  document.getElementById('inCount').textContent = '';
+}
+
+function userRowHtml(user) {
+  const displayName = (user.known_name || user.first_name || '').trim() || user.email || 'Unnamed';
+  const fullName = [user.first_name, user.last_name].filter(Boolean).join(' ') || displayName;
+  const initials = fullName.split(' ').map(w => w[0]).filter(Boolean).join('').toUpperCase().slice(0, 2) || '?';
+
+  return `<div class="member-list-item">
+    <span class="avatar avatar-sm rounded-circle bg-primary-lt">${App.escHtml(initials)}</span>
+    <div>
+      <div class="fw-semibold">${App.escHtml(fullName)}</div>
+      <div class="text-secondary small">${App.escHtml(user.email || '')}</div>
+    </div>
+  </div>`;
+}
+
+function renderMemberLists() {
+  const notIn = allUsers.filter(u => !currentMemberIds.has(u.user_id));
+  const inAud = allUsers.filter(u => currentMemberIds.has(u.user_id));
+
+  document.getElementById('notInCount').textContent = `${notIn.length}`;
+  document.getElementById('inCount').textContent = `${inAud.length}`;
+
+  document.getElementById('notInListBody').innerHTML = notIn.length
+    ? notIn.map(userRowHtml).join('')
+    : `<div class="text-center py-4 text-secondary small">No users outside this audience</div>`;
+
+  document.getElementById('inListBody').innerHTML = inAud.length
+    ? inAud.map(userRowHtml).join('')
+    : `<div class="text-center py-4 text-secondary small">No members yet</div>`;
+}
+  </script>
+</body>
+</html>
