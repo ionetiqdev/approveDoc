@@ -1,1 +1,1 @@
-Tighten page title spacing next to sidebar toggle; Countries/Languages columns to 5/5/90
+Remove redundant per-page title CSS so the global theme.css rule applies consistently everywhere
