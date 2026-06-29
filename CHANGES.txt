@@ -1,1 +1,1 @@
-Force page title out of Tabler's default centering via flex order, not just margin/text-align
+Restore sidebar toggle button position - explicitly order it before the title instead of letting order:-1 jump the title ahead of it

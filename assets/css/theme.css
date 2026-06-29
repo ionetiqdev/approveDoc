@@ -318,30 +318,26 @@ body:has(#sidebar.collapsed) .app-content-wrapper { margin-left: var(--sidebar-w
   background: none; border: none; color: var(--tblr-secondary-color); cursor: pointer; padding: 0; font-size: 1rem;
 }
 
-/* Page titles in the header bar - bigger, and explicitly positioned
-   right next to the sidebar toggle button, not pushed to the far
-   right of the header. text-align alone wasn't enough - something in
-   Tabler's own .navbar-brand default (likely flex-grow / auto margin
-   from the .navbar flex container) was moving the whole element's
-   box, not just its text, so this pins the box itself with flex:
-   none and margin-right: auto (which claims all the *remaining*
-   space on the right instead of the left, keeping the title pinned
-   immediately after the toggle button). */
 /* Page titles in the header bar - bigger, and pinned immediately
    after the sidebar toggle button. Tabler's .navbar-brand defaults
    to being centered/auto-sized within the header's flex layout
    regardless of margin/text-align overrides - confirmed via
    DevTools: the element's own box was small (~93px) and sitting at
-   the horizontal centre of the header, not stretched or right-
-   shifted. Forcing it out of that default flow with order + flex-
-   basis + width:auto + no auto margins is what actually moves the
-   box, not just the text inside it. */
+   the horizontal centre of the header. order:-1 alone moved the
+   title ahead of the toggle button too (toggle has no explicit
+   order, defaults to 0) - explicitly ordering the toggle button as
+   0 and the title as 1 keeps the toggle first, title directly after
+   it, regardless of where either sits in the actual HTML. */
 header.navbar > .container-fluid {
   display: flex !important;
   align-items: center !important;
 }
+header .container-fluid > #sidebarToggle {
+  order: 0 !important;
+  flex: 0 0 auto !important;
+}
 header .navbar-brand.page-title-lg {
-  order: -1 !important;
+  order: 1 !important;
   flex: 0 0 auto !important;
   width: auto !important;
   max-width: none !important;
