@@ -1,1 +1,1 @@
-Audiences: 14px header text, 10px top/bottom padding on all panel headers
+Audiences: Update/Delete buttons now btn-sm to match New Audience sizing
