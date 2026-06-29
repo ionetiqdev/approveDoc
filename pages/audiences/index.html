@@ -7,7 +7,7 @@
 
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/core@1.4.0/dist/css/tabler.min.css" />
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.44.0/dist/tabler-icons.min.css" />
-  <link rel="stylesheet" href="../../assets/css/theme.css?r=8qd6p3u4" />
+  <link rel="stylesheet" href="../../assets/css/theme.css?r=my7x8d6r" />
 
   <script>
     (function() {
@@ -64,11 +64,20 @@
     .audience-row.active { background: var(--tblr-primary-lt); }
     .audience-row:hover { background: var(--tblr-bg-surface-secondary); }
 
-    .member-list-item { display: flex; align-items: center; gap: .6rem; padding: .5rem .75rem; border-bottom: 1px solid var(--tblr-border-color); }
+    .member-list-item { display: flex; align-items: center; gap: .6rem; padding: .5rem .75rem; border-bottom: 1px solid var(--tblr-border-color); cursor: grab; }
     .member-list-item:last-child { border-bottom: none; }
+    .member-list-item.dragging { opacity: .4; }
+    .member-list-item input[type="checkbox"] { flex-shrink: 0; }
+
+    .member-list-pane.drag-over { background: var(--tblr-primary-lt); outline: 2px dashed var(--tblr-primary); outline-offset: -2px; }
 
     .audiences-top .card-header, .audiences-bottom .card-header {
       background: var(--tblr-bg-surface-secondary);
+      padding-top: 10px;
+      padding-bottom: 10px;
+    }
+    .audiences-top .card-title, .audiences-bottom .card-title {
+      font-size: 14px;
     }
 
     /* The detail/edit panel's body needs to actually be a flex
@@ -151,7 +160,7 @@
               <h3 class="card-title">Not in this audience</h3>
               <span class="text-secondary ms-auto small" id="notInCount"></span>
             </div>
-            <div class="scroll-pane" id="notInListBody">
+            <div class="scroll-pane member-list-pane" id="notInListBody" data-side="notIn">
               <div class="text-center py-4 text-secondary small">Select an audience above</div>
             </div>
           </div>
@@ -161,7 +170,7 @@
               <h3 class="card-title">In this audience</h3>
               <span class="text-secondary ms-auto small" id="inCount"></span>
             </div>
-            <div class="scroll-pane" id="inListBody">
+            <div class="scroll-pane member-list-pane" id="inListBody" data-side="in">
               <div class="text-center py-4 text-secondary small">Select an audience above</div>
             </div>
           </div>
@@ -204,14 +213,14 @@
   <script src="https://cdn.jsdelivr.net/npm/@tabler/core@1.4.0/dist/js/tabler.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="../../assets/js/version.js?r=8qd6p3u4"></script>
-  <script src="../../assets/js/supabase-client.js?r=8qd6p3u4"></script>
-  <script src="../../assets/js/auth.js?r=8qd6p3u4"></script>
-  <script src="../../assets/js/app.js?r=8qd6p3u4"></script>
-  <script src="../../assets/js/theme.js?r=8qd6p3u4"></script>
-  <script src="../../assets/js/sidebar-html.js?r=8qd6p3u4"></script>
-  <script src="../../assets/js/sidebar.js?r=8qd6p3u4"></script>
-  <script src="../../assets/js/profile-modal.js?r=8qd6p3u4"></script>
+  <script src="../../assets/js/version.js?r=my7x8d6r"></script>
+  <script src="../../assets/js/supabase-client.js?r=my7x8d6r"></script>
+  <script src="../../assets/js/auth.js?r=my7x8d6r"></script>
+  <script src="../../assets/js/app.js?r=my7x8d6r"></script>
+  <script src="../../assets/js/theme.js?r=my7x8d6r"></script>
+  <script src="../../assets/js/sidebar-html.js?r=my7x8d6r"></script>
+  <script src="../../assets/js/sidebar.js?r=my7x8d6r"></script>
+  <script src="../../assets/js/profile-modal.js?r=my7x8d6r"></script>
   <script>
 // Audiences: top half is a master/detail pair (audience list + its
 // details/create form), bottom half is a two-list view of which
@@ -224,6 +233,7 @@ let allUsers = [];
 let currentMemberIds = new Set();
 let selectedAudienceId = null;
 let newAudienceModal;
+let checkedUserIds = new Set(); // checkbox selection, cleared whenever membership changes
 
 (async () => {
   const session = await Auth.requireAuth();
@@ -239,6 +249,7 @@ let newAudienceModal;
   }
 
   newAudienceModal = new bootstrap.Modal(document.getElementById('newAudienceModal'));
+  setupDropZones();
 
   await Promise.all([loadUsers(), loadAudiences()]);
 
@@ -366,6 +377,7 @@ function renderAudienceList() {
 
 function selectAudience(audience) {
   selectedAudienceId = audience.audience_id;
+  checkedUserIds.clear();
   renderAudienceList();
   showDetailForm(audience);
   loadMembership(audience.audience_id);
@@ -476,6 +488,7 @@ async function loadMembership(audienceId) {
 
 function resetMemberLists() {
   currentMemberIds = new Set();
+  checkedUserIds.clear();
   document.getElementById('notInListBody').innerHTML = `<div class="text-center py-4 text-secondary small">Select an audience above</div>`;
   document.getElementById('inListBody').innerHTML = `<div class="text-center py-4 text-secondary small">Select an audience above</div>`;
   document.getElementById('notInCount').textContent = '';
@@ -491,7 +504,10 @@ function userRowHtml(user) {
     ? `<span class="avatar avatar-sm rounded-circle" style="background-image:url('${App.escHtml(user.avatar_url)}')"></span>`
     : `<span class="avatar avatar-sm rounded-circle bg-primary-lt">${App.escHtml(initials)}</span>`;
 
-  return `<div class="member-list-item">
+  const checked = checkedUserIds.has(user.user_id) ? 'checked' : '';
+
+  return `<div class="member-list-item" draggable="true" data-user-id="${user.user_id}">
+    <input type="checkbox" class="form-check-input member-checkbox" data-user-id="${user.user_id}" draggable="false" ${checked} />
     ${avatar}
     <div>
       <div class="fw-semibold">${App.escHtml(fullName)}</div>
@@ -507,13 +523,111 @@ function renderMemberLists() {
   document.getElementById('notInCount').textContent = `${notIn.length} user${notIn.length === 1 ? '' : 's'}`;
   document.getElementById('inCount').textContent = `${inAud.length} user${inAud.length === 1 ? '' : 's'}`;
 
-  document.getElementById('notInListBody').innerHTML = notIn.length
+  const notInPane = document.getElementById('notInListBody');
+  const inPane = document.getElementById('inListBody');
+
+  notInPane.innerHTML = notIn.length
     ? notIn.map(userRowHtml).join('')
     : `<div class="text-center py-4 text-secondary small">No users outside this audience</div>`;
 
-  document.getElementById('inListBody').innerHTML = inAud.length
+  inPane.innerHTML = inAud.length
     ? inAud.map(userRowHtml).join('')
     : `<div class="text-center py-4 text-secondary small">No members yet</div>`;
+
+  wireUpRowInteractions(notInPane, 'notIn');
+  wireUpRowInteractions(inPane, 'in');
+}
+
+// Wires checkbox toggling, double-click transfer, and drag-start on
+// every row within one pane. Called fresh after every render, since
+// renderMemberLists() always rebuilds the DOM from scratch.
+function wireUpRowInteractions(pane, side) {
+  pane.querySelectorAll('.member-checkbox').forEach(cb => {
+    cb.addEventListener('change', () => {
+      if (cb.checked) checkedUserIds.add(cb.dataset.userId);
+      else checkedUserIds.delete(cb.dataset.userId);
+    });
+    // Clicking the checkbox shouldn't also trigger the row's own
+    // drag-start/double-click handlers.
+    cb.addEventListener('click', e => e.stopPropagation());
+  });
+
+  pane.querySelectorAll('.member-list-item').forEach(row => {
+    row.addEventListener('dblclick', () => {
+      transferUsers([row.dataset.userId], side === 'notIn' ? 'in' : 'notIn');
+    });
+
+    row.addEventListener('dragstart', (e) => {
+      // If this row is checked, drag the whole checked set (within
+      // this same pane); otherwise drag just this one row, same as
+      // a double-click would.
+      const idsInThisPane = new Set(
+        Array.from(pane.querySelectorAll('.member-checkbox:checked')).map(c => c.dataset.userId)
+      );
+      const draggingIds = idsInThisPane.has(row.dataset.userId)
+        ? Array.from(idsInThisPane)
+        : [row.dataset.userId];
+
+      e.dataTransfer.setData('text/plain', JSON.stringify({ userIds: draggingIds, fromSide: side }));
+      e.dataTransfer.effectAllowed = 'move';
+      row.classList.add('dragging');
+    });
+
+    row.addEventListener('dragend', () => row.classList.remove('dragging'));
+  });
+}
+
+// Drop-zone handlers, attached once (not re-attached on every
+// render, since the pane elements themselves are stable - only
+// their innerHTML changes).
+function setupDropZones() {
+  document.querySelectorAll('.member-list-pane').forEach(pane => {
+    pane.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      pane.classList.add('drag-over');
+    });
+    pane.addEventListener('dragleave', () => pane.classList.remove('drag-over'));
+    pane.addEventListener('drop', (e) => {
+      e.preventDefault();
+      pane.classList.remove('drag-over');
+
+      let payload;
+      try { payload = JSON.parse(e.dataTransfer.getData('text/plain')); }
+      catch { return; }
+
+      const targetSide = pane.dataset.side;
+      if (!payload?.userIds?.length || payload.fromSide === targetSide) return;
+
+      transferUsers(payload.userIds, targetSide);
+    });
+  });
+}
+
+// Moves one or more users into ('in') or out of ('notIn') the
+// currently selected audience, via real ad_audience_member
+// insert/delete calls, then reloads membership from the database so
+// the UI always reflects what's actually saved (rather than
+// optimistically updating local state and risking drift on error).
+async function transferUsers(userIds, targetSide) {
+  if (!selectedAudienceId || !userIds.length) return;
+
+  const orgId = Auth.getOrganisationId();
+
+  if (targetSide === 'in') {
+    const rows = userIds.map(user_id => ({ audience_id: selectedAudienceId, user_id, organisation_id: orgId }));
+    const { error } = await sb.from('ad_audience_member').upsert(rows, { onConflict: 'audience_id,user_id' });
+    if (error) { App.toast('Failed to add: ' + error.message, 'danger'); return; }
+  } else {
+    const { error } = await sb.from('ad_audience_member')
+      .delete()
+      .eq('audience_id', selectedAudienceId)
+      .in('user_id', userIds);
+    if (error) { App.toast('Failed to remove: ' + error.message, 'danger'); return; }
+  }
+
+  checkedUserIds.clear();
+  App.toast(targetSide === 'in' ? 'Added to audience' : 'Removed from audience');
+  await loadMembership(selectedAudienceId);
 }
   </script>
 </body>

@@ -1,1 +1,1 @@
-Audiences: grey panel headers, Edit form layout (Description fills space, buttons pinned bottom), real avatar images from profiles.avatar_url
+Audiences: 14px header text, 10px top/bottom padding on all panel headers
