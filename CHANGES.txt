@@ -1,1 +1,1 @@
-Audiences Advanced: criteria builder (Country/Location/Department, AND across types, OR within), live match preview, confirm builds real membership
+Audiences Advanced: swap layout - top-right is name/description form, bottom-left is criteria builder, bottom-right matching users preview

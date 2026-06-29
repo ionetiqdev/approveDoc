@@ -7,7 +7,7 @@
 
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/core@1.4.0/dist/css/tabler.min.css" />
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.44.0/dist/tabler-icons.min.css" />
-  <link rel="stylesheet" href="../../assets/css/theme.css?r=diq9h1rg" />
+  <link rel="stylesheet" href="../../assets/css/theme.css?r=iqwg2cua" />
 
   <script>
     (function() {
@@ -111,7 +111,7 @@
     <div class="page-body">
       <div class="container-fluid">
 
-        <!-- ── Top half: audience list (left) + criteria builder (right) ── -->
+        <!-- ── Top half: audience list (left) + name/description form (right) ── -->
         <div class="audiences-top">
 
           <div class="card">
@@ -136,17 +136,29 @@
             </div>
             <div class="scroll-pane">
               <div class="card-body" id="detailCardBody">
-                <p class="text-secondary">Choose an audience from the list on the left to build or edit its criteria here.</p>
+                <p class="text-secondary">Choose an audience from the list on the left to see and edit its details here.</p>
               </div>
             </div>
           </div>
 
         </div>
 
-        <!-- ── Bottom half: read-only preview of users the current
-             criteria match. Updates live as criteria checkboxes
-             change, before anything is saved. ── -->
+        <!-- ── Bottom half: criteria builder (left) + read-only
+             preview of matching users (right). Preview updates live
+             as criteria checkboxes change, before anything is
+             saved. ── -->
         <div class="audiences-bottom">
+
+          <div class="card">
+            <div class="card-header">
+              <h3 class="card-title" id="criteriaCardTitle">Criteria</h3>
+            </div>
+            <div class="scroll-pane">
+              <div class="card-body" id="criteriaCardBody">
+                <p class="text-secondary">Choose an audience above to build or edit its criteria here.</p>
+              </div>
+            </div>
+          </div>
 
           <div class="card">
             <div class="card-header">
@@ -196,14 +208,14 @@
   <script src="https://cdn.jsdelivr.net/npm/@tabler/core@1.4.0/dist/js/tabler.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="../../assets/js/version.js?r=diq9h1rg"></script>
-  <script src="../../assets/js/supabase-client.js?r=diq9h1rg"></script>
-  <script src="../../assets/js/auth.js?r=diq9h1rg"></script>
-  <script src="../../assets/js/app.js?r=diq9h1rg"></script>
-  <script src="../../assets/js/theme.js?r=diq9h1rg"></script>
-  <script src="../../assets/js/sidebar-html.js?r=diq9h1rg"></script>
-  <script src="../../assets/js/sidebar.js?r=diq9h1rg"></script>
-  <script src="../../assets/js/profile-modal.js?r=diq9h1rg"></script>
+  <script src="../../assets/js/version.js?r=iqwg2cua"></script>
+  <script src="../../assets/js/supabase-client.js?r=iqwg2cua"></script>
+  <script src="../../assets/js/auth.js?r=iqwg2cua"></script>
+  <script src="../../assets/js/app.js?r=iqwg2cua"></script>
+  <script src="../../assets/js/theme.js?r=iqwg2cua"></script>
+  <script src="../../assets/js/sidebar-html.js?r=iqwg2cua"></script>
+  <script src="../../assets/js/sidebar.js?r=iqwg2cua"></script>
+  <script src="../../assets/js/profile-modal.js?r=iqwg2cua"></script>
   <script>
 // Audiences (Advanced): same ad_audience / ad_audience_member tables
 // as the basic Audiences page, but membership here is derived from a
@@ -340,8 +352,66 @@ function renderAudienceList() {
 async function selectAudience(audience) {
   selectedAudienceId = audience.audience_id;
   renderAudienceList();
+  showDetailForm(audience);
   await loadCriteria(audience.audience_id);
   showCriteriaBuilder(audience);
+}
+
+function showDetailForm(audience) {
+  document.getElementById('detailCardTitle').textContent = audience.name;
+
+  document.getElementById('detailCardBody').innerHTML = `
+    <div id="audienceFormError" class="alert alert-danger d-none py-2 small mb-3"></div>
+    <div class="mb-3">
+      <label class="form-label">Name <span class="text-danger">*</span></label>
+      <input type="text" id="audienceName" class="form-control" value="${App.escHtml(audience.name)}" />
+    </div>
+    <div class="mb-3">
+      <label class="form-label">Description</label>
+      <textarea id="audienceDescription" class="form-control" rows="4" placeholder="What this audience represents, who it's for, etc.">${audience.description ? App.escHtml(audience.description) : ''}</textarea>
+    </div>
+    <button class="btn btn-primary btn-sm" id="saveAudienceBtn">
+      <span id="saveAudienceLabel">Update</span>
+      <span id="saveAudienceSpinner" class="spinner-border spinner-border-sm ms-2 d-none"></span>
+    </button>
+  `;
+
+  document.getElementById('saveAudienceBtn').addEventListener('click', () => saveAudienceDetails(audience));
+}
+
+async function saveAudienceDetails(audience) {
+  const errorEl = document.getElementById('audienceFormError');
+  errorEl.classList.add('d-none');
+
+  const name = document.getElementById('audienceName').value.trim();
+  const description = document.getElementById('audienceDescription').value.trim() || null;
+
+  if (!name) {
+    errorEl.textContent = 'Name is required.';
+    errorEl.classList.remove('d-none');
+    return;
+  }
+
+  document.getElementById('saveAudienceSpinner').classList.remove('d-none');
+  document.getElementById('saveAudienceBtn').disabled = true;
+
+  const { error } = await sb.from('ad_audience').update({ name, description }).eq('audience_id', audience.audience_id);
+
+  document.getElementById('saveAudienceSpinner').classList.add('d-none');
+  document.getElementById('saveAudienceBtn').disabled = false;
+
+  if (error) {
+    errorEl.textContent = 'Save failed: ' + (error.message || 'Unknown error');
+    errorEl.classList.remove('d-none');
+    return;
+  }
+
+  App.toast('Updated');
+  await loadAudiences();
+  const fresh = allAudiences.find(a => a.audience_id === audience.audience_id);
+  if (fresh) {
+    document.getElementById('detailCardTitle').textContent = fresh.name;
+  }
 }
 
 async function loadCriteria(audienceId) {
@@ -384,9 +454,9 @@ function criteriaBlockHtml(type, title, options) {
 }
 
 function showCriteriaBuilder(audience) {
-  document.getElementById('detailCardTitle').textContent = `Criteria: ${audience.name}`;
+  document.getElementById('criteriaCardTitle').textContent = `Criteria: ${audience.name}`;
 
-  document.getElementById('detailCardBody').innerHTML = `
+  document.getElementById('criteriaCardBody').innerHTML = `
     <div id="criteriaError" class="alert alert-danger d-none py-2 small mb-3"></div>
     ${criteriaBlockHtml('country', 'Country', countryOptions)}
     <div class="criteria-and-divider">AND</div>
@@ -565,7 +635,9 @@ async function deleteAudience(audience) {
   App.toast('Deleted');
   selectedAudienceId = null;
   document.getElementById('detailCardTitle').textContent = 'Select an audience';
-  document.getElementById('detailCardBody').innerHTML = `<p class="text-secondary">Choose an audience from the list on the left to build or edit its criteria here.</p>`;
+  document.getElementById('detailCardBody').innerHTML = `<p class="text-secondary">Choose an audience from the list on the left to see and edit its details here.</p>`;
+  document.getElementById('criteriaCardTitle').textContent = 'Criteria';
+  document.getElementById('criteriaCardBody').innerHTML = `<p class="text-secondary">Choose an audience above to build or edit its criteria here.</p>`;
   document.getElementById('matchListBody').innerHTML = `<div class="text-center py-4 text-secondary small">Select an audience above</div>`;
   document.getElementById('matchCount').textContent = '';
   await loadAudiences();
