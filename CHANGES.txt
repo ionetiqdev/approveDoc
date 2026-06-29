@@ -1,1 +1,1 @@
-Restore sidebar toggle button position - explicitly order it before the title instead of letting order:-1 jump the title ahead of it
+Fix header layout - explicit justify-content: flex-start on the container, with the right-side nav block pushed right via its own margin-left auto (DevTools-confirmed root cause: container had no justify-content override, so Tabler default was spacing children apart)

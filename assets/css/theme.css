@@ -331,6 +331,11 @@ body:has(#sidebar.collapsed) .app-content-wrapper { margin-left: var(--sidebar-w
 header.navbar > .container-fluid {
   display: flex !important;
   align-items: center !important;
+  justify-content: flex-start !important;
+  gap: 0 !important;
+}
+header.navbar > .container-fluid > .navbar-nav {
+  margin-left: auto !important;
 }
 header .container-fluid > #sidebarToggle {
   order: 0 !important;
