@@ -1,1 +1,1 @@
-Restore pagination on all lookup tables (no scrollbar); 10/10/80 columns + flags on Countries and Languages; larger left-aligned page titles app-wide
+Adjust Countries/Languages column widths to 7/7/86
