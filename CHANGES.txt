@@ -1,1 +1,1 @@
-Fix lookup row icon sizing to match Issues (btn-icon-lg); add Job Roles lookup with drag-to-reorder; add Job Role as audience criteria
+Consolidate sidebar to single Audiences entry pointing at the Combined page; basic/Advanced pages stay reachable by direct URL, no longer in menu

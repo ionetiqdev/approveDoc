@@ -83,23 +83,9 @@ const SidebarHtml = (() => {
           </li>
 
           <li class="nav-item">
-            <a href="${root}pages/audiences/index.html" class="nav-link">
-              <i class="ti ti-users-group"></i>
-              <span class="nav-link-text">Audiences</span>
-            </a>
-          </li>
-
-          <li class="nav-item">
-            <a href="${root}pages/audiences_adv/index.html" class="nav-link">
-              <i class="ti ti-users-group"></i>
-              <span class="nav-link-text">Audiences (Advanced)</span>
-            </a>
-          </li>
-
-          <li class="nav-item">
             <a href="${root}pages/audiences_combined/index.html" class="nav-link">
               <i class="ti ti-users-group"></i>
-              <span class="nav-link-text">Audiences (Combined)</span>
+              <span class="nav-link-text">Audiences</span>
             </a>
           </li>
 
