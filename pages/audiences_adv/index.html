@@ -7,7 +7,7 @@
 
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/core@1.4.0/dist/css/tabler.min.css" />
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.44.0/dist/tabler-icons.min.css" />
-  <link rel="stylesheet" href="../../assets/css/theme.css?r=iqwg2cua" />
+  <link rel="stylesheet" href="../../assets/css/theme.css?r=hxk17wfo" />
 
   <script>
     (function() {
@@ -75,9 +75,15 @@
        it's clear this is a query, not a single field. */
     .criteria-block { border: 1px solid var(--tblr-border-color); border-radius: var(--tblr-border-radius); padding: .65rem .75rem; margin-bottom: .75rem; }
     .criteria-block-title { font-weight: 600; font-size: .8125rem; margin-bottom: .4rem; display: flex; align-items: center; gap: .4rem; }
-    .criteria-options { display: flex; flex-wrap: wrap; gap: .4rem .9rem; max-height: 130px; overflow-y: auto; }
-    .criteria-options label { display: flex; align-items: center; gap: .35rem; font-size: .8125rem; font-weight: 400; margin: 0; cursor: pointer; }
     .criteria-and-divider { text-align: center; font-size: .7rem; color: var(--tblr-secondary-color); font-weight: 600; letter-spacing: .05em; margin: -.25rem 0 .5rem; }
+    .criteria-summary { min-height: 1.5rem; }
+
+    .criteria-picker-list { max-height: 320px; overflow-y: auto; border: 1px solid var(--tblr-border-color); border-radius: var(--tblr-border-radius); }
+    .criteria-picker-item { display: flex; align-items: center; gap: .6rem; padding: .45rem .65rem; border-bottom: 1px solid var(--tblr-border-color); cursor: pointer; }
+    .criteria-picker-item:last-child { border-bottom: none; }
+    .criteria-picker-item:hover { background: var(--tblr-bg-surface-secondary); }
+    .criteria-picker-item img { width: 24px; height: 18px; border-radius: 2px; flex-shrink: 0; box-shadow: 0 0 0 1px rgba(0,0,0,.08); }
+    .criteria-picker-item input[type="checkbox"] { flex-shrink: 0; }
   </style>
 </head>
 <body>
@@ -205,17 +211,47 @@
     </div>
   </div>
 
+  <div class="modal modal-blur fade" id="criteriaPickerModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="criteriaPickerTitle">Select</h5>
+          <button type="button" class="modal-close-btn" data-bs-dismiss="modal" aria-label="Close"><i class="ti ti-x"></i></button>
+        </div>
+        <div class="modal-body">
+          <div class="input-icon mb-3">
+            <span class="input-icon-addon"><i class="ti ti-search"></i></span>
+            <input type="text" id="criteriaPickerSearch" class="form-control" placeholder="Search…" />
+          </div>
+          <div class="d-flex justify-content-between mb-2">
+            <span class="text-secondary small" id="criteriaPickerCount"></span>
+            <div>
+              <a href="#" class="small" id="criteriaPickerSelectAll">Select all</a>
+              <span class="text-secondary mx-1">·</span>
+              <a href="#" class="small" id="criteriaPickerClearAll">Clear all</a>
+            </div>
+          </div>
+          <div class="criteria-picker-list" id="criteriaPickerList"></div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn" data-bs-dismiss="modal">Cancel</button>
+          <button type="button" class="btn btn-primary" id="applyCriteriaPickerBtn">Apply</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <script src="https://cdn.jsdelivr.net/npm/@tabler/core@1.4.0/dist/js/tabler.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="../../assets/js/version.js?r=iqwg2cua"></script>
-  <script src="../../assets/js/supabase-client.js?r=iqwg2cua"></script>
-  <script src="../../assets/js/auth.js?r=iqwg2cua"></script>
-  <script src="../../assets/js/app.js?r=iqwg2cua"></script>
-  <script src="../../assets/js/theme.js?r=iqwg2cua"></script>
-  <script src="../../assets/js/sidebar-html.js?r=iqwg2cua"></script>
-  <script src="../../assets/js/sidebar.js?r=iqwg2cua"></script>
-  <script src="../../assets/js/profile-modal.js?r=iqwg2cua"></script>
+  <script src="../../assets/js/version.js?r=hxk17wfo"></script>
+  <script src="../../assets/js/supabase-client.js?r=hxk17wfo"></script>
+  <script src="../../assets/js/auth.js?r=hxk17wfo"></script>
+  <script src="../../assets/js/app.js?r=hxk17wfo"></script>
+  <script src="../../assets/js/theme.js?r=hxk17wfo"></script>
+  <script src="../../assets/js/sidebar-html.js?r=hxk17wfo"></script>
+  <script src="../../assets/js/sidebar.js?r=hxk17wfo"></script>
+  <script src="../../assets/js/profile-modal.js?r=hxk17wfo"></script>
   <script>
 // Audiences (Advanced): same ad_audience / ad_audience_member tables
 // as the basic Audiences page, but membership here is derived from a
@@ -235,6 +271,7 @@ let departmentOptions = [];  // { value: department_id, label: name }
 let selectedAudienceId = null;
 let selectedCriteria = { country: new Set(), location: new Set(), department: new Set() };
 let newAudienceModal;
+let criteriaPickerModal;
 
 (async () => {
   const session = await Auth.requireAuth();
@@ -250,6 +287,7 @@ let newAudienceModal;
   }
 
   newAudienceModal = new bootstrap.Modal(document.getElementById('newAudienceModal'));
+  criteriaPickerModal = new bootstrap.Modal(document.getElementById('criteriaPickerModal'));
 
   await Promise.all([loadLookups(), loadUsers(), loadAudiences()]);
 
@@ -262,7 +300,7 @@ async function loadLookups() {
   const orgId = Auth.getOrganisationId();
 
   const [countriesRes, locationsRes, departmentsRes] = await Promise.all([
-    sb.from('ad_country').select('country_code, name').order('name'),
+    sb.from('ad_country').select('country_code, name, alpha2').order('name'),
     sb.from('ad_location').select('location_id, name').eq('organisation_id', orgId).order('name'),
     sb.from('ad_department').select('department_id, name').eq('organisation_id', orgId).order('name'),
   ]);
@@ -271,12 +309,7 @@ async function loadLookups() {
   if (locationsRes.error) console.error('[Audiences Adv] locations load error:', locationsRes.error);
   if (departmentsRes.error) console.error('[Audiences Adv] departments load error:', departmentsRes.error);
 
-  // Countries is a global lookup with 248 rows - only offer ones
-  // actually in use by at least one user in this org as criteria
-  // options, otherwise the list is unusably long and mostly
-  // irrelevant. Locations/departments are already org-scoped and
-  // small, so no filtering needed there.
-  countryOptions = (countriesRes.data || []).map(c => ({ value: c.country_code, label: c.name }));
+  countryOptions = (countriesRes.data || []).map(c => ({ value: c.country_code, label: c.name, alpha2: c.alpha2 }));
   locationOptions = (locationsRes.data || []).map(l => ({ value: l.location_id, label: l.name }));
   departmentOptions = (departmentsRes.data || []).map(d => ({ value: d.department_id, label: d.name }));
 }
@@ -299,11 +332,6 @@ async function loadUsers() {
       allUsers = allUsers.map(u => ({ ...u, avatar_url: avatarById.get(u.user_id) || null }));
     }
   }
-
-  // Narrow the country option list down to countries actually used
-  // by at least one user in this org, now that we have allUsers.
-  const usedCountryCodes = new Set(allUsers.map(u => u.country_code).filter(Boolean));
-  countryOptions = countryOptions.filter(c => usedCountryCodes.has(c.value));
 }
 
 async function loadAudiences() {
@@ -432,25 +460,117 @@ async function loadCriteria(audienceId) {
 }
 
 function criteriaBlockHtml(type, title, options) {
-  if (!options.length) {
-    return `<div class="criteria-block">
-      <div class="criteria-block-title">${title}</div>
-      <p class="text-secondary small mb-0">No ${title.toLowerCase()} options available yet.</p>
-    </div>`;
-  }
+  const selectedCount = selectedCriteria[type].size;
+  const selectedLabels = options.filter(opt => selectedCriteria[type].has(String(opt.value))).map(opt => opt.label);
 
-  const checkboxes = options.map(opt => {
-    const checked = selectedCriteria[type].has(String(opt.value)) ? 'checked' : '';
-    return `<label>
-      <input type="checkbox" class="form-check-input criteria-checkbox" data-type="${type}" value="${App.escHtml(String(opt.value))}" ${checked} />
-      ${App.escHtml(opt.label)}
-    </label>`;
-  }).join('');
+  const summary = selectedCount
+    ? selectedLabels.slice(0, 6).map(l => `<span class="badge bg-secondary-lt me-1 mb-1">${App.escHtml(l)}</span>`).join('')
+      + (selectedCount > 6 ? `<span class="text-secondary small">+${selectedCount - 6} more</span>` : '')
+    : `<span class="text-secondary small">None selected (no filter applied)</span>`;
 
   return `<div class="criteria-block">
-    <div class="criteria-block-title">${title}<span class="text-secondary small fw-normal">(any selected, OR)</span></div>
-    <div class="criteria-options">${checkboxes}</div>
+    <div class="criteria-block-title">
+      ${title}<span class="text-secondary small fw-normal">(any selected, OR)</span>
+      <button type="button" class="btn btn-outline-primary btn-sm ms-auto criteria-select-btn" data-type="${type}" data-title="${App.escHtml(title)}">
+        <i class="ti ti-list-search me-1"></i>Select…
+      </button>
+    </div>
+    <div class="criteria-summary">${summary}</div>
   </div>`;
+}
+
+// Picker modal state - a working copy of the selection for whichever
+// criterion is currently open, so Cancel can discard changes without
+// having touched the real selectedCriteria set.
+let pickerType = null;
+let pickerOptions = [];
+let pickerWorkingSet = new Set();
+
+function getPickerOptions(type) {
+  if (type === 'country') return countryOptions;
+  if (type === 'location') return locationOptions;
+  if (type === 'department') return departmentOptions;
+  return [];
+}
+
+function openCriteriaPicker(type, title) {
+  pickerType = type;
+  pickerOptions = getPickerOptions(type);
+  pickerWorkingSet = new Set(selectedCriteria[type]);
+
+  document.getElementById('criteriaPickerTitle').textContent = `Select ${title}`;
+  document.getElementById('criteriaPickerSearch').value = '';
+  renderPickerList('');
+
+  document.getElementById('criteriaPickerSearch').oninput = (e) => renderPickerList(e.target.value);
+  document.getElementById('criteriaPickerSelectAll').onclick = (e) => {
+    e.preventDefault();
+    getFilteredPickerOptions(document.getElementById('criteriaPickerSearch').value).forEach(opt => pickerWorkingSet.add(String(opt.value)));
+    renderPickerList(document.getElementById('criteriaPickerSearch').value);
+  };
+  document.getElementById('criteriaPickerClearAll').onclick = (e) => {
+    e.preventDefault();
+    pickerWorkingSet.clear();
+    renderPickerList(document.getElementById('criteriaPickerSearch').value);
+  };
+  document.getElementById('applyCriteriaPickerBtn').onclick = applyCriteriaPicker;
+
+  criteriaPickerModal.show();
+}
+
+function getFilteredPickerOptions(search) {
+  const term = (search || '').toLowerCase();
+  return term ? pickerOptions.filter(opt => opt.label.toLowerCase().includes(term)) : pickerOptions;
+}
+
+function renderPickerList(search) {
+  const filtered = getFilteredPickerOptions(search);
+  document.getElementById('criteriaPickerCount').textContent = `${pickerWorkingSet.size} selected`;
+
+  const list = document.getElementById('criteriaPickerList');
+
+  if (!filtered.length) {
+    list.innerHTML = `<div class="text-center py-4 text-secondary small">No matches</div>`;
+    return;
+  }
+
+  list.innerHTML = filtered.map(opt => {
+    const value = String(opt.value);
+    const checked = pickerWorkingSet.has(value) ? 'checked' : '';
+    const flag = pickerType === 'country' && opt.alpha2
+      ? `<img src="https://flagcdn.com/24x18/${opt.alpha2.toLowerCase()}.png" alt="" onerror="this.style.visibility='hidden'">`
+      : '';
+
+    return `<div class="criteria-picker-item" data-value="${App.escHtml(value)}">
+      <input type="checkbox" class="form-check-input" ${checked} />
+      ${flag}
+      <span>${App.escHtml(opt.label)}</span>
+    </div>`;
+  }).join('');
+
+  list.querySelectorAll('.criteria-picker-item').forEach(item => {
+    item.addEventListener('click', (e) => {
+      // Let a direct checkbox click toggle itself naturally - this
+      // handler still needs to run either way to keep pickerWorkingSet
+      // in sync, but we avoid double-toggling when the click target
+      // IS the checkbox by reading its post-click state directly.
+      const checkbox = item.querySelector('input[type="checkbox"]');
+      if (e.target !== checkbox) checkbox.checked = !checkbox.checked;
+
+      const value = item.dataset.value;
+      if (checkbox.checked) pickerWorkingSet.add(value);
+      else pickerWorkingSet.delete(value);
+
+      document.getElementById('criteriaPickerCount').textContent = `${pickerWorkingSet.size} selected`;
+    });
+  });
+}
+
+function applyCriteriaPicker() {
+  selectedCriteria[pickerType] = new Set(pickerWorkingSet);
+  criteriaPickerModal.hide();
+  showCriteriaBuilder(allAudiences.find(a => a.audience_id === selectedAudienceId));
+  renderMatchPreview();
 }
 
 function showCriteriaBuilder(audience) {
@@ -472,13 +592,8 @@ function showCriteriaBuilder(audience) {
     </div>
   `;
 
-  document.querySelectorAll('.criteria-checkbox').forEach(cb => {
-    cb.addEventListener('change', () => {
-      const type = cb.dataset.type;
-      if (cb.checked) selectedCriteria[type].add(cb.value);
-      else selectedCriteria[type].delete(cb.value);
-      renderMatchPreview();
-    });
+  document.querySelectorAll('.criteria-select-btn').forEach(btn => {
+    btn.addEventListener('click', () => openCriteriaPicker(btn.dataset.type, btn.dataset.title));
   });
 
   document.getElementById('confirmCriteriaBtn').addEventListener('click', () => confirmCriteria(audience));

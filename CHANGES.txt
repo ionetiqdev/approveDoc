@@ -1,1 +1,1 @@
-Audiences Advanced: swap layout - top-right is name/description form, bottom-left is criteria builder, bottom-right matching users preview
+Audiences Advanced: criteria selection moved to searchable modal pickers (Select all/Clear all), flags shown for Country, all 248 countries available
