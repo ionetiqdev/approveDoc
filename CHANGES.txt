@@ -1,1 +1,1 @@
-Move Search to left of header on all lookup pages; remove entries-count text from Countries/Languages pagination footer
+Force page title out of Tabler's default centering via flex order, not just margin/text-align
