@@ -1,1 +1,1 @@
-Fix FTP deploy failing on branch names with slashes (e.g. feature/audiences-advanced) - sanitize state filename
+Audiences Advanced: criteria builder (Country/Location/Department, AND across types, OR within), live match preview, confirm builds real membership
