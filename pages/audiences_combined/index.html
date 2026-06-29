@@ -7,7 +7,7 @@
 
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/core@1.4.0/dist/css/tabler.min.css" />
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.44.0/dist/tabler-icons.min.css" />
-  <link rel="stylesheet" href="../../assets/css/theme.css?r=40jkqgdu" />
+  <link rel="stylesheet" href="../../assets/css/theme.css?r=fzng14sj" />
 
   <script>
     (function() {
@@ -298,14 +298,14 @@
   <script src="https://cdn.jsdelivr.net/npm/@tabler/core@1.4.0/dist/js/tabler.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="../../assets/js/version.js?r=40jkqgdu"></script>
-  <script src="../../assets/js/supabase-client.js?r=40jkqgdu"></script>
-  <script src="../../assets/js/auth.js?r=40jkqgdu"></script>
-  <script src="../../assets/js/app.js?r=40jkqgdu"></script>
-  <script src="../../assets/js/theme.js?r=40jkqgdu"></script>
-  <script src="../../assets/js/sidebar-html.js?r=40jkqgdu"></script>
-  <script src="../../assets/js/sidebar.js?r=40jkqgdu"></script>
-  <script src="../../assets/js/profile-modal.js?r=40jkqgdu"></script>
+  <script src="../../assets/js/version.js?r=fzng14sj"></script>
+  <script src="../../assets/js/supabase-client.js?r=fzng14sj"></script>
+  <script src="../../assets/js/auth.js?r=fzng14sj"></script>
+  <script src="../../assets/js/app.js?r=fzng14sj"></script>
+  <script src="../../assets/js/theme.js?r=fzng14sj"></script>
+  <script src="../../assets/js/sidebar-html.js?r=fzng14sj"></script>
+  <script src="../../assets/js/sidebar.js?r=fzng14sj"></script>
+  <script src="../../assets/js/profile-modal.js?r=fzng14sj"></script>
   <script>
 // Audiences: top half is a master/detail pair (audience list + its
 // details/create form), bottom half is a two-list view of which
@@ -325,7 +325,8 @@ let currentMode = 'manual'; // 'manual' or 'criteria' - mirrors the audienceMode
 let countryOptions = [];
 let locationOptions = [];
 let departmentOptions = [];
-let selectedCriteria = { country: new Set(), location: new Set(), department: new Set() };
+let jobRoleOptions = [];
+let selectedCriteria = { country: new Set(), location: new Set(), department: new Set(), job_role: new Set() };
 let criteriaPickerModal;
 let pickerType = null;
 let pickerOptions = [];
@@ -420,19 +421,22 @@ async function saveNewAudience() {
 async function loadLookups() {
   const orgId = Auth.getOrganisationId();
 
-  const [countriesRes, locationsRes, departmentsRes] = await Promise.all([
+  const [countriesRes, locationsRes, departmentsRes, jobRolesRes] = await Promise.all([
     sb.from('ad_country').select('country_code, name, alpha2').order('name'),
     sb.from('ad_location').select('location_id, name').eq('organisation_id', orgId).order('name'),
     sb.from('ad_department').select('department_id, name').eq('organisation_id', orgId).order('name'),
+    sb.from('ad_job_role').select('job_role_id, name').eq('organisation_id', orgId).order('sort_order'),
   ]);
 
   if (countriesRes.error) console.error('[Audiences] countries load error:', countriesRes.error);
   if (locationsRes.error) console.error('[Audiences] locations load error:', locationsRes.error);
   if (departmentsRes.error) console.error('[Audiences] departments load error:', departmentsRes.error);
+  if (jobRolesRes.error) console.error('[Audiences] job roles load error:', jobRolesRes.error);
 
   countryOptions = (countriesRes.data || []).map(c => ({ value: c.country_code, label: c.name, alpha2: c.alpha2 }));
   locationOptions = (locationsRes.data || []).map(l => ({ value: l.location_id, label: l.name }));
   departmentOptions = (departmentsRes.data || []).map(d => ({ value: d.department_id, label: d.name }));
+  jobRoleOptions = (jobRolesRes.data || []).map(j => ({ value: j.job_role_id, label: j.name }));
 }
 
 async function loadUsers() {
@@ -812,7 +816,7 @@ async function transferUsers(userIds, targetSide) {
 // duplicates those.
 
 async function loadCriteria(audienceId) {
-  selectedCriteria = { country: new Set(), location: new Set(), department: new Set() };
+  selectedCriteria = { country: new Set(), location: new Set(), department: new Set(), job_role: new Set() };
 
   const { data, error } = await sb.from('ad_audience_criteria').select('criteria_type, criteria_value').eq('audience_id', audienceId).eq('organisation_id', Auth.getOrganisationId());
 
@@ -852,6 +856,7 @@ function getPickerOptions(type) {
   if (type === 'country') return countryOptions;
   if (type === 'location') return locationOptions;
   if (type === 'department') return departmentOptions;
+  if (type === 'job_role') return jobRoleOptions;
   return [];
 }
 
@@ -941,6 +946,8 @@ function showCriteriaBuilder(audience) {
     ${criteriaBlockHtml('location', 'Location', locationOptions)}
     <div class="criteria-and-divider">AND</div>
     ${criteriaBlockHtml('department', 'Department', departmentOptions)}
+    <div class="criteria-and-divider">AND</div>
+    ${criteriaBlockHtml('job_role', 'Job Role', jobRoleOptions)}
     <div class="d-flex gap-2 mt-3">
       <button class="btn btn-primary btn-sm" id="confirmCriteriaBtn">
         <span id="confirmCriteriaLabel">Confirm &amp; build audience</span>
@@ -965,13 +972,14 @@ function getMatchingUsers() {
     if (selectedCriteria.country.size && !selectedCriteria.country.has(u.country_code)) return false;
     if (selectedCriteria.location.size && !selectedCriteria.location.has(String(u.location_id))) return false;
     if (selectedCriteria.department.size && !selectedCriteria.department.has(String(u.department_id))) return false;
+    if (selectedCriteria.job_role.size && !selectedCriteria.job_role.has(String(u.job_role_id))) return false;
     return true;
   });
 }
 
 function renderMatchPreview() {
   const matched = getMatchingUsers();
-  const noFilterApplied = !selectedCriteria.country.size && !selectedCriteria.location.size && !selectedCriteria.department.size;
+  const noFilterApplied = !selectedCriteria.country.size && !selectedCriteria.location.size && !selectedCriteria.department.size && !selectedCriteria.job_role.size;
 
   document.getElementById('matchCount').textContent = noFilterApplied
     ? ''
@@ -1015,7 +1023,7 @@ async function confirmCriteria(audience) {
   const errorEl = document.getElementById('criteriaError');
   errorEl.classList.add('d-none');
 
-  const noFilterApplied = !selectedCriteria.country.size && !selectedCriteria.location.size && !selectedCriteria.department.size;
+  const noFilterApplied = !selectedCriteria.country.size && !selectedCriteria.location.size && !selectedCriteria.department.size && !selectedCriteria.job_role.size;
   if (noFilterApplied) {
     errorEl.textContent = 'Select at least one criterion before confirming.';
     errorEl.classList.remove('d-none');
@@ -1036,7 +1044,7 @@ async function confirmCriteria(audience) {
   }
 
   const criteriaRows = [];
-  ['country', 'location', 'department'].forEach(type => {
+  ['country', 'location', 'department', 'job_role'].forEach(type => {
     selectedCriteria[type].forEach(value => {
       criteriaRows.push({ audience_id: audience.audience_id, organisation_id: orgId, criteria_type: type, criteria_value: value });
     });

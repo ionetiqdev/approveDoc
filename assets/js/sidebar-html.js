@@ -145,6 +145,7 @@ const SidebarHtml = (() => {
                   <li class="nav-item"><a href="${root}pages/lookups/categories.html" class="nav-link"><span class="nav-link-text">Categories</span></a></li>
                   <li class="nav-item"><a href="${root}pages/lookups/approval-types.html" class="nav-link"><span class="nav-link-text">Approval Types</span></a></li>
                   <li class="nav-item"><a href="${root}pages/lookups/countries.html" class="nav-link"><span class="nav-link-text">Countries</span></a></li>
+                  <li class="nav-item"><a href="${root}pages/lookups/job-roles.html" class="nav-link"><span class="nav-link-text">Job Roles</span></a></li>
                   <li class="nav-item"><a href="${root}pages/lookups/languages.html" class="nav-link"><span class="nav-link-text">Languages</span></a></li>
                 </ul>
               </li>

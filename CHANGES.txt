@@ -1,1 +1,1 @@
-Audiences Combined: audience-row top/bottom padding 10px, text-secondary font-size .8em
+Fix lookup row icon sizing to match Issues (btn-icon-lg); add Job Roles lookup with drag-to-reorder; add Job Role as audience criteria

@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Approval Types - approveDoc</title>
+  <title>Job Roles - approveDoc</title>
 
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/core@1.4.0/dist/css/tabler.min.css" />
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.44.0/dist/tabler-icons.min.css" />
@@ -46,6 +46,16 @@
     .page-body { flex: 1; min-height: 0; display: flex; flex-direction: column; padding-top: 1rem; padding-bottom: 1rem; }
     .page-body > .container-fluid { flex: 1; min-height: 0; display: flex; flex-direction: column; }
     .lookup-card { flex: 1; min-height: 0; display: flex; flex-direction: column; overflow: hidden; }
+
+    /* Drag-to-reorder - no pagination on this page (dragging across
+       page boundaries would be awkward), so the table body scrolls
+       internally instead. */
+    .job-role-row { cursor: default; }
+    .job-role-row.dragging { opacity: .4; }
+    .job-role-row.drag-over-top { box-shadow: inset 0 2px 0 0 var(--tblr-primary); }
+    .job-role-row.drag-over-bottom { box-shadow: inset 0 -2px 0 0 var(--tblr-primary); }
+    .drag-handle { cursor: grab; color: var(--tblr-secondary-color); }
+    .drag-handle:active { cursor: grabbing; }
   </style>
 </head>
 <body>
@@ -60,7 +70,7 @@
         <button id="sidebarToggle" class="btn btn-icon" aria-label="Toggle sidebar" title="Toggle sidebar">
           <i class="ti ti-menu-2"></i>
         </button>
-        <h1 class="navbar-brand d-none d-sm-inline-block ms-2 mb-0 page-title-lg">Approval Types</h1>
+        <h1 class="navbar-brand d-none d-sm-inline-block ms-2 mb-0 page-title-lg">Job Roles</h1>
         <div class="navbar-nav flex-row order-md-last align-items-center gap-2">
           <div data-active-organisation></div>
           <button class="btn btn-icon" data-theme-toggle title="Toggle dark mode"><i class="ti ti-moon"></i></button>
@@ -84,29 +94,29 @@
             <div class="text-secondary me-2">Search:</div>
             <input type="text" id="searchInput" class="form-control form-control-sm" style="max-width:200px" />
             <button class="btn btn-primary btn-sm ms-3" id="addItemBtn">
-              <i class="ti ti-plus me-1"></i>Add approval type
+              <i class="ti ti-plus me-1"></i>Add job role
             </button>
           </div>
-          <div style="flex:1; min-height:0; overflow:hidden">
+          <div style="flex:1; min-height:0; overflow-y:auto" id="tableScrollPane">
             <table class="table table-vcenter card-table table-hover mb-0">
               <thead>
                 <tr>
+                  <th style="width:36px"></th>
                   <th style="width:48px"></th>
                   <th>Name</th>
-                  <th>Sort</th>
+                  <th>Department</th>
                   <th class="w-1"></th>
                 </tr>
               </thead>
               <tbody id="itemsBody">
-                <tr><td colspan="4" class="text-center py-4 text-secondary">
+                <tr><td colspan="5" class="text-center py-4 text-secondary">
                   <span class="spinner-border spinner-border-sm me-2"></span>Loading…
                 </td></tr>
               </tbody>
             </table>
           </div>
-          <div class="card-footer d-flex align-items-center" style="flex-shrink:0">
+          <div class="card-footer" style="flex-shrink:0">
             <p class="m-0 text-secondary" id="pageInfo"></p>
-            <ul class="pagination m-0 ms-auto" id="pagerList"></ul>
           </div>
         </div>
 
@@ -118,7 +128,7 @@
     <div class="modal-dialog modal-dialog-centered">
       <div class="modal-content">
         <div class="modal-header">
-          <h5 class="modal-title" id="itemModalTitle">Add approval type</h5>
+          <h5 class="modal-title" id="itemModalTitle">Add job role</h5>
           <button type="button" class="modal-close-btn" data-bs-dismiss="modal" aria-label="Close"><i class="ti ti-x"></i></button>
         </div>
         <div class="modal-body">
@@ -126,13 +136,15 @@
           <input type="hidden" id="itemId" />
 
           <div class="row g-3">
-            <div class="col-8">
+            <div class="col-12">
               <label class="form-label">Name <span class="text-danger">*</span></label>
-              <input type="text" id="itemName" class="form-control" placeholder="e.g. Approval Types" />
+              <input type="text" id="itemName" class="form-control" placeholder="e.g. Account Manager" />
             </div>
-            <div class="col-4">
-              <label class="form-label">Sort order</label>
-              <input type="number" id="itemSortOrder" class="form-control" placeholder="0" />
+            <div class="col-12">
+              <label class="form-label">Department</label>
+              <select id="itemDepartment" class="form-select">
+                <option value="">— None —</option>
+              </select>
             </div>
           </div>
         </div>
@@ -153,7 +165,7 @@
         <div class="modal-status bg-danger"></div>
         <div class="modal-body text-center py-4">
           <i class="ti ti-trash text-danger mb-2" style="font-size:2.2rem"></i>
-          <h6 class="mb-1">Delete this approval type?</h6>
+          <h6 class="mb-1">Delete this job role?</h6>
           <p class="text-secondary small mb-0" id="deleteItemName"></p>
           <p class="text-danger small mt-2 mb-0">This may also affect data linked to this record.</p>
         </div>
@@ -179,9 +191,8 @@
   <script>
 let itemModal, deleteModal;
 let allItems = [];
+let allDepartments = [];
 let pendingDeleteId = null;
-let currentPage = 1;
-let rowsPerPage = 20;
 
 (async () => {
   const session = await Auth.requireAuth();
@@ -199,27 +210,40 @@ let rowsPerPage = 20;
   itemModal   = new bootstrap.Modal(document.getElementById('itemModal'));
   deleteModal = new bootstrap.Modal(document.getElementById('deleteModal'));
 
+  await loadDepartments();
   await loadItems();
 
-  document.getElementById('searchInput').addEventListener('input', () => { currentPage = 1; renderTable(); });
-  window.addEventListener('resize', () => { calcRowsPerPage(); renderTable(); });
+  document.getElementById('searchInput').addEventListener('input', renderTable);
   document.getElementById('addItemBtn').addEventListener('click', () => openModal());
   document.getElementById('saveItemBtn').addEventListener('click', saveItem);
   document.getElementById('confirmDeleteBtn').addEventListener('click', confirmDelete);
   document.getElementById('itemModal').addEventListener('hidden.bs.modal', resetModal);
 })();
 
+async function loadDepartments() {
+  const { data, error } = await sb.from('ad_department').select('*').eq('organisation_id', Auth.getOrganisationId()).order('name');
+  if (error) { console.error('[Job Roles] departments load error:', error); return; }
+  allDepartments = data || [];
+
+  const select = document.getElementById('itemDepartment');
+  allDepartments.forEach(d => {
+    const opt = document.createElement('option');
+    opt.value = d.department_id;
+    opt.textContent = d.name;
+    select.appendChild(opt);
+  });
+}
+
 async function loadItems() {
-  const { data, error } = await sb.from('ad_approval_type').select('*').eq('organisation_id', Auth.getOrganisationId()).order('sort_order');
+  const { data, error } = await sb.from('ad_job_role').select('*').eq('organisation_id', Auth.getOrganisationId()).order('sort_order');
 
   if (error) {
-    console.error('[Approval Types] Load error:', error);
-    App.toast('Failed to load approval types: ' + error.message, 'danger');
+    console.error('[Job Roles] Load error:', error);
+    App.toast('Failed to load job roles: ' + error.message, 'danger');
     return;
   }
 
   allItems = data || [];
-  calcRowsPerPage();
   renderTable();
 }
 
@@ -231,88 +255,45 @@ function getFiltered() {
   });
 }
 
-function calcRowsPerPage() {
-  const wrapper = document.querySelector('.lookup-card > div[style*="overflow:hidden"]');
-  const headerRow = document.querySelector('thead tr');
-  if (!wrapper || !headerRow) return;
-
-  const availableHeight = wrapper.clientHeight - headerRow.clientHeight;
-  const sampleRowHeight = 49;
-  rowsPerPage = Math.max(5, Math.floor(availableHeight / sampleRowHeight));
-}
-
-function renderPager(totalPages) {
-  const pagerList = document.getElementById('pagerList');
-  const items = [];
-
-  items.push(`<li class="page-item ${currentPage <= 1 ? 'disabled' : ''}">
-    <a class="page-link" href="#" data-page="${currentPage - 1}" aria-label="Previous">
-      <i class="ti ti-chevron-left"></i> prev
-    </a>
-  </li>`);
-
-  let start = Math.max(1, currentPage - 2);
-  let end = Math.min(totalPages, start + 4);
-  start = Math.max(1, end - 4);
-
-  for (let p = start; p <= end; p++) {
-    items.push(`<li class="page-item ${p === currentPage ? 'active' : ''}">
-      <a class="page-link" href="#" data-page="${p}">${p}</a>
-    </li>`);
-  }
-
-  items.push(`<li class="page-item ${currentPage >= totalPages ? 'disabled' : ''}">
-    <a class="page-link" href="#" data-page="${currentPage + 1}" aria-label="Next">
-      next <i class="ti ti-chevron-right"></i>
-    </a>
-  </li>`);
-
-  pagerList.innerHTML = items.join('');
-
-  pagerList.querySelectorAll('a[data-page]').forEach(a => {
-    a.addEventListener('click', (e) => {
-      e.preventDefault();
-      const page = parseInt(a.dataset.page, 10);
-      if (page < 1 || page > totalPages || page === currentPage) return;
-      currentPage = page;
-      renderTable();
-    });
-  });
+function departmentName(departmentId) {
+  if (!departmentId) return null;
+  const dept = allDepartments.find(d => d.department_id === departmentId);
+  return dept ? dept.name : null;
 }
 
 function renderTable() {
   const filtered = getFiltered();
-  const totalPages = Math.max(1, Math.ceil(filtered.length / rowsPerPage));
-  currentPage = Math.min(Math.max(1, currentPage), totalPages);
-  const start = (currentPage - 1) * rowsPerPage;
-  const pageItems = filtered.slice(start, start + rowsPerPage);
+  const searching = !!(document.getElementById('searchInput').value || '').trim();
 
   document.getElementById('pageInfo').textContent = filtered.length
-    ? `Showing ${start + 1} to ${Math.min(start + rowsPerPage, filtered.length)} of ${filtered.length} entries`
+    ? `${filtered.length} job role${filtered.length === 1 ? '' : 's'}`
     : 'No matching entries found';
-
-  renderPager(totalPages);
 
   const tbody = document.getElementById('itemsBody');
 
-  if (!pageItems.length) {
-    tbody.innerHTML = `<tr><td colspan="4" class="text-center py-4 text-secondary">
-      <i class="ti ti-stamp mb-1 d-block" style="font-size:1.5rem"></i>No approval types found
+  if (!filtered.length) {
+    tbody.innerHTML = `<tr><td colspan="5" class="text-center py-4 text-secondary">
+      <i class="ti ti-id-badge mb-1 d-block" style="font-size:1.5rem"></i>No job roles found
     </td></tr>`;
     return;
   }
 
-  tbody.innerHTML = pageItems.map(item => {
+  // Drag-to-reorder only makes sense against the full, unfiltered
+  // order - disable the handle while a search is active so dragging
+  // a filtered subset can't silently scramble the real sort_order.
+  tbody.innerHTML = filtered.map(item => {
     const initials = (item.name || '?').split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2);
+    const deptName = departmentName(item.department_id);
 
-    return `<tr>
+    return `<tr class="job-role-row" data-id="${item.job_role_id}" draggable="${searching ? 'false' : 'true'}">
+      <td>${searching ? '' : '<i class="ti ti-grip-vertical drag-handle"></i>'}</td>
       <td><span class="avatar avatar-sm rounded-circle bg-primary-lt">${App.escHtml(initials)}</span></td>
       <td class="fw-semibold">${App.escHtml(item.name)}</td>
-      <td class="text-secondary">${item.sort_order ?? '—'}</td>
+      <td class="text-secondary">${deptName ? App.escHtml(deptName) : '—'}</td>
       <td>
         <div class="btn-list flex-nowrap">
-          <button class="btn btn-icon btn-icon-lg edit-btn" data-id="${item.approval_type_id}" title="Edit"><i class="ti ti-edit"></i></button>
-          <button class="btn btn-icon btn-icon-lg text-danger delete-btn" data-id="${item.approval_type_id}" data-name="${App.escHtml(item.name)}" title="Delete"><i class="ti ti-trash"></i></button>
+          <button class="btn btn-icon btn-icon-lg edit-btn" data-id="${item.job_role_id}" title="Edit"><i class="ti ti-edit"></i></button>
+          <button class="btn btn-icon btn-icon-lg text-danger delete-btn" data-id="${item.job_role_id}" data-name="${App.escHtml(item.name)}" title="Delete"><i class="ti ti-trash"></i></button>
         </div>
       </td>
     </tr>`;
@@ -320,7 +301,7 @@ function renderTable() {
 
   tbody.querySelectorAll('.edit-btn').forEach(btn => {
     btn.addEventListener('click', () => {
-      const item = allItems.find(i => String(i.approval_type_id) === btn.dataset.id);
+      const item = allItems.find(i => String(i.job_role_id) === btn.dataset.id);
       if (item) openModal(item);
     });
   });
@@ -332,28 +313,111 @@ function renderTable() {
       deleteModal.show();
     });
   });
+
+  if (!searching) wireUpDragReorder(tbody);
+}
+
+// Native HTML5 drag-and-drop, reordering rows within the same table.
+// On drop, recomputes sort_order for the WHOLE list (not just the
+// two rows involved) to keep values clean/sequential, then writes
+// every changed row back in one batch.
+function wireUpDragReorder(tbody) {
+  let draggedId = null;
+
+  tbody.querySelectorAll('.job-role-row').forEach(row => {
+    row.addEventListener('dragstart', () => {
+      draggedId = row.dataset.id;
+      row.classList.add('dragging');
+    });
+
+    row.addEventListener('dragend', () => {
+      row.classList.remove('dragging');
+      tbody.querySelectorAll('.job-role-row').forEach(r => r.classList.remove('drag-over-top', 'drag-over-bottom'));
+    });
+
+    row.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      if (row.dataset.id === draggedId) return;
+
+      const rect = row.getBoundingClientRect();
+      const isTopHalf = (e.clientY - rect.top) < rect.height / 2;
+      row.classList.toggle('drag-over-top', isTopHalf);
+      row.classList.toggle('drag-over-bottom', !isTopHalf);
+    });
+
+    row.addEventListener('dragleave', () => {
+      row.classList.remove('drag-over-top', 'drag-over-bottom');
+    });
+
+    row.addEventListener('drop', async (e) => {
+      e.preventDefault();
+      row.classList.remove('drag-over-top', 'drag-over-bottom');
+      if (!draggedId || row.dataset.id === draggedId) return;
+
+      const rect = row.getBoundingClientRect();
+      const dropBefore = (e.clientY - rect.top) < rect.height / 2;
+      await reorderItems(draggedId, row.dataset.id, dropBefore);
+    });
+  });
+}
+
+async function reorderItems(draggedId, targetId, dropBefore) {
+  const ordered = [...allItems].sort((a, b) => a.sort_order - b.sort_order);
+  const draggedIndex = ordered.findIndex(i => i.job_role_id === draggedId);
+  if (draggedIndex === -1) return;
+
+  const [draggedItem] = ordered.splice(draggedIndex, 1);
+  let targetIndex = ordered.findIndex(i => i.job_role_id === targetId);
+  if (targetIndex === -1) return;
+  if (!dropBefore) targetIndex += 1;
+
+  ordered.splice(targetIndex, 0, draggedItem);
+
+  // Recompute sequential sort_order for the whole list, then only
+  // write back the rows whose value actually changed.
+  const updates = [];
+  ordered.forEach((item, index) => {
+    const newSortOrder = index;
+    if (item.sort_order !== newSortOrder) {
+      updates.push({ job_role_id: item.job_role_id, sort_order: newSortOrder });
+    }
+  });
+
+  if (!updates.length) return;
+
+  const results = await Promise.all(
+    updates.map(u => sb.from('ad_job_role').update({ sort_order: u.sort_order }).eq('job_role_id', u.job_role_id))
+  );
+  const failed = results.find(r => r.error);
+  if (failed) {
+    App.toast('Failed to save new order: ' + failed.error.message, 'danger');
+    await loadItems();
+    return;
+  }
+
+  await loadItems();
 }
 
 function openModal(item = null) {
   resetModal();
   if (item) {
-    document.getElementById('itemModalTitle').textContent = 'Edit approval type';
+    document.getElementById('itemModalTitle').textContent = 'Edit job role';
     document.getElementById('saveItemLabel').textContent  = 'Update';
-    document.getElementById('itemId').value   = item.approval_type_id;
+    document.getElementById('itemId').value   = item.job_role_id;
     document.getElementById('itemName').value = item.name || '';
-    document.getElementById('itemSortOrder').value = item.sort_order ?? '';
+    document.getElementById('itemDepartment').value = item.department_id || '';
   }
   itemModal.show();
   setTimeout(() => document.getElementById('itemName').focus(), 300);
 }
 
 function resetModal() {
-  document.getElementById('itemModalTitle').textContent = 'Add approval type';
+  document.getElementById('itemModalTitle').textContent = 'Add job role';
   document.getElementById('saveItemLabel').textContent  = 'Save';
   document.getElementById('itemModalError').classList.add('d-none');
   document.getElementById('itemId').value   = '';
   document.getElementById('itemName').value = '';
-  document.getElementById('itemSortOrder').value = '';
+  document.getElementById('itemDepartment').value = '';
 }
 
 async function saveItem() {
@@ -362,6 +426,7 @@ async function saveItem() {
 
   const id   = document.getElementById('itemId').value;
   const name = document.getElementById('itemName').value.trim();
+  const departmentId = document.getElementById('itemDepartment').value || null;
 
   if (!name) {
     errorEl.textContent = 'Name is required.';
@@ -369,21 +434,19 @@ async function saveItem() {
     return;
   }
 
-  const payload = {
-    name: name,
-    sort_order: parseInt(document.getElementById('itemSortOrder').value, 10) || 0,
-    organisation_id: Auth.getOrganisationId(),
-  };
-
   document.getElementById('saveItemLabel').textContent = id ? 'Saving…' : 'Adding…';
   document.getElementById('saveItemSpinner').classList.remove('d-none');
   document.getElementById('saveItemBtn').disabled = true;
 
   let error;
   if (id) {
-    ({ error } = await sb.from('ad_approval_type').update(payload).eq('approval_type_id', id));
+    const payload = { name, department_id: departmentId };
+    ({ error } = await sb.from('ad_job_role').update(payload).eq('job_role_id', id));
   } else {
-    ({ error } = await sb.from('ad_approval_type').insert(payload));
+    // New roles go to the end of the current order.
+    const maxSortOrder = allItems.reduce((max, i) => Math.max(max, i.sort_order ?? 0), -1);
+    const payload = { name, department_id: departmentId, sort_order: maxSortOrder + 1, organisation_id: Auth.getOrganisationId() };
+    ({ error } = await sb.from('ad_job_role').insert(payload));
   }
 
   document.getElementById('saveItemLabel').textContent = id ? 'Update' : 'Save';
@@ -403,7 +466,7 @@ async function saveItem() {
 
 async function confirmDelete() {
   if (!pendingDeleteId) return;
-  const { error } = await sb.from('ad_approval_type').delete().eq('approval_type_id', pendingDeleteId);
+  const { error } = await sb.from('ad_job_role').delete().eq('job_role_id', pendingDeleteId);
   deleteModal.hide();
   if (error) { App.toast('Delete failed: ' + error.message, 'danger'); return; }
   App.toast('Deleted');
