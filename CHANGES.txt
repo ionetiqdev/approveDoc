@@ -1,1 +1,1 @@
-Remove pagination, fit table to viewport with internal scroll; add flags to Languages via locale
+Restore pagination on all lookup tables (no scrollbar); 10/10/80 columns + flags on Countries and Languages; larger left-aligned page titles app-wide

@@ -317,3 +317,16 @@ body:has(#sidebar.collapsed) .app-content-wrapper { margin-left: var(--sidebar-w
   position: absolute; right: .75rem; top: 50%; transform: translateY(-50%);
   background: none; border: none; color: var(--tblr-secondary-color); cursor: pointer; padding: 0; font-size: 1rem;
 }
+
+/* Page titles in the header bar - bigger and explicitly left-aligned
+   (Tabler's default .navbar-brand is fine for a logo/brand context,
+   but undersized for a page title used as the primary heading).
+   !important needed to reliably beat Bootstrap's fs-5 utility class,
+   which several pages still carry alongside .navbar-brand. */
+header .navbar-brand.fs-5,
+header .navbar-brand.page-title-lg,
+header .navbar-brand {
+  font-size: 1.25rem !important;
+  font-weight: 600 !important;
+  text-align: left !important;
+}
