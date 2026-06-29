@@ -1,1 +1,1 @@
-Remove Customers, add Audiences page (list/detail + member layout, add/remove not yet wired)
+Add ad_audience.description and ad_user.country_code (FK to ad_country); remove Approval Type from Audiences UI (column stays in DB)

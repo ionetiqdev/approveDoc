@@ -7,7 +7,7 @@
 
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/core@1.4.0/dist/css/tabler.min.css" />
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.44.0/dist/tabler-icons.min.css" />
-  <link rel="stylesheet" href="../../assets/css/theme.css?r=bvczg92q" />
+  <link rel="stylesheet" href="../../assets/css/theme.css?r=60lvrba3" />
 
   <script>
     (function() {
@@ -160,14 +160,14 @@
   <script src="https://cdn.jsdelivr.net/npm/@tabler/core@1.4.0/dist/js/tabler.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="../../assets/js/version.js?r=bvczg92q"></script>
-  <script src="../../assets/js/supabase-client.js?r=bvczg92q"></script>
-  <script src="../../assets/js/auth.js?r=bvczg92q"></script>
-  <script src="../../assets/js/app.js?r=bvczg92q"></script>
-  <script src="../../assets/js/theme.js?r=bvczg92q"></script>
-  <script src="../../assets/js/sidebar-html.js?r=bvczg92q"></script>
-  <script src="../../assets/js/sidebar.js?r=bvczg92q"></script>
-  <script src="../../assets/js/profile-modal.js?r=bvczg92q"></script>
+  <script src="../../assets/js/version.js?r=60lvrba3"></script>
+  <script src="../../assets/js/supabase-client.js?r=60lvrba3"></script>
+  <script src="../../assets/js/auth.js?r=60lvrba3"></script>
+  <script src="../../assets/js/app.js?r=60lvrba3"></script>
+  <script src="../../assets/js/theme.js?r=60lvrba3"></script>
+  <script src="../../assets/js/sidebar-html.js?r=60lvrba3"></script>
+  <script src="../../assets/js/sidebar.js?r=60lvrba3"></script>
+  <script src="../../assets/js/profile-modal.js?r=60lvrba3"></script>
   <script>
 // Audiences: top half is a master/detail pair (audience list + its
 // details/create form), bottom half is a two-list view of which
@@ -177,7 +177,6 @@
 
 let allAudiences = [];
 let allUsers = [];
-let approvalTypes = [];
 let currentMemberIds = new Set();
 let selectedAudienceId = null;
 
@@ -194,16 +193,10 @@ let selectedAudienceId = null;
     return;
   }
 
-  await Promise.all([loadApprovalTypes(), loadUsers(), loadAudiences()]);
+  await Promise.all([loadUsers(), loadAudiences()]);
 
   document.getElementById('newAudienceBtn').addEventListener('click', () => showDetailForm(null));
 })();
-
-async function loadApprovalTypes() {
-  const { data, error } = await sb.from('ad_approval_type').select('*').eq('organisation_id', Auth.getOrganisationId()).order('sort_order');
-  if (error) { console.error('[Audiences] approval types load error:', error); return; }
-  approvalTypes = data || [];
-}
 
 async function loadUsers() {
   const { data, error } = await sb.from('ad_user').select('*').eq('organisation_id', Auth.getOrganisationId()).order('first_name');
@@ -235,10 +228,9 @@ function renderAudienceList() {
   }
 
   body.innerHTML = allAudiences.map(a => {
-    const approvalType = approvalTypes.find(t => t.approval_type_id === a.approval_type_id);
     return `<div class="list-group-item audience-row ${a.audience_id === selectedAudienceId ? 'active' : ''}" data-id="${a.audience_id}">
       <div class="fw-semibold">${App.escHtml(a.name)}</div>
-      ${approvalType ? `<div class="text-secondary small">${App.escHtml(approvalType.name)}</div>` : ''}
+      ${a.description ? `<div class="text-secondary small">${App.escHtml(a.description)}</div>` : ''}
     </div>`;
   }).join('');
 
@@ -261,10 +253,6 @@ function showDetailForm(audience) {
   const isEdit = !!audience;
   document.getElementById('detailCardTitle').textContent = isEdit ? 'Edit audience' : 'New audience';
 
-  const approvalOptions = approvalTypes.map(t =>
-    `<option value="${t.approval_type_id}" ${audience?.approval_type_id === t.approval_type_id ? 'selected' : ''}>${App.escHtml(t.name)}</option>`
-  ).join('');
-
   document.getElementById('detailCardBody').innerHTML = `
     <div id="audienceFormError" class="alert alert-danger d-none py-2 small mb-3"></div>
     <div class="mb-3">
@@ -272,11 +260,8 @@ function showDetailForm(audience) {
       <input type="text" id="audienceName" class="form-control" placeholder="e.g. All UK Staff" value="${audience ? App.escHtml(audience.name) : ''}" />
     </div>
     <div class="mb-3">
-      <label class="form-label">Approval type</label>
-      <select id="audienceApprovalType" class="form-select">
-        <option value="">— None —</option>
-        ${approvalOptions}
-      </select>
+      <label class="form-label">Description</label>
+      <textarea id="audienceDescription" class="form-control" rows="3" placeholder="What this audience represents, who it's for, etc.">${audience?.description ? App.escHtml(audience.description) : ''}</textarea>
     </div>
     <div class="d-flex gap-2">
       <button class="btn btn-primary" id="saveAudienceBtn">
@@ -298,7 +283,7 @@ async function saveAudience(existing) {
   errorEl.classList.add('d-none');
 
   const name = document.getElementById('audienceName').value.trim();
-  const approvalTypeId = document.getElementById('audienceApprovalType').value || null;
+  const description = document.getElementById('audienceDescription').value.trim() || null;
 
   if (!name) {
     errorEl.textContent = 'Name is required.';
@@ -308,7 +293,7 @@ async function saveAudience(existing) {
 
   const payload = {
     name,
-    approval_type_id: approvalTypeId,
+    description,
     organisation_id: Auth.getOrganisationId(),
   };
 
