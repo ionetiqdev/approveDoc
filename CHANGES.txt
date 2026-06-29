@@ -1,1 +1,1 @@
-Adjust Countries/Languages column widths to 7/7/86
+Tighten page title spacing next to sidebar toggle; Countries/Languages columns to 5/5/90

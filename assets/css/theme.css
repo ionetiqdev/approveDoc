@@ -329,4 +329,5 @@ header .navbar-brand {
   font-size: 1.25rem !important;
   font-weight: 600 !important;
   text-align: left !important;
+  margin-left: .35rem !important;
 }
