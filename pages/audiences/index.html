@@ -7,7 +7,7 @@
 
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/core@1.4.0/dist/css/tabler.min.css" />
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.44.0/dist/tabler-icons.min.css" />
-  <link rel="stylesheet" href="../../assets/css/theme.css?r=t52p3eb1" />
+  <link rel="stylesheet" href="../../assets/css/theme.css?r=8qd6p3u4" />
 
   <script>
     (function() {
@@ -66,6 +66,16 @@
 
     .member-list-item { display: flex; align-items: center; gap: .6rem; padding: .5rem .75rem; border-bottom: 1px solid var(--tblr-border-color); }
     .member-list-item:last-child { border-bottom: none; }
+
+    .audiences-top .card-header, .audiences-bottom .card-header {
+      background: var(--tblr-bg-surface-secondary);
+    }
+
+    /* The detail/edit panel's body needs to actually be a flex
+       column with real height, not just auto-sized to content - so
+       the Description textarea can grow to fill remaining space and
+       the Save/Delete buttons can sit pinned at the bottom. */
+    #detailCardBody { display: flex; flex-direction: column; height: 100%; }
   </style>
 </head>
 <body>
@@ -194,14 +204,14 @@
   <script src="https://cdn.jsdelivr.net/npm/@tabler/core@1.4.0/dist/js/tabler.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="../../assets/js/version.js?r=t52p3eb1"></script>
-  <script src="../../assets/js/supabase-client.js?r=t52p3eb1"></script>
-  <script src="../../assets/js/auth.js?r=t52p3eb1"></script>
-  <script src="../../assets/js/app.js?r=t52p3eb1"></script>
-  <script src="../../assets/js/theme.js?r=t52p3eb1"></script>
-  <script src="../../assets/js/sidebar-html.js?r=t52p3eb1"></script>
-  <script src="../../assets/js/sidebar.js?r=t52p3eb1"></script>
-  <script src="../../assets/js/profile-modal.js?r=t52p3eb1"></script>
+  <script src="../../assets/js/version.js?r=8qd6p3u4"></script>
+  <script src="../../assets/js/supabase-client.js?r=8qd6p3u4"></script>
+  <script src="../../assets/js/auth.js?r=8qd6p3u4"></script>
+  <script src="../../assets/js/app.js?r=8qd6p3u4"></script>
+  <script src="../../assets/js/theme.js?r=8qd6p3u4"></script>
+  <script src="../../assets/js/sidebar-html.js?r=8qd6p3u4"></script>
+  <script src="../../assets/js/sidebar.js?r=8qd6p3u4"></script>
+  <script src="../../assets/js/profile-modal.js?r=8qd6p3u4"></script>
   <script>
 // Audiences: top half is a master/detail pair (audience list + its
 // details/create form), bottom half is a two-list view of which
@@ -296,6 +306,21 @@ async function loadUsers() {
   const { data, error } = await sb.from('ad_user').select('*').eq('organisation_id', Auth.getOrganisationId()).order('first_name');
   if (error) { console.error('[Audiences] users load error:', error); return; }
   allUsers = data || [];
+
+  // Avatars live on profiles, not ad_user - they're sibling tables on
+  // the same auth.users row (profiles owns the avatar/storage link).
+  // Fetch separately and merge in, rather than failing the whole user
+  // list if this lookup has an issue.
+  const userIds = allUsers.map(u => u.user_id);
+  if (userIds.length) {
+    const { data: profilesData, error: profilesError } = await sb.from('profiles').select('id, avatar_url').in('id', userIds);
+    if (profilesError) {
+      console.error('[Audiences] profiles/avatar load error:', profilesError);
+    } else {
+      const avatarById = new Map((profilesData || []).map(p => [p.id, p.avatar_url]));
+      allUsers = allUsers.map(u => ({ ...u, avatar_url: avatarById.get(u.user_id) || null }));
+    }
+  }
 }
 
 async function loadAudiences() {
@@ -356,11 +381,11 @@ function showDetailForm(audience) {
       <label class="form-label">Name <span class="text-danger">*</span></label>
       <input type="text" id="audienceName" class="form-control" placeholder="e.g. All UK Staff" value="${audience ? App.escHtml(audience.name) : ''}" />
     </div>
-    <div class="mb-3">
+    <div class="mb-3 d-flex flex-column flex-grow-1">
       <label class="form-label">Description</label>
-      <textarea id="audienceDescription" class="form-control" rows="3" placeholder="What this audience represents, who it's for, etc.">${audience?.description ? App.escHtml(audience.description) : ''}</textarea>
+      <textarea id="audienceDescription" class="form-control flex-grow-1" style="resize:none" placeholder="What this audience represents, who it's for, etc.">${audience?.description ? App.escHtml(audience.description) : ''}</textarea>
     </div>
-    <div class="d-flex gap-2">
+    <div class="d-flex gap-2 mt-auto">
       <button class="btn btn-primary" id="saveAudienceBtn">
         <span id="saveAudienceLabel">${isEdit ? 'Update' : 'Save'}</span>
         <span id="saveAudienceSpinner" class="spinner-border spinner-border-sm ms-2 d-none"></span>
@@ -462,8 +487,12 @@ function userRowHtml(user) {
   const fullName = [user.first_name, user.last_name].filter(Boolean).join(' ') || displayName;
   const initials = fullName.split(' ').map(w => w[0]).filter(Boolean).join('').toUpperCase().slice(0, 2) || '?';
 
+  const avatar = user.avatar_url
+    ? `<span class="avatar avatar-sm rounded-circle" style="background-image:url('${App.escHtml(user.avatar_url)}')"></span>`
+    : `<span class="avatar avatar-sm rounded-circle bg-primary-lt">${App.escHtml(initials)}</span>`;
+
   return `<div class="member-list-item">
-    <span class="avatar avatar-sm rounded-circle bg-primary-lt">${App.escHtml(initials)}</span>
+    ${avatar}
     <div>
       <div class="fw-semibold">${App.escHtml(fullName)}</div>
       <div class="text-secondary small">${App.escHtml(user.email || '')}</div>

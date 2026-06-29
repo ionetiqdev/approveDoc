@@ -1,1 +1,1 @@
-Audiences: 33/67 top/bottom split, 'n user(s)' counts, New Audience moved to modal, avatars added to audience list rows
+Audiences: grey panel headers, Edit form layout (Description fills space, buttons pinned bottom), real avatar images from profiles.avatar_url

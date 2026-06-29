@@ -58,12 +58,15 @@ jobs:
 
       - name: Notify Slack
         if: success() && vars.SLACK_NOTIFY == 'true'
+        continue-on-error: true
         run: |
           TIMESTAMP=$(TZ="Europe/London" date '+%d/%m/%y %H:%M')
           REPO_NAME="${{ github.event.repository.name }}"
           BRANCH_NAME="${{ github.ref_name }}"
           COMMIT_MSG="${{ github.event.head_commit.message }}"
           curl -s -X POST -H 'Content-type: application/json' \
+            --connect-timeout 10 \
+            --max-time 15 \
             --data "$(jq -n \
               --arg text "${TIMESTAMP} - ${REPO_NAME} [${BRANCH_NAME}] Published: ${COMMIT_MSG}" \
               '{text: $text}')" \
