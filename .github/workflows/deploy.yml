@@ -34,6 +34,10 @@ jobs:
             echo "dir=public_html/${{ vars.PROJECT_CODE }}/${{ github.ref_name }}/" >> "$GITHUB_OUTPUT"
           fi
 
+      - name: Sanitize branch name for state file
+        id: branch_safe
+        run: echo "name=$(echo '${{ github.ref_name }}' | tr '/' '-')" >> "$GITHUB_OUTPUT"
+
       - name: Deploy via FTP
         uses: SamKirkland/FTP-Deploy-Action@v4.3.5
         with:
@@ -42,7 +46,7 @@ jobs:
           password: ${{ secrets.FTP_PASSWORD }}
           server-dir: ${{ steps.target.outputs.dir }}
           local-dir: ./
-          state-name: .ftp-deploy-sync-state-${{ github.ref_name }}.json
+          state-name: .ftp-deploy-sync-state-${{ steps.branch_safe.outputs.name }}.json
           timeout: 60000
           exclude: |
             **/.git*
