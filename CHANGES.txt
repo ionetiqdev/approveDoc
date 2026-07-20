@@ -1,1 +1,1 @@
-Distribution: add all remaining fields to create/edit modal (instructions, days to ack, warnings, req flags)
+Add build_distribution_items() Postgres function; call it after distribution create/update to populate ad_distribution_item rows with computed warning dates
