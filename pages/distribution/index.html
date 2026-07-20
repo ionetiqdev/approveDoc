@@ -7,7 +7,7 @@
 
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/core@1.4.0/dist/css/tabler.min.css" />
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.44.0/dist/tabler-icons.min.css" />
-  <link rel="stylesheet" href="../../assets/css/theme.css?r=1pitvzcf" />
+  <link rel="stylesheet" href="../../assets/css/theme.css?r=f3n87xid" />
 
   <script>
     (function() {
@@ -95,6 +95,7 @@
                 <tr>
                   <th>Name</th>
                   <th>Document</th>
+                  <th>Type</th>
                   <th>Start</th>
                   <th>Due</th>
                   <th>Status</th>
@@ -102,7 +103,7 @@
                 </tr>
               </thead>
               <tbody id="distributionBody">
-                <tr><td colspan="6" class="text-center py-4 text-secondary">
+                <tr><td colspan="7" class="text-center py-4 text-secondary">
                   <span class="spinner-border spinner-border-sm me-2"></span>Loading…
                 </td></tr>
               </tbody>
@@ -138,6 +139,15 @@
             <label class="form-label">Document</label>
             <select id="distributionDoc" class="form-select">
               <option value="">— None —</option>
+            </select>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Distribution type <span class="text-danger">*</span></label>
+            <select id="distributionType" class="form-select">
+              <option value="">— Select —</option>
+              <option value="ONEOFF">One off</option>
+              <option value="FIXED_VAL">Fixed validity</option>
+              <option value="TO_CLOSE">Until closed</option>
             </select>
           </div>
           <div class="row g-3">
@@ -184,14 +194,14 @@
   <script src="https://cdn.jsdelivr.net/npm/@tabler/core@1.4.0/dist/js/tabler.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="../../assets/js/version.js?r=1pitvzcf"></script>
-  <script src="../../assets/js/supabase-client.js?r=1pitvzcf"></script>
-  <script src="../../assets/js/auth.js?r=1pitvzcf"></script>
-  <script src="../../assets/js/app.js?r=1pitvzcf"></script>
-  <script src="../../assets/js/theme.js?r=1pitvzcf"></script>
-  <script src="../../assets/js/sidebar-html.js?r=1pitvzcf"></script>
-  <script src="../../assets/js/sidebar.js?r=1pitvzcf"></script>
-  <script src="../../assets/js/profile-modal.js?r=1pitvzcf"></script>
+  <script src="../../assets/js/version.js?r=f3n87xid"></script>
+  <script src="../../assets/js/supabase-client.js?r=f3n87xid"></script>
+  <script src="../../assets/js/auth.js?r=f3n87xid"></script>
+  <script src="../../assets/js/app.js?r=f3n87xid"></script>
+  <script src="../../assets/js/theme.js?r=f3n87xid"></script>
+  <script src="../../assets/js/sidebar-html.js?r=f3n87xid"></script>
+  <script src="../../assets/js/sidebar.js?r=f3n87xid"></script>
+  <script src="../../assets/js/profile-modal.js?r=f3n87xid"></script>
   <script>
 let distributionModal, deleteModal;
 let allDistributions = [];
@@ -267,6 +277,14 @@ function formatDate(dateStr) {
   return d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
 }
 
+function typePill(d) {
+  const type = d.distribution_type || '';
+  if (type === 'ONEOFF')    return `<span class="badge bg-blue-lt">One off</span>`;
+  if (type === 'FIXED_VAL') return `<span class="badge bg-purple-lt">Fixed validity</span>`;
+  if (type === 'TO_CLOSE')  return `<span class="badge bg-orange-lt">Until closed</span>`;
+  return `<span class="badge bg-secondary-lt">—</span>`;
+}
+
 function statusPill(d) {
   const status = (d.status || '').toLowerCase();
   if (status === 'active')   return `<span class="badge bg-success-lt">Active</span>`;
@@ -285,7 +303,7 @@ function renderTable() {
     : 'No distributions found';
 
   if (!filtered.length) {
-    tbody.innerHTML = `<tr><td colspan="6" class="text-center py-4 text-secondary">
+    tbody.innerHTML = `<tr><td colspan="7" class="text-center py-4 text-secondary">
       <i class="ti ti-send mb-1 d-block" style="font-size:1.5rem"></i>No distributions yet
     </td></tr>`;
     return;
@@ -296,6 +314,7 @@ function renderTable() {
     return `<tr>
       <td class="fw-semibold">${App.escHtml(d.name)}</td>
       <td class="text-secondary">${doc ? App.escHtml(doc.name) : '—'}</td>
+      <td>${typePill(d)}</td>
       <td class="text-secondary">${formatDate(d.start_date)}</td>
       <td class="text-secondary">${formatDate(d.due_date)}</td>
       <td>${statusPill(d)}</td>
@@ -332,6 +351,7 @@ function openModal(item = null) {
     document.getElementById('distributionId').value        = item.distribution_id;
     document.getElementById('distributionName').value      = item.name || '';
     document.getElementById('distributionDoc').value       = item.doc_id || '';
+    document.getElementById('distributionType').value      = item.distribution_type || '';
     document.getElementById('distributionStartDate').value = item.start_date || '';
     document.getElementById('distributionDueDate').value   = item.due_date || '';
   }
@@ -346,6 +366,7 @@ function resetModal() {
   document.getElementById('distributionId').value        = '';
   document.getElementById('distributionName').value      = '';
   document.getElementById('distributionDoc').value       = '';
+  document.getElementById('distributionType').value      = '';
   document.getElementById('distributionStartDate').value = '';
   document.getElementById('distributionDueDate').value   = '';
 }
@@ -354,14 +375,20 @@ async function saveDistribution() {
   const errorEl = document.getElementById('distributionModalError');
   errorEl.classList.add('d-none');
 
-  const id        = document.getElementById('distributionId').value;
-  const name      = document.getElementById('distributionName').value.trim();
-  const docId     = document.getElementById('distributionDoc').value || null;
-  const startDate = document.getElementById('distributionStartDate').value || null;
-  const dueDate   = document.getElementById('distributionDueDate').value || null;
+  const id             = document.getElementById('distributionId').value;
+  const name           = document.getElementById('distributionName').value.trim();
+  const docId          = document.getElementById('distributionDoc').value || null;
+  const distributionType = document.getElementById('distributionType').value || null;
+  const startDate      = document.getElementById('distributionStartDate').value || null;
+  const dueDate        = document.getElementById('distributionDueDate').value || null;
 
   if (!name) {
     errorEl.textContent = 'Name is required.';
+    errorEl.classList.remove('d-none');
+    return;
+  }
+  if (!distributionType) {
+    errorEl.textContent = 'Distribution type is required.';
     errorEl.classList.remove('d-none');
     return;
   }
@@ -369,7 +396,15 @@ async function saveDistribution() {
   document.getElementById('saveDistributionSpinner').classList.remove('d-none');
   document.getElementById('saveDistributionBtn').disabled = true;
 
-  const payload = { name, doc_id: docId, start_date: startDate, due_date: dueDate, organisation_id: Auth.getOrganisationId() };
+  const payload = {
+    name,
+    doc_id: docId,
+    distribution_type: distributionType,
+    start_date: startDate,
+    due_date: dueDate,
+    owner: Auth.getSession()?.user?.id || null,
+    organisation_id: Auth.getOrganisationId()
+  };
 
   const { error } = id
     ? await sb.from('ad_distribution').update(payload).eq('distribution_id', id)
