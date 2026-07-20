@@ -1,1 +1,1 @@
-Consolidate sidebar to single Audiences entry pointing at the Combined page; basic/Advanced pages stay reachable by direct URL, no longer in menu
+Add ad_distribution, ad_distribution_audience (junction), ad_distribution_item tables with RLS
