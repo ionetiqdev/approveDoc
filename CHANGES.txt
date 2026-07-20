@@ -1,1 +1,1 @@
-Add Distribution sidebar entry and list page with create/edit/delete
+Fix document upload failure - make documents.title nullable (was blocking all uploads)
