@@ -1,1 +1,1 @@
-Distribution modal: widen to modal-lg, split into two columns (form fields left 7, audiences right 5)
+Add Testing submenu (User/Audience/Distribution) with distribution item viewer and inline editor

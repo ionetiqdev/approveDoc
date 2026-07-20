@@ -154,6 +154,19 @@ const SidebarHtml = (() => {
           </li>
           <!-- SUBSYSTEM:issues:end -->
 
+          <li class="nav-item">
+            <a href="#" class="nav-link" data-submenu="testingSubmenu">
+              <i class="ti ti-test-pipe"></i>
+              <span class="nav-link-text">Testing</span>
+              <i class="ti ti-chevron-right nav-chevron"></i>
+            </a>
+            <ul class="nav-submenu list-unstyled" id="testingSubmenu">
+              <li class="nav-item"><a href="${root}pages/testing/user.html" class="nav-link"><span class="nav-link-text">User</span></a></li>
+              <li class="nav-item"><a href="${root}pages/testing/audience.html" class="nav-link"><span class="nav-link-text">Audience</span></a></li>
+              <li class="nav-item"><a href="${root}pages/testing/distribution.html" class="nav-link"><span class="nav-link-text">Distribution</span></a></li>
+            </ul>
+          </li>
+
         </ul>
       </nav>
 

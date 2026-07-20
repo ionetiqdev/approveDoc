@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="en" data-bs-theme="light" data-app-root="../../">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Testing: Audience - approveDoc</title>
+
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/core@1.4.0/dist/css/tabler.min.css" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.44.0/dist/tabler-icons.min.css" />
+  <link rel="stylesheet" href="../../assets/css/theme.css?r=0xoe1sh6" />
+
+  <script>
+    (function() {
+      try {
+        var root = document.documentElement.dataset.appRoot || './';
+        var absoluteRoot = new URL(root, window.location.href).pathname;
+        var suffix = ':' + absoluteRoot;
+        var savedTheme = localStorage.getItem('app_theme');
+        var theme = savedTheme || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+        document.documentElement.setAttribute('data-bs-theme', theme);
+        var accent = localStorage.getItem('app_accent' + suffix);
+        if (accent) {
+          document.documentElement.style.setProperty('--tblr-primary', accent);
+          var ah = accent.replace('#','');
+          if (ah.length === 3) ah = ah.split('').map(function(c){return c+c;}).join('');
+          document.documentElement.style.setProperty('--tblr-primary-rgb', parseInt(ah.slice(0,2),16) + ', ' + parseInt(ah.slice(2,4),16) + ', ' + parseInt(ah.slice(4,6),16));
+        }
+        var sidebarBg = localStorage.getItem('app_sidebar_bg' + suffix);
+        if (sidebarBg) {
+          document.documentElement.style.setProperty('--bg-sidebar', sidebarBg);
+          var hex = sidebarBg.replace('#', '');
+          if (hex.length === 3) hex = hex.split('').map(function(c){return c+c;}).join('');
+          var r = parseInt(hex.slice(0,2),16) / 255, g = parseInt(hex.slice(2,4),16) / 255, b = parseInt(hex.slice(4,6),16) / 255;
+          var toLinear = function(c){ return c <= 0.03928 ? c/12.92 : Math.pow((c+0.055)/1.055, 2.4); };
+          var isLight = (0.2126*toLinear(r) + 0.7152*toLinear(g) + 0.0722*toLinear(b)) > 0.5;
+          document.documentElement.style.setProperty('--sidebar-fg', isLight ? '#0f172a' : '#ffffff');
+          document.documentElement.style.setProperty('--sidebar-fg-rgb', isLight ? '15,23,42' : '255,255,255');
+        }
+      } catch(e) {}
+    })();
+  </script>
+
+  <style>
+    html, body { height: 100%; overflow: hidden; }
+    .app-content-wrapper { height: 100vh; display: flex; flex-direction: column; }
+    .page-body { flex: 1; min-height: 0; display: flex; flex-direction: column; padding-top: 1rem; padding-bottom: 1rem; }
+    .page-body > .container-fluid { flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 1rem; }
+    .pane-top { flex: 1 1 0; min-height: 0; display: flex; flex-direction: column; overflow: hidden; }
+    .pane-bottom { flex: 1 1 0; min-height: 0; display: flex; flex-direction: column; overflow: hidden; }
+    .pane-top .card, .pane-bottom .card { flex: 1; min-height: 0; display: flex; flex-direction: column; overflow: hidden; }
+    .scroll-pane { flex: 1; min-height: 0; overflow-y: auto; }
+    .item-row { cursor: pointer; }
+    .item-row.active { background: var(--tblr-primary-lt); }
+    .item-row:hover { background: var(--tblr-bg-surface-secondary); }
+    .pane-top .card-header, .pane-bottom .card-header { background: var(--tblr-bg-surface-secondary); padding-top: 10px; padding-bottom: 10px; }
+    .pane-top .card-title, .pane-bottom .card-title { font-size: 14px; }
+  </style>
+</head>
+<body>
+
+  <aside id="sidebar"></aside>
+  <div id="sidebarOverlay" class="sidebar-overlay"></div>
+
+  <div class="app-content-wrapper">
+    <header class="navbar navbar-expand-md d-print-none border-bottom">
+      <div class="container-fluid">
+        <button id="sidebarToggle" class="btn btn-icon"><i class="ti ti-menu-2"></i></button>
+        <h1 class="navbar-brand d-none d-sm-inline-block ms-2 mb-0 page-title-lg">Testing: Audience Items</h1>
+        <div class="navbar-nav flex-row order-md-last align-items-center gap-2">
+          <div data-active-organisation></div>
+          <button class="btn btn-icon" data-theme-toggle><i class="ti ti-moon"></i></button>
+          <button class="btn btn-icon" id="headerPreferencesBtn"><i class="ti ti-adjustments"></i></button>
+          <span class="avatar avatar-sm rounded-circle bg-primary-lt" data-user-initials>?</span>
+        </div>
+      </div>
+    </header>
+
+    <div class="page-body">
+      <div class="container-fluid">
+
+        <div class="pane-top">
+          <div class="card">
+            <div class="card-header">
+              <h3 class="card-title">Audience</h3>
+              <select id="pickerSelect" class="form-select form-select-sm ms-3" style="max-width:320px">
+                <option value="">— Choose an audience —</option>
+              </select>
+              <span class="text-secondary ms-3 small" id="itemCount"></span>
+            </div>
+            <div class="scroll-pane">
+              <table class="table table-vcenter card-table table-hover mb-0">
+                <thead>
+                  <tr>
+                    <th>User</th>
+                    <th>Distribution</th>
+                    <th>Start</th>
+                    <th>Due</th>
+                    <th>Warning 1</th>
+                    <th>Warning 2</th>
+                    <th>Status</th>
+                    <th>Acknowledged</th>
+                    <th>Rejected</th>
+                  </tr>
+                </thead>
+                <tbody id="itemsBody">
+                  <tr><td colspan="9" class="text-center py-4 text-secondary">Choose an audience above</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <div class="pane-bottom">
+          <div class="card">
+            <div class="card-header">
+              <h3 class="card-title" id="detailTitle">Select a row above</h3>
+            </div>
+            <div class="scroll-pane">
+              <div class="card-body" id="detailBody">
+                <p class="text-secondary">Click a row in the table above to see and edit its details here.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@tabler/core@1.4.0/dist/js/tabler.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="../../assets/js/version.js?r=0xoe1sh6"></script>
+  <script src="../../assets/js/supabase-client.js?r=0xoe1sh6"></script>
+  <script src="../../assets/js/auth.js?r=0xoe1sh6"></script>
+  <script src="../../assets/js/app.js?r=0xoe1sh6"></script>
+  <script src="../../assets/js/theme.js?r=0xoe1sh6"></script>
+  <script src="../../assets/js/sidebar-html.js?r=0xoe1sh6"></script>
+  <script src="../../assets/js/sidebar.js?r=0xoe1sh6"></script>
+  <script src="../../assets/js/profile-modal.js?r=0xoe1sh6"></script>
+  <script>
+let allItems = [];
+let allUsers = [];
+let allDistributions = [];
+let selectedItemId = null;
+
+(async () => {
+  const session = await Auth.requireAuth();
+  if (!session) return;
+  SidebarHtml.inject('../../');
+  Sidebar.init();
+  Auth.refreshUI();
+
+  const orgId = Auth.getOrganisationId();
+
+  const [{ data: audiences }, { data: users }, { data: dists }] = await Promise.all([
+    sb.from('ad_audience').select('audience_id, name').eq('organisation_id', orgId).order('name'),
+    sb.from('ad_user').select('user_id, first_name, last_name, email').eq('organisation_id', orgId),
+    sb.from('ad_distribution').select('distribution_id, name').eq('organisation_id', orgId).order('name'),
+  ]);
+
+  allUsers = users || [];
+  allDistributions = dists || [];
+
+  const picker = document.getElementById('pickerSelect');
+  (audiences || []).forEach(a => {
+    const opt = document.createElement('option');
+    opt.value = a.audience_id;
+    opt.textContent = a.name;
+    picker.appendChild(opt);
+  });
+
+  picker.addEventListener('change', () => {
+    selectedItemId = null;
+    clearDetail();
+    if (picker.value) loadItems(picker.value);
+    else clearItems();
+  });
+})();
+
+async function loadItems(audienceId) {
+  // Get all user_ids in this audience, then fetch their distribution items
+  const { data: members, error: memberErr } = await sb.from('ad_audience_member')
+    .select('user_id')
+    .eq('audience_id', audienceId)
+    .eq('organisation_id', Auth.getOrganisationId());
+
+  if (memberErr) { App.toast('Failed to load members: ' + memberErr.message, 'danger'); return; }
+
+  const userIds = (members || []).map(m => m.user_id);
+  if (!userIds.length) {
+    allItems = [];
+    renderTable();
+    return;
+  }
+
+  const { data, error } = await sb.from('ad_distribution_item')
+    .select('*')
+    .in('user_id', userIds)
+    .eq('organisation_id', Auth.getOrganisationId())
+    .order('user_id')
+    .order('created_at');
+
+  if (error) { App.toast('Failed to load items: ' + error.message, 'danger'); return; }
+  allItems = data || [];
+  renderTable();
+}
+
+function clearItems() {
+  allItems = [];
+  document.getElementById('itemCount').textContent = '';
+  document.getElementById('itemsBody').innerHTML = '<tr><td colspan="9" class="text-center py-4 text-secondary">Choose an audience above</td></tr>';
+  clearDetail();
+}
+
+function userName(userId) {
+  const u = allUsers.find(u => u.user_id === userId);
+  if (!u) return userId;
+  return [u.first_name, u.last_name].filter(Boolean).join(' ') || u.email || userId;
+}
+
+function distName(distributionId) {
+  const d = allDistributions.find(d => d.distribution_id === distributionId);
+  return d ? d.name : distributionId;
+}
+
+function fmt(d) { return d ? new Date(d).toLocaleDateString('en-GB', { day:'2-digit', month:'short', year:'numeric' }) : '—'; }
+
+function statusBadge(status) {
+  const s = (status || '').toUpperCase();
+  if (s === 'PENDING')      return `<span class="badge bg-secondary-lt">Pending</span>`;
+  if (s === 'ACKNOWLEDGED') return `<span class="badge bg-success-lt">Acknowledged</span>`;
+  if (s === 'REJECTED')     return `<span class="badge bg-danger-lt">Rejected</span>`;
+  if (s === 'OVERDUE')      return `<span class="badge bg-warning-lt">Overdue</span>`;
+  return `<span class="badge bg-secondary-lt">${App.escHtml(status || '—')}</span>`;
+}
+
+function renderTable() {
+  document.getElementById('itemCount').textContent = `${allItems.length} item${allItems.length === 1 ? '' : 's'}`;
+  const tbody = document.getElementById('itemsBody');
+
+  if (!allItems.length) {
+    tbody.innerHTML = '<tr><td colspan="9" class="text-center py-4 text-secondary">No distribution items for users in this audience</td></tr>';
+    return;
+  }
+
+  tbody.innerHTML = allItems.map(item => `
+    <tr class="item-row ${item.distrib_item_id === selectedItemId ? 'active' : ''}" data-id="${item.distrib_item_id}">
+      <td class="fw-semibold">${App.escHtml(userName(item.user_id))}</td>
+      <td class="text-secondary">${App.escHtml(distName(item.distribution_id))}</td>
+      <td class="text-secondary">${fmt(item.start_date)}</td>
+      <td class="text-secondary">${fmt(item.due_date)}</td>
+      <td class="text-secondary">${fmt(item.warning1)}</td>
+      <td class="text-secondary">${fmt(item.warning2)}</td>
+      <td>${statusBadge(item.status)}</td>
+      <td class="text-secondary">${item.acknowledged ? fmt(item.acknowledged_date) : '—'}</td>
+      <td class="text-secondary">${item.rejected ? fmt(item.rejected_date) : '—'}</td>
+    </tr>`).join('');
+
+  tbody.querySelectorAll('.item-row').forEach(row => {
+    row.addEventListener('click', () => {
+      selectedItemId = row.dataset.id;
+      renderTable();
+      showDetail(allItems.find(i => i.distrib_item_id === row.dataset.id));
+    });
+  });
+}
+
+function showDetail(item) {
+  if (!item) return;
+  document.getElementById('detailTitle').textContent = `Item: ${userName(item.user_id)} — ${distName(item.distribution_id)}`;
+  document.getElementById('detailBody').innerHTML = `
+    <div id="detailError" class="alert alert-danger d-none py-2 small mb-3"></div>
+    <div class="row g-3">
+      <div class="col-3">
+        <label class="form-label">Status</label>
+        <select id="detailStatus" class="form-select form-select-sm">
+          <option value="PENDING" ${item.status==='PENDING'?'selected':''}>Pending</option>
+          <option value="ACKNOWLEDGED" ${item.status==='ACKNOWLEDGED'?'selected':''}>Acknowledged</option>
+          <option value="REJECTED" ${item.status==='REJECTED'?'selected':''}>Rejected</option>
+          <option value="OVERDUE" ${item.status==='OVERDUE'?'selected':''}>Overdue</option>
+        </select>
+      </div>
+      <div class="col-3">
+        <label class="form-label">Start date</label>
+        <input type="date" id="detailStartDate" class="form-control form-control-sm" value="${item.start_date || ''}" />
+      </div>
+      <div class="col-3">
+        <label class="form-label">Due date</label>
+        <input type="date" id="detailDueDate" class="form-control form-control-sm" value="${item.due_date || ''}" />
+      </div>
+      <div class="col-3">
+        <label class="form-label">Warning 1</label>
+        <input type="date" id="detailWarning1" class="form-control form-control-sm" value="${item.warning1 || ''}" />
+      </div>
+      <div class="col-3">
+        <label class="form-label">Warning 2</label>
+        <input type="date" id="detailWarning2" class="form-control form-control-sm" value="${item.warning2 || ''}" />
+      </div>
+      <div class="col-3">
+        <label class="form-label">Acknowledged</label>
+        <input type="checkbox" id="detailAcknowledged" class="form-check-input d-block mt-2" ${item.acknowledged?'checked':''} />
+      </div>
+      <div class="col-3">
+        <label class="form-label">Acknowledged date</label>
+        <input type="date" id="detailAckDate" class="form-control form-control-sm" value="${item.acknowledged_date || ''}" />
+      </div>
+      <div class="col-3">
+        <label class="form-label">Rejected</label>
+        <input type="checkbox" id="detailRejected" class="form-check-input d-block mt-2" ${item.rejected?'checked':''} />
+      </div>
+      <div class="col-3">
+        <label class="form-label">Rejected date</label>
+        <input type="date" id="detailRejDate" class="form-control form-control-sm" value="${item.rejected_date || ''}" />
+      </div>
+    </div>
+    <div class="mt-3">
+      <button class="btn btn-primary btn-sm" id="saveDetailBtn">
+        <span id="saveDetailLabel">Save</span>
+        <span id="saveDetailSpinner" class="spinner-border spinner-border-sm ms-2 d-none"></span>
+      </button>
+    </div>
+  `;
+  document.getElementById('saveDetailBtn').addEventListener('click', () => saveDetail(item.distrib_item_id));
+}
+
+async function saveDetail(itemId) {
+  const errorEl = document.getElementById('detailError');
+  errorEl.classList.add('d-none');
+  document.getElementById('saveDetailSpinner').classList.remove('d-none');
+  document.getElementById('saveDetailBtn').disabled = true;
+
+  const { error } = await sb.from('ad_distribution_item').update({
+    status:            document.getElementById('detailStatus').value,
+    start_date:        document.getElementById('detailStartDate').value || null,
+    due_date:          document.getElementById('detailDueDate').value || null,
+    warning1:          document.getElementById('detailWarning1').value || null,
+    warning2:          document.getElementById('detailWarning2').value || null,
+    acknowledged:      document.getElementById('detailAcknowledged').checked,
+    acknowledged_date: document.getElementById('detailAckDate').value || null,
+    rejected:          document.getElementById('detailRejected').checked,
+    rejected_date:     document.getElementById('detailRejDate').value || null,
+    updated_at:        new Date().toISOString(),
+  }).eq('distrib_item_id', itemId);
+
+  document.getElementById('saveDetailSpinner').classList.add('d-none');
+  document.getElementById('saveDetailBtn').disabled = false;
+
+  if (error) {
+    errorEl.textContent = 'Save failed: ' + error.message;
+    errorEl.classList.remove('d-none');
+    return;
+  }
+
+  App.toast('Saved');
+  await loadItems(document.getElementById('pickerSelect').value);
+}
+
+function clearDetail() {
+  document.getElementById('detailTitle').textContent = 'Select a row above';
+  document.getElementById('detailBody').innerHTML = '<p class="text-secondary">Click a row in the table above to see and edit its details here.</p>';
+}
+  </script>
+</body>
+</html>
