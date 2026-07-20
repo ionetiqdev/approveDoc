@@ -99,6 +99,13 @@ const SidebarHtml = (() => {
           <!-- SUBSYSTEM:documents:end -->
 
           <li class="nav-item">
+            <a href="${root}pages/distribution/index.html" class="nav-link">
+              <i class="ti ti-send"></i>
+              <span class="nav-link-text">Distribution</span>
+            </a>
+          </li>
+
+          <li class="nav-item">
             <a href="#" class="nav-link" data-submenu="reportsSubmenu">
               <i class="ti ti-report"></i>
               <span class="nav-link-text">Reports</span>

@@ -1,0 +1,403 @@
+<!DOCTYPE html>
+<html lang="en" data-bs-theme="light" data-app-root="../../">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Distribution - approveDoc</title>
+
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/core@1.4.0/dist/css/tabler.min.css" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.44.0/dist/tabler-icons.min.css" />
+  <link rel="stylesheet" href="../../assets/css/theme.css?r=3of1p9sn" />
+
+  <script>
+    (function() {
+      try {
+        var root = document.documentElement.dataset.appRoot || './';
+        var absoluteRoot = new URL(root, window.location.href).pathname;
+        var suffix = ':' + absoluteRoot;
+        var savedTheme = localStorage.getItem('app_theme');
+        var theme = savedTheme || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+        document.documentElement.setAttribute('data-bs-theme', theme);
+        var accent = localStorage.getItem('app_accent' + suffix);
+        if (accent) {
+          document.documentElement.style.setProperty('--tblr-primary', accent);
+          var ah = accent.replace('#','');
+          if (ah.length === 3) ah = ah.split('').map(function(c){return c+c;}).join('');
+          document.documentElement.style.setProperty('--tblr-primary-rgb', parseInt(ah.slice(0,2),16) + ', ' + parseInt(ah.slice(2,4),16) + ', ' + parseInt(ah.slice(4,6),16));
+        }
+        var sidebarBg = localStorage.getItem('app_sidebar_bg' + suffix);
+        if (sidebarBg) {
+          document.documentElement.style.setProperty('--bg-sidebar', sidebarBg);
+          var hex = sidebarBg.replace('#', '');
+          if (hex.length === 3) hex = hex.split('').map(function(c){return c+c;}).join('');
+          var r = parseInt(hex.slice(0,2),16) / 255, g = parseInt(hex.slice(2,4),16) / 255, b = parseInt(hex.slice(4,6),16) / 255;
+          var toLinear = function(c){ return c <= 0.03928 ? c/12.92 : Math.pow((c+0.055)/1.055, 2.4); };
+          var isLight = (0.2126*toLinear(r) + 0.7152*toLinear(g) + 0.0722*toLinear(b)) > 0.5;
+          document.documentElement.style.setProperty('--sidebar-fg', isLight ? '#0f172a' : '#ffffff');
+          document.documentElement.style.setProperty('--sidebar-fg-rgb', isLight ? '15,23,42' : '255,255,255');
+        }
+      } catch (e) {}
+    })();
+  </script>
+
+  <style>
+    html, body { height: 100%; overflow: hidden; }
+    .app-content-wrapper { height: 100vh; display: flex; flex-direction: column; }
+    .page-body { flex: 1; min-height: 0; display: flex; flex-direction: column; padding-top: 1rem; padding-bottom: 1rem; }
+    .page-body > .container-fluid { flex: 1; min-height: 0; display: flex; flex-direction: column; }
+    .distribution-card { flex: 1; min-height: 0; display: flex; flex-direction: column; overflow: hidden; }
+    .distribution-card .table-scroll { flex: 1; min-height: 0; overflow-y: auto; }
+  </style>
+</head>
+<body>
+
+  <aside id="sidebar"></aside>
+  <div id="sidebarOverlay" class="sidebar-overlay"></div>
+
+  <div class="app-content-wrapper">
+
+    <header class="navbar navbar-expand-md d-print-none border-bottom">
+      <div class="container-fluid">
+        <button id="sidebarToggle" class="btn btn-icon" aria-label="Toggle sidebar" title="Toggle sidebar">
+          <i class="ti ti-menu-2"></i>
+        </button>
+        <h1 class="navbar-brand d-none d-sm-inline-block ms-2 mb-0 page-title-lg">Distribution</h1>
+        <div class="navbar-nav flex-row order-md-last align-items-center gap-2">
+          <div data-active-organisation></div>
+          <button class="btn btn-icon" data-theme-toggle title="Toggle dark mode"><i class="ti ti-moon"></i></button>
+          <button class="btn btn-icon" id="headerPreferencesBtn" title="Preferences">
+            <i class="ti ti-adjustments"></i>
+          </button>
+          <span class="avatar avatar-sm rounded-circle bg-primary-lt" data-user-initials>?</span>
+          <span class="d-none d-xl-block">
+            <span class="d-block fw-semibold" style="font-size:.8125rem" data-user-name>—</span>
+            <span class="d-block text-secondary" style="font-size:.7rem" data-user-email>—</span>
+          </span>
+        </div>
+      </div>
+    </header>
+
+    <div class="page-body">
+      <div class="container-fluid">
+
+        <div class="card distribution-card">
+          <div class="card-header">
+            <div class="text-secondary me-2">Search:</div>
+            <input type="text" id="searchInput" class="form-control form-control-sm" style="max-width:220px" placeholder="Name or document…" />
+            <button class="btn btn-primary btn-sm ms-3" id="createDistributionBtn">
+              <i class="ti ti-plus me-1"></i>Create distribution
+            </button>
+          </div>
+
+          <div class="table-scroll">
+            <table class="table table-vcenter card-table table-hover mb-0">
+              <thead>
+                <tr>
+                  <th>Name</th>
+                  <th>Document</th>
+                  <th>Start</th>
+                  <th>Due</th>
+                  <th>Status</th>
+                  <th class="w-1"></th>
+                </tr>
+              </thead>
+              <tbody id="distributionBody">
+                <tr><td colspan="6" class="text-center py-4 text-secondary">
+                  <span class="spinner-border spinner-border-sm me-2"></span>Loading…
+                </td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="card-footer" style="flex-shrink:0">
+            <p class="m-0 text-secondary" id="pageInfo"></p>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- Create / Edit modal -->
+  <div class="modal modal-blur fade" id="distributionModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="distributionModalTitle">Create distribution</h5>
+          <button type="button" class="modal-close-btn" data-bs-dismiss="modal" aria-label="Close"><i class="ti ti-x"></i></button>
+        </div>
+        <div class="modal-body">
+          <div id="distributionModalError" class="alert alert-danger d-none py-2 small mb-3"></div>
+          <input type="hidden" id="distributionId" />
+
+          <div class="mb-3">
+            <label class="form-label">Name <span class="text-danger">*</span></label>
+            <input type="text" id="distributionName" class="form-control" placeholder="e.g. Q3 Policy Update" />
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Document</label>
+            <select id="distributionDoc" class="form-select">
+              <option value="">— None —</option>
+            </select>
+          </div>
+          <div class="row g-3">
+            <div class="col-6">
+              <label class="form-label">Start date</label>
+              <input type="date" id="distributionStartDate" class="form-control" />
+            </div>
+            <div class="col-6">
+              <label class="form-label">Due date</label>
+              <input type="date" id="distributionDueDate" class="form-control" />
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn" data-bs-dismiss="modal">Cancel</button>
+          <button type="button" class="btn btn-primary" id="saveDistributionBtn">
+            <span id="saveDistributionLabel">Save</span>
+            <span id="saveDistributionSpinner" class="spinner-border spinner-border-sm ms-2 d-none"></span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Delete confirmation modal -->
+  <div class="modal modal-blur fade" id="deleteModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered modal-sm">
+      <div class="modal-content">
+        <div class="modal-status bg-danger"></div>
+        <div class="modal-body text-center py-4">
+          <i class="ti ti-trash text-danger mb-2" style="font-size:2.2rem"></i>
+          <h6 class="mb-1">Delete this distribution?</h6>
+          <p class="text-secondary small mb-0" id="deleteDistributionName"></p>
+          <p class="text-danger small mt-2 mb-0">This will also delete all associated distribution items.</p>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn" data-bs-dismiss="modal">Cancel</button>
+          <button type="button" class="btn btn-danger" id="confirmDeleteBtn">Delete</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@tabler/core@1.4.0/dist/js/tabler.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="../../assets/js/version.js?r=3of1p9sn"></script>
+  <script src="../../assets/js/supabase-client.js?r=3of1p9sn"></script>
+  <script src="../../assets/js/auth.js?r=3of1p9sn"></script>
+  <script src="../../assets/js/app.js?r=3of1p9sn"></script>
+  <script src="../../assets/js/theme.js?r=3of1p9sn"></script>
+  <script src="../../assets/js/sidebar-html.js?r=3of1p9sn"></script>
+  <script src="../../assets/js/sidebar.js?r=3of1p9sn"></script>
+  <script src="../../assets/js/profile-modal.js?r=3of1p9sn"></script>
+  <script>
+let distributionModal, deleteModal;
+let allDistributions = [];
+let allDocuments = [];
+let pendingDeleteId = null;
+
+(async () => {
+  const session = await Auth.requireAuth();
+  if (!session) return;
+  SidebarHtml.inject('../../');
+  Sidebar.init();
+  Auth.refreshUI();
+
+  if (!Auth.isAdmin()) {
+    App.toast('You do not have access to this page', 'danger');
+    window.location.href = '../../index.html';
+    return;
+  }
+
+  distributionModal = new bootstrap.Modal(document.getElementById('distributionModal'));
+  deleteModal       = new bootstrap.Modal(document.getElementById('deleteModal'));
+
+  await Promise.all([loadDocuments(), loadDistributions()]);
+
+  document.getElementById('searchInput').addEventListener('input', renderTable);
+  document.getElementById('createDistributionBtn').addEventListener('click', () => openModal());
+  document.getElementById('saveDistributionBtn').addEventListener('click', saveDistribution);
+  document.getElementById('confirmDeleteBtn').addEventListener('click', confirmDelete);
+  document.getElementById('distributionModal').addEventListener('hidden.bs.modal', resetModal);
+})();
+
+async function loadDocuments() {
+  const { data, error } = await sb.from('ad_document').select('doc_id, name').eq('organisation_id', Auth.getOrganisationId()).order('name');
+  if (error) { console.error('[Distribution] documents load error:', error); return; }
+  allDocuments = data || [];
+
+  const select = document.getElementById('distributionDoc');
+  allDocuments.forEach(d => {
+    const opt = document.createElement('option');
+    opt.value = d.doc_id;
+    opt.textContent = d.name;
+    select.appendChild(opt);
+  });
+}
+
+async function loadDistributions() {
+  const { data, error } = await sb.from('ad_distribution').select('*').eq('organisation_id', Auth.getOrganisationId()).order('created_at', { ascending: false });
+
+  if (error) {
+    console.error('[Distribution] Load error:', error);
+    App.toast('Failed to load distributions: ' + error.message, 'danger');
+    return;
+  }
+
+  allDistributions = data || [];
+  renderTable();
+}
+
+function getFiltered() {
+  const search = (document.getElementById('searchInput').value || '').toLowerCase();
+  if (!search) return allDistributions;
+  return allDistributions.filter(d => {
+    if (d.name?.toLowerCase().includes(search)) return true;
+    const doc = allDocuments.find(doc => doc.doc_id === d.doc_id);
+    if (doc?.name?.toLowerCase().includes(search)) return true;
+    return false;
+  });
+}
+
+function formatDate(dateStr) {
+  if (!dateStr) return '—';
+  const d = new Date(dateStr);
+  return d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+}
+
+function statusPill(d) {
+  const status = (d.status || '').toLowerCase();
+  if (status === 'active')   return `<span class="badge bg-success-lt">Active</span>`;
+  if (status === 'complete') return `<span class="badge bg-secondary-lt">Complete</span>`;
+  if (status === 'draft')    return `<span class="badge bg-warning-lt">Draft</span>`;
+  if (status === 'cancelled') return `<span class="badge bg-danger-lt">Cancelled</span>`;
+  return `<span class="badge bg-secondary-lt">—</span>`;
+}
+
+function renderTable() {
+  const filtered = getFiltered();
+  const tbody = document.getElementById('distributionBody');
+
+  document.getElementById('pageInfo').textContent = filtered.length
+    ? `${filtered.length} distribution${filtered.length === 1 ? '' : 's'}`
+    : 'No distributions found';
+
+  if (!filtered.length) {
+    tbody.innerHTML = `<tr><td colspan="6" class="text-center py-4 text-secondary">
+      <i class="ti ti-send mb-1 d-block" style="font-size:1.5rem"></i>No distributions yet
+    </td></tr>`;
+    return;
+  }
+
+  tbody.innerHTML = filtered.map(d => {
+    const doc = allDocuments.find(doc => doc.doc_id === d.doc_id);
+    return `<tr>
+      <td class="fw-semibold">${App.escHtml(d.name)}</td>
+      <td class="text-secondary">${doc ? App.escHtml(doc.name) : '—'}</td>
+      <td class="text-secondary">${formatDate(d.start_date)}</td>
+      <td class="text-secondary">${formatDate(d.due_date)}</td>
+      <td>${statusPill(d)}</td>
+      <td>
+        <div class="btn-list flex-nowrap">
+          <button class="btn btn-icon btn-icon-lg edit-btn" data-id="${d.distribution_id}" title="Edit"><i class="ti ti-edit"></i></button>
+          <button class="btn btn-icon btn-icon-lg text-danger delete-btn" data-id="${d.distribution_id}" data-name="${App.escHtml(d.name)}" title="Delete"><i class="ti ti-trash"></i></button>
+        </div>
+      </td>
+    </tr>`;
+  }).join('');
+
+  tbody.querySelectorAll('.edit-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const item = allDistributions.find(d => d.distribution_id === btn.dataset.id);
+      if (item) openModal(item);
+    });
+  });
+
+  tbody.querySelectorAll('.delete-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      pendingDeleteId = btn.dataset.id;
+      document.getElementById('deleteDistributionName').textContent = btn.dataset.name;
+      deleteModal.show();
+    });
+  });
+}
+
+function openModal(item = null) {
+  resetModal();
+  if (item) {
+    document.getElementById('distributionModalTitle').textContent = 'Edit distribution';
+    document.getElementById('saveDistributionLabel').textContent  = 'Update';
+    document.getElementById('distributionId').value        = item.distribution_id;
+    document.getElementById('distributionName').value      = item.name || '';
+    document.getElementById('distributionDoc').value       = item.doc_id || '';
+    document.getElementById('distributionStartDate').value = item.start_date || '';
+    document.getElementById('distributionDueDate').value   = item.due_date || '';
+  }
+  distributionModal.show();
+  setTimeout(() => document.getElementById('distributionName').focus(), 300);
+}
+
+function resetModal() {
+  document.getElementById('distributionModalTitle').textContent = 'Create distribution';
+  document.getElementById('saveDistributionLabel').textContent  = 'Save';
+  document.getElementById('distributionModalError').classList.add('d-none');
+  document.getElementById('distributionId').value        = '';
+  document.getElementById('distributionName').value      = '';
+  document.getElementById('distributionDoc').value       = '';
+  document.getElementById('distributionStartDate').value = '';
+  document.getElementById('distributionDueDate').value   = '';
+}
+
+async function saveDistribution() {
+  const errorEl = document.getElementById('distributionModalError');
+  errorEl.classList.add('d-none');
+
+  const id        = document.getElementById('distributionId').value;
+  const name      = document.getElementById('distributionName').value.trim();
+  const docId     = document.getElementById('distributionDoc').value || null;
+  const startDate = document.getElementById('distributionStartDate').value || null;
+  const dueDate   = document.getElementById('distributionDueDate').value || null;
+
+  if (!name) {
+    errorEl.textContent = 'Name is required.';
+    errorEl.classList.remove('d-none');
+    return;
+  }
+
+  document.getElementById('saveDistributionSpinner').classList.remove('d-none');
+  document.getElementById('saveDistributionBtn').disabled = true;
+
+  const payload = { name, doc_id: docId, start_date: startDate, due_date: dueDate, organisation_id: Auth.getOrganisationId() };
+
+  const { error } = id
+    ? await sb.from('ad_distribution').update(payload).eq('distribution_id', id)
+    : await sb.from('ad_distribution').insert(payload);
+
+  document.getElementById('saveDistributionSpinner').classList.add('d-none');
+  document.getElementById('saveDistributionBtn').disabled = false;
+
+  if (error) {
+    errorEl.textContent = 'Save failed: ' + (error.message || 'Unknown error');
+    errorEl.classList.remove('d-none');
+    return;
+  }
+
+  distributionModal.hide();
+  App.toast(id ? 'Updated' : 'Created');
+  await loadDistributions();
+}
+
+async function confirmDelete() {
+  if (!pendingDeleteId) return;
+  const { error } = await sb.from('ad_distribution').delete().eq('distribution_id', pendingDeleteId);
+  deleteModal.hide();
+  if (error) { App.toast('Delete failed: ' + error.message, 'danger'); return; }
+  App.toast('Deleted');
+  pendingDeleteId = null;
+  await loadDistributions();
+}
+  </script>
+</body>
+</html>

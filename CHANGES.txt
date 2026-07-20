@@ -1,1 +1,1 @@
-Add ad_distribution, ad_distribution_audience (junction), ad_distribution_item tables with RLS
+Add Distribution sidebar entry and list page with create/edit/delete
