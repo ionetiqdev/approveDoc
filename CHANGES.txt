@@ -1,1 +1,1 @@
-Distribution: add Distribution Type select (hardcoded), owner auto-set to current user, Type column in list
+Distribution: add all remaining fields to create/edit modal (instructions, days to ack, warnings, req flags)

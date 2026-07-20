@@ -7,7 +7,7 @@
 
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/core@1.4.0/dist/css/tabler.min.css" />
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.44.0/dist/tabler-icons.min.css" />
-  <link rel="stylesheet" href="../../assets/css/theme.css?r=f3n87xid" />
+  <link rel="stylesheet" href="../../assets/css/theme.css?r=f5vh09b7" />
 
   <script>
     (function() {
@@ -150,7 +150,11 @@
               <option value="TO_CLOSE">Until closed</option>
             </select>
           </div>
-          <div class="row g-3">
+          <div class="mb-3">
+            <label class="form-label">Instructions</label>
+            <textarea id="distributionInstructions" class="form-control" rows="3" placeholder="Instructions shown to users when acknowledging…"></textarea>
+          </div>
+          <div class="row g-3 mb-3">
             <div class="col-6">
               <label class="form-label">Start date</label>
               <input type="date" id="distributionStartDate" class="form-control" />
@@ -158,6 +162,57 @@
             <div class="col-6">
               <label class="form-label">Due date</label>
               <input type="date" id="distributionDueDate" class="form-control" />
+            </div>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Days to acknowledge</label>
+            <input type="number" id="distributionDaysToAck" class="form-control" min="1" placeholder="e.g. 30" />
+          </div>
+
+          <div class="mb-1 fw-semibold text-secondary" style="font-size:.8125rem">First warning</div>
+          <div class="row g-3 mb-3">
+            <div class="col-6">
+              <label class="form-label">Days</label>
+              <input type="number" id="distributionWarn1Days" class="form-control" min="1" placeholder="e.g. 7" />
+            </div>
+            <div class="col-6">
+              <label class="form-label">Direction</label>
+              <select id="distributionWarn1Dir" class="form-select">
+                <option value="">— None —</option>
+                <option value="B">Before due date</option>
+                <option value="A">After due date</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="mb-1 fw-semibold text-secondary" style="font-size:.8125rem">Second warning</div>
+          <div class="row g-3 mb-3">
+            <div class="col-6">
+              <label class="form-label">Days</label>
+              <input type="number" id="distributionWarn2Days" class="form-control" min="1" placeholder="e.g. 3" />
+            </div>
+            <div class="col-6">
+              <label class="form-label">Direction</label>
+              <select id="distributionWarn2Dir" class="form-select">
+                <option value="">— None —</option>
+                <option value="B">Before due date</option>
+                <option value="A">After due date</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="row g-3">
+            <div class="col-6">
+              <label class="form-check form-switch">
+                <input type="checkbox" id="distributionReqAck" class="form-check-input" checked />
+                <span class="form-check-label">Require acknowledgement</span>
+              </label>
+            </div>
+            <div class="col-6">
+              <label class="form-check form-switch">
+                <input type="checkbox" id="distributionReqPassword" class="form-check-input" />
+                <span class="form-check-label">Require password</span>
+              </label>
             </div>
           </div>
         </div>
@@ -194,14 +249,14 @@
   <script src="https://cdn.jsdelivr.net/npm/@tabler/core@1.4.0/dist/js/tabler.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="../../assets/js/version.js?r=f3n87xid"></script>
-  <script src="../../assets/js/supabase-client.js?r=f3n87xid"></script>
-  <script src="../../assets/js/auth.js?r=f3n87xid"></script>
-  <script src="../../assets/js/app.js?r=f3n87xid"></script>
-  <script src="../../assets/js/theme.js?r=f3n87xid"></script>
-  <script src="../../assets/js/sidebar-html.js?r=f3n87xid"></script>
-  <script src="../../assets/js/sidebar.js?r=f3n87xid"></script>
-  <script src="../../assets/js/profile-modal.js?r=f3n87xid"></script>
+  <script src="../../assets/js/version.js?r=f5vh09b7"></script>
+  <script src="../../assets/js/supabase-client.js?r=f5vh09b7"></script>
+  <script src="../../assets/js/auth.js?r=f5vh09b7"></script>
+  <script src="../../assets/js/app.js?r=f5vh09b7"></script>
+  <script src="../../assets/js/theme.js?r=f5vh09b7"></script>
+  <script src="../../assets/js/sidebar-html.js?r=f5vh09b7"></script>
+  <script src="../../assets/js/sidebar.js?r=f5vh09b7"></script>
+  <script src="../../assets/js/profile-modal.js?r=f5vh09b7"></script>
   <script>
 let distributionModal, deleteModal;
 let allDistributions = [];
@@ -348,12 +403,20 @@ function openModal(item = null) {
   if (item) {
     document.getElementById('distributionModalTitle').textContent = 'Edit distribution';
     document.getElementById('saveDistributionLabel').textContent  = 'Update';
-    document.getElementById('distributionId').value        = item.distribution_id;
-    document.getElementById('distributionName').value      = item.name || '';
-    document.getElementById('distributionDoc').value       = item.doc_id || '';
-    document.getElementById('distributionType').value      = item.distribution_type || '';
-    document.getElementById('distributionStartDate').value = item.start_date || '';
-    document.getElementById('distributionDueDate').value   = item.due_date || '';
+    document.getElementById('distributionId').value             = item.distribution_id;
+    document.getElementById('distributionName').value           = item.name || '';
+    document.getElementById('distributionDoc').value            = item.doc_id || '';
+    document.getElementById('distributionType').value           = item.distribution_type || '';
+    document.getElementById('distributionInstructions').value   = item.instructions || '';
+    document.getElementById('distributionStartDate').value      = item.start_date || '';
+    document.getElementById('distributionDueDate').value        = item.due_date || '';
+    document.getElementById('distributionDaysToAck').value      = item.days_to_acknowledge ?? '';
+    document.getElementById('distributionWarn1Days').value      = item.first_warning_days ?? '';
+    document.getElementById('distributionWarn1Dir').value       = item.first_warning_direction || '';
+    document.getElementById('distributionWarn2Days').value      = item.second_warning_days ?? '';
+    document.getElementById('distributionWarn2Dir').value       = item.second_warning_direction || '';
+    document.getElementById('distributionReqAck').checked       = item.req_acknowledgement ?? true;
+    document.getElementById('distributionReqPassword').checked  = item.req_password ?? false;
   }
   distributionModal.show();
   setTimeout(() => document.getElementById('distributionName').focus(), 300);
@@ -363,24 +426,40 @@ function resetModal() {
   document.getElementById('distributionModalTitle').textContent = 'Create distribution';
   document.getElementById('saveDistributionLabel').textContent  = 'Save';
   document.getElementById('distributionModalError').classList.add('d-none');
-  document.getElementById('distributionId').value        = '';
-  document.getElementById('distributionName').value      = '';
-  document.getElementById('distributionDoc').value       = '';
-  document.getElementById('distributionType').value      = '';
-  document.getElementById('distributionStartDate').value = '';
-  document.getElementById('distributionDueDate').value   = '';
+  document.getElementById('distributionId').value             = '';
+  document.getElementById('distributionName').value           = '';
+  document.getElementById('distributionDoc').value            = '';
+  document.getElementById('distributionType').value           = '';
+  document.getElementById('distributionInstructions').value   = '';
+  document.getElementById('distributionStartDate').value      = '';
+  document.getElementById('distributionDueDate').value        = '';
+  document.getElementById('distributionDaysToAck').value      = '';
+  document.getElementById('distributionWarn1Days').value      = '';
+  document.getElementById('distributionWarn1Dir').value       = '';
+  document.getElementById('distributionWarn2Days').value      = '';
+  document.getElementById('distributionWarn2Dir').value       = '';
+  document.getElementById('distributionReqAck').checked       = true;
+  document.getElementById('distributionReqPassword').checked  = false;
 }
 
 async function saveDistribution() {
   const errorEl = document.getElementById('distributionModalError');
   errorEl.classList.add('d-none');
 
-  const id             = document.getElementById('distributionId').value;
-  const name           = document.getElementById('distributionName').value.trim();
-  const docId          = document.getElementById('distributionDoc').value || null;
+  const id               = document.getElementById('distributionId').value;
+  const name             = document.getElementById('distributionName').value.trim();
+  const docId            = document.getElementById('distributionDoc').value || null;
   const distributionType = document.getElementById('distributionType').value || null;
-  const startDate      = document.getElementById('distributionStartDate').value || null;
-  const dueDate        = document.getElementById('distributionDueDate').value || null;
+  const instructions     = document.getElementById('distributionInstructions').value.trim() || null;
+  const startDate        = document.getElementById('distributionStartDate').value || null;
+  const dueDate          = document.getElementById('distributionDueDate').value || null;
+  const daysToAck        = document.getElementById('distributionDaysToAck').value ? parseInt(document.getElementById('distributionDaysToAck').value) : null;
+  const warn1Days        = document.getElementById('distributionWarn1Days').value ? parseInt(document.getElementById('distributionWarn1Days').value) : null;
+  const warn1Dir         = document.getElementById('distributionWarn1Dir').value || null;
+  const warn2Days        = document.getElementById('distributionWarn2Days').value ? parseInt(document.getElementById('distributionWarn2Days').value) : null;
+  const warn2Dir         = document.getElementById('distributionWarn2Dir').value || null;
+  const reqAck           = document.getElementById('distributionReqAck').checked;
+  const reqPassword      = document.getElementById('distributionReqPassword').checked;
 
   if (!name) {
     errorEl.textContent = 'Name is required.';
@@ -400,8 +479,16 @@ async function saveDistribution() {
     name,
     doc_id: docId,
     distribution_type: distributionType,
+    instructions,
     start_date: startDate,
     due_date: dueDate,
+    days_to_acknowledge: daysToAck,
+    first_warning_days: warn1Days,
+    first_warning_direction: warn1Dir,
+    second_warning_days: warn2Days,
+    second_warning_direction: warn2Dir,
+    req_acknowledgement: reqAck,
+    req_password: reqPassword,
     owner: Auth.getSession()?.user?.id || null,
     organisation_id: Auth.getOrganisationId()
   };
