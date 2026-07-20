@@ -7,7 +7,7 @@
 
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/core@1.4.0/dist/css/tabler.min.css" />
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.44.0/dist/tabler-icons.min.css" />
-  <link rel="stylesheet" href="../../assets/css/theme.css?r=ukxmfsbv" />
+  <link rel="stylesheet" href="../../assets/css/theme.css?r=uqm6042j" />
 
   <script>
     (function() {
@@ -201,6 +201,26 @@
             </div>
           </div>
 
+          <div class="mb-1 fw-semibold text-secondary mt-3" style="font-size:.8125rem">Audiences</div>
+          <div class="mb-2">
+            <label class="form-label">Audience 1</label>
+            <select id="distributionAudience1" class="form-select">
+              <option value="">— None —</option>
+            </select>
+          </div>
+          <div class="mb-2">
+            <label class="form-label">Audience 2</label>
+            <select id="distributionAudience2" class="form-select">
+              <option value="">— None —</option>
+            </select>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Audience 3</label>
+            <select id="distributionAudience3" class="form-select">
+              <option value="">— None —</option>
+            </select>
+          </div>
+
           <div class="row g-3">
             <div class="col-6">
               <label class="form-check form-switch">
@@ -249,18 +269,19 @@
   <script src="https://cdn.jsdelivr.net/npm/@tabler/core@1.4.0/dist/js/tabler.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="../../assets/js/version.js?r=ukxmfsbv"></script>
-  <script src="../../assets/js/supabase-client.js?r=ukxmfsbv"></script>
-  <script src="../../assets/js/auth.js?r=ukxmfsbv"></script>
-  <script src="../../assets/js/app.js?r=ukxmfsbv"></script>
-  <script src="../../assets/js/theme.js?r=ukxmfsbv"></script>
-  <script src="../../assets/js/sidebar-html.js?r=ukxmfsbv"></script>
-  <script src="../../assets/js/sidebar.js?r=ukxmfsbv"></script>
-  <script src="../../assets/js/profile-modal.js?r=ukxmfsbv"></script>
+  <script src="../../assets/js/version.js?r=uqm6042j"></script>
+  <script src="../../assets/js/supabase-client.js?r=uqm6042j"></script>
+  <script src="../../assets/js/auth.js?r=uqm6042j"></script>
+  <script src="../../assets/js/app.js?r=uqm6042j"></script>
+  <script src="../../assets/js/theme.js?r=uqm6042j"></script>
+  <script src="../../assets/js/sidebar-html.js?r=uqm6042j"></script>
+  <script src="../../assets/js/sidebar.js?r=uqm6042j"></script>
+  <script src="../../assets/js/profile-modal.js?r=uqm6042j"></script>
   <script>
 let distributionModal, deleteModal;
 let allDistributions = [];
 let allDocuments = [];
+let allAudiences = [];
 let pendingDeleteId = null;
 
 (async () => {
@@ -279,7 +300,7 @@ let pendingDeleteId = null;
   distributionModal = new bootstrap.Modal(document.getElementById('distributionModal'));
   deleteModal       = new bootstrap.Modal(document.getElementById('deleteModal'));
 
-  await Promise.all([loadDocuments(), loadDistributions()]);
+  await Promise.all([loadDocuments(), loadAudiences(), loadDistributions()]);
 
   document.getElementById('searchInput').addEventListener('input', renderTable);
   document.getElementById('createDistributionBtn').addEventListener('click', () => openModal());
@@ -299,6 +320,22 @@ async function loadDocuments() {
     opt.value = d.doc_id;
     opt.textContent = d.name;
     select.appendChild(opt);
+  });
+}
+
+async function loadAudiences() {
+  const { data, error } = await sb.from('ad_audience').select('audience_id, name').eq('organisation_id', Auth.getOrganisationId()).order('name');
+  if (error) { console.error('[Distribution] audiences load error:', error); return; }
+  allAudiences = data || [];
+
+  [1, 2, 3].forEach(n => {
+    const select = document.getElementById(`distributionAudience${n}`);
+    allAudiences.forEach(a => {
+      const opt = document.createElement('option');
+      opt.value = a.audience_id;
+      opt.textContent = a.name;
+      select.appendChild(opt);
+    });
   });
 }
 
@@ -398,7 +435,7 @@ function renderTable() {
   });
 }
 
-function openModal(item = null) {
+async function openModal(item = null) {
   resetModal();
   if (item) {
     document.getElementById('distributionModalTitle').textContent = 'Edit distribution';
@@ -417,6 +454,16 @@ function openModal(item = null) {
     document.getElementById('distributionWarn2Dir').value       = item.second_warning_direction || '';
     document.getElementById('distributionReqAck').checked       = item.req_acknowledgement ?? true;
     document.getElementById('distributionReqPassword').checked  = item.req_password ?? false;
+
+    // Load existing audience links in sort_order order
+    const { data: links } = await sb.from('ad_distribution_audience')
+      .select('audience_id')
+      .eq('distribution_id', item.distribution_id)
+      .order('sort_order');
+    (links || []).forEach((link, i) => {
+      const sel = document.getElementById(`distributionAudience${i + 1}`);
+      if (sel) sel.value = link.audience_id;
+    });
   }
   distributionModal.show();
   setTimeout(() => document.getElementById('distributionName').focus(), 300);
@@ -440,6 +487,7 @@ function resetModal() {
   document.getElementById('distributionWarn2Dir').value       = '';
   document.getElementById('distributionReqAck').checked       = true;
   document.getElementById('distributionReqPassword').checked  = false;
+  [1, 2, 3].forEach(n => { document.getElementById(`distributionAudience${n}`).value = ''; });
 }
 
 async function saveDistribution() {
@@ -510,6 +558,28 @@ async function saveDistribution() {
     errorEl.textContent = 'Save failed: ' + (error.message || 'Unknown error');
     errorEl.classList.remove('d-none');
     return;
+  }
+
+  // Save audience links - delete existing and re-insert selected ones.
+  // Done before build_distribution_items so the function picks up the
+  // latest audience set.
+  if (newDistribId) {
+    await sb.from('ad_distribution_audience').delete().eq('distribution_id', newDistribId);
+
+    const audienceRows = [1, 2, 3]
+      .map(n => document.getElementById(`distributionAudience${n}`).value)
+      .filter(v => !!v)
+      .map((audienceId, i) => ({
+        distribution_id: newDistribId,
+        audience_id: audienceId,
+        organisation_id: Auth.getOrganisationId(),
+        sort_order: i
+      }));
+
+    if (audienceRows.length) {
+      const { error: audErr } = await sb.from('ad_distribution_audience').insert(audienceRows);
+      if (audErr) App.toast('Audience links could not be saved: ' + audErr.message, 'warning');
+    }
   }
 
   distributionModal.hide();
