@@ -1,1 +1,1 @@
-Fix document upload failure - make documents.title nullable (was blocking all uploads)
+Redirect documents module to ad_document/ad_document_file/ad_category; drop old documents/document_files/document_category_lookup tables

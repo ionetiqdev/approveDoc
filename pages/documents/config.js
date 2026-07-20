@@ -19,16 +19,16 @@ const DOC_CONFIG = {
   signedUrlExpirySeconds: 60,
 
   // Database tables & columns
-  tableDocs:    'documents',
-  tableFiles:   'document_files',
-  colDocId:     'id',
-  colDocDesc:   'description',
-  colDocCatId:  'document_category_id',
+  tableDocs:    'ad_document',
+  tableFiles:   'ad_document_file',
+  colDocId:     'doc_id',
+  colDocDesc:   'name',
+  colDocCatId:  'category_id',
 
-  tableCategoryLookup: 'document_category_lookup',
-  colCategoryId:       'id',
+  tableCategoryLookup: 'ad_category',
+  colCategoryId:       'category_id',
   colCategoryName:     'name',
-  colCategoryOrder:    'document_category_order',
+  colCategoryOrder:    'sort_order',
   defaultCategoryName: 'Other',
 
   colOrgId:     'organisation_id',
