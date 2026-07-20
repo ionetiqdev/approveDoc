@@ -1,1 +1,1 @@
-Distribution: add up to 3 audience selectors to modal; save to ad_distribution_audience; build_distribution_items called after
+Distribution modal: widen to modal-lg, split into two columns (form fields left 7, audiences right 5)
