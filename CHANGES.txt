@@ -1,1 +1,1 @@
-Fix status widget dropdown - manually init Bootstrap dropdown since button is injected dynamically
+Status widget: remove sticky tooltip; click outside closes dropdown

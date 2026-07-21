@@ -70,24 +70,19 @@ function _injectButton() {
   wrapper.className = 'dropdown';
   wrapper.id = 'statusWidgetDropdown';
   wrapper.innerHTML = `
-    <button class="btn btn-icon" aria-expanded="false" title="My document status" id="statusWidgetBtn">
+    <button class="btn btn-icon" id="statusWidgetBtn" aria-expanded="false">
       <i class="ti ti-files"></i>
     </button>
-    <div class="dropdown-menu dropdown-menu-end" id="statusWidgetMenu" style="min-width:240px">
-    </div>`;
+    <div class="dropdown-menu dropdown-menu-end" id="statusWidgetMenu" style="min-width:240px"></div>`;
 
   themeBtn.parentNode.insertBefore(wrapper, themeBtn);
 
-  // Bootstrap won't auto-initialise dynamically injected dropdowns,
-  // so we do it manually after the element is in the DOM.
-  const btn = wrapper.querySelector('#statusWidgetBtn');
-  const menu = wrapper.querySelector('#statusWidgetMenu');
-  const bsDropdown = new bootstrap.Dropdown(btn, { reference: 'toggle' });
-
-  btn.addEventListener('click', e => {
-    e.stopPropagation();
-    bsDropdown.toggle();
-  });
+  // Bootstrap won't auto-initialise dynamically injected dropdowns so we
+  // do it manually. autoClose:'outside' means clicking anywhere outside
+  // the menu closes it without any extra wiring needed.
+  const btn  = wrapper.querySelector('#statusWidgetBtn');
+  const bsDd = new bootstrap.Dropdown(btn, { autoClose: 'outside' });
+  btn.addEventListener('click', e => { e.stopPropagation(); bsDd.toggle(); });
 }
 
 // ── Data loading ──────────────────────────────────────────────────────────
