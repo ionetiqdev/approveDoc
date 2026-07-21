@@ -142,7 +142,7 @@ function _render() {
     if (meta === null) return '<hr class="dropdown-divider my-1" />';
 
     const count = counts[meta.key] ?? 0;
-    return `<a class="dropdown-item d-flex align-items-center justify-content-between py-2 status-widget-item"
+    return `<a class="dropdown-item d-flex align-items-center justify-content-between py-2 ps-3 status-widget-item"
         href="#" data-section="${meta.section}" data-expand="${meta.key === 'overdue' ? 'awaiting' : meta.section}">
       <span>${meta.label}</span>
       <span class="badge rounded-pill ms-3" style="background:${meta.colour};color:#fff;min-width:1.5rem">${count}</span>

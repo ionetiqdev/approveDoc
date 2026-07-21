@@ -1,1 +1,1 @@
-Status widget: remove white band above name header; match name font size to menu items
+Status widget: align menu item left padding with name header
