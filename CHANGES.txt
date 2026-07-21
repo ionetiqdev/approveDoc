@@ -1,1 +1,1 @@
-User View: remove Status column, rename Due Status to Status, trim date column headers, apply hex status colours, add temp test colour modal
+User View: live-editable status colour picker in test modal (hex input + colour picker per status)

@@ -7,7 +7,7 @@
 
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/core@1.4.0/dist/css/tabler.min.css" />
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.44.0/dist/tabler-icons.min.css" />
-  <link rel="stylesheet" href="../../assets/css/theme.css?r=ot13lnam" />
+  <link rel="stylesheet" href="../../assets/css/theme.css?r=xrt25g1h" />
 
   <script>
     (function() {
@@ -108,21 +108,14 @@
 
   <!-- Temporary: test status colour modal - remove once colours confirmed -->
   <div class="modal modal-blur fade" id="testStatusModal" tabindex="-1">
-    <div class="modal-dialog modal-dialog-centered modal-sm">
+    <div class="modal-dialog modal-dialog-centered">
       <div class="modal-content">
         <div class="modal-header">
           <h5 class="modal-title">Status colours</h5>
           <button type="button" class="modal-close-btn" data-bs-dismiss="modal"><i class="ti ti-x"></i></button>
         </div>
         <div class="modal-body">
-          <div class="d-flex flex-column gap-2">
-            <span id="pill-ontime"></span>
-            <span id="pill-duesoon"></span>
-            <span id="pill-overdue"></span>
-            <span id="pill-acknowledged"></span>
-            <span id="pill-rejected"></span>
-            <span id="pill-nodue"></span>
-          </div>
+          <div id="statusColourRows"></div>
         </div>
       </div>
     </div>
@@ -131,20 +124,29 @@
   <script src="https://cdn.jsdelivr.net/npm/@tabler/core@1.4.0/dist/js/tabler.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="../../assets/js/version.js?r=ot13lnam"></script>
-  <script src="../../assets/js/supabase-client.js?r=ot13lnam"></script>
-  <script src="../../assets/js/auth.js?r=ot13lnam"></script>
-  <script src="../../assets/js/app.js?r=ot13lnam"></script>
-  <script src="../../assets/js/theme.js?r=ot13lnam"></script>
-  <script src="../../assets/js/sidebar-html.js?r=ot13lnam"></script>
-  <script src="../../assets/js/sidebar.js?r=ot13lnam"></script>
-  <script src="../../assets/js/profile-modal.js?r=ot13lnam"></script>
+  <script src="../../assets/js/version.js?r=xrt25g1h"></script>
+  <script src="../../assets/js/supabase-client.js?r=xrt25g1h"></script>
+  <script src="../../assets/js/auth.js?r=xrt25g1h"></script>
+  <script src="../../assets/js/app.js?r=xrt25g1h"></script>
+  <script src="../../assets/js/theme.js?r=xrt25g1h"></script>
+  <script src="../../assets/js/sidebar-html.js?r=xrt25g1h"></script>
+  <script src="../../assets/js/sidebar.js?r=xrt25g1h"></script>
+  <script src="../../assets/js/profile-modal.js?r=xrt25g1h"></script>
   <script>
 // Lookup caches
 let allDocuments = [];       // ad_document rows
 let allDistributions = [];   // ad_distribution rows (for doc_id + audience lookup)
 let allAudiences = [];       // ad_audience rows (for name lookup)
 let audiencesByDist = {};    // distribution_id -> audience name(s) string
+
+const STATUS_COLOURS = [
+  { key: 'ontime',       label: 'On time',     colour: '#009432' },
+  { key: 'duesoon',      label: 'Due soon',     colour: '#F79F1F' },
+  { key: 'overdue',      label: 'Overdue',      colour: '#EA2027' },
+  { key: 'acknowledged', label: 'Acknowledged', colour: '#6ab04c' },
+  { key: 'rejected',     label: 'Rejected',     colour: '#778ca3' },
+  { key: 'nodue',        label: 'No due date',  colour: '#b2bec3' },
+];
 
 (async () => {
   const session = await Auth.requireAuth();
@@ -200,13 +202,38 @@ let audiencesByDist = {};    // distribution_id -> audience name(s) string
 
   // Temporary test button - wire after DOM is ready
   const testModal = new bootstrap.Modal(document.getElementById('testStatusModal'));
+
+  function buildColourRows() {
+    const container = document.getElementById('statusColourRows');
+    container.innerHTML = STATUS_COLOURS.map(s => `
+      <div class="d-flex align-items-center gap-3 mb-2" data-key="${s.key}">
+        <span class="status-pill-preview badge" style="background:${s.colour};color:#fff;min-width:120px;text-align:center">${s.label}</span>
+        <input type="text" class="form-control form-control-sm status-hex-input" value="${s.colour}" style="max-width:110px;font-family:monospace" maxlength="7" />
+        <input type="color" class="form-control form-control-color status-colour-picker" value="${s.colour}" style="width:38px;height:31px;padding:2px" />
+      </div>`).join('');
+
+    container.querySelectorAll('[data-key]').forEach(row => {
+      const key = row.dataset.key;
+      const entry = STATUS_COLOURS.find(s => s.key === key);
+      const hexInput = row.querySelector('.status-hex-input');
+      const colourPicker = row.querySelector('.status-colour-picker');
+      const pillPreview = row.querySelector('.status-pill-preview');
+
+      function applyColour(val) {
+        if (!/^#[0-9a-fA-F]{6}$/.test(val)) return;
+        entry.colour = val;
+        pillPreview.style.background = val;
+        hexInput.value = val;
+        colourPicker.value = val;
+      }
+
+      hexInput.addEventListener('input', () => applyColour(hexInput.value));
+      colourPicker.addEventListener('input', () => applyColour(colourPicker.value));
+    });
+  }
+
   document.getElementById('testStatusBtn').addEventListener('click', () => {
-    document.getElementById('pill-ontime').innerHTML       = pill('On time',      '#009432');
-    document.getElementById('pill-duesoon').innerHTML      = pill('Due soon',     '#F79F1F');
-    document.getElementById('pill-overdue').innerHTML      = pill('Overdue',      '#EA2027');
-    document.getElementById('pill-acknowledged').innerHTML = pill('Acknowledged', '#6ab04c');
-    document.getElementById('pill-rejected').innerHTML     = pill('Rejected',     '#95afc0');
-    document.getElementById('pill-nodue').innerHTML        = pill('No due date',  '#b2bec3');
+    buildColourRows();
     testModal.show();
   });
 })();
@@ -253,21 +280,25 @@ function pill(label, colour) {
   return `<span class="badge" style="background:${colour};color:#fff">${label}</span>`;
 }
 
+function c(key) {
+  return STATUS_COLOURS.find(s => s.key === key)?.colour || '#b2bec3';
+}
+
 function dueStatus(item) {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
 
-  if (item.rejected)     return pill('Rejected',     '#95afc0');
-  if (item.acknowledged) return pill('Acknowledged', '#6ab04c');
-  if (!item.due_date)    return pill('No due date',  '#b2bec3');
+  if (item.rejected)     return pill('Rejected',     c('rejected'));
+  if (item.acknowledged) return pill('Acknowledged', c('acknowledged'));
+  if (!item.due_date)    return pill('No due date',  c('nodue'));
 
   const due = new Date(item.due_date);
-  if (due < today)       return pill('Overdue',      '#EA2027');
+  if (due < today)       return pill('Overdue',      c('overdue'));
 
   const warn = item.warning1 || item.warning2;
-  if (warn && today >= new Date(warn)) return pill('Due soon', '#F79F1F');
+  if (warn && today >= new Date(warn)) return pill('Due soon', c('duesoon'));
 
-  return pill('On time', '#009432');
+  return pill('On time', c('ontime'));
 }
 
 function renderTable(items) {
