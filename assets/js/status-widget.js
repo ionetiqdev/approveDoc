@@ -28,6 +28,7 @@ const STATUS_META = [
 
 let counts = { awaiting: 0, overdue: 0, approved: 0, rejected: 0, reference: 0 };
 let currentUserId = null;
+let currentUserName = null;
 
 // ── Public API ────────────────────────────────────────────────────────────
 
@@ -57,6 +58,7 @@ async function setUser(userId) {
 async function refresh() {
   if (currentUserId) await _loadCounts();
   else counts = { awaiting: 0, overdue: 0, approved: 0, rejected: 0, reference: 0 };
+  if (!currentUserId) currentUserName = null;
   _render();
 }
 
@@ -71,7 +73,7 @@ function _injectButton() {
   wrapper.id = 'statusWidgetDropdown';
   wrapper.innerHTML = `
     <button class="btn btn-icon" id="statusWidgetBtn" aria-expanded="false">
-      <i class="ti ti-files"></i>
+      <i class="ti ti-list-check"></i>
     </button>
     <div class="dropdown-menu dropdown-menu-end" id="statusWidgetMenu" style="min-width:240px"></div>`;
 
@@ -90,19 +92,29 @@ function _injectButton() {
 async function _loadCounts() {
   if (!currentUserId || typeof sb === 'undefined') return;
 
-  const { data, error } = await sb
-    .from('ad_distribution_item')
-    .select('status, acknowledged, rejected, due_date, warning1, warning2')
-    .eq('user_id', currentUserId);
+  const [itemsRes, userRes] = await Promise.all([
+    sb.from('ad_distribution_item')
+      .select('status, acknowledged, rejected, due_date, warning1, warning2')
+      .eq('user_id', currentUserId),
+    sb.from('ad_user')
+      .select('first_name, last_name, email')
+      .eq('user_id', currentUserId)
+      .single(),
+  ]);
 
-  if (error) { console.error('[StatusWidget]', error); return; }
+  if (userRes.data) {
+    const u = userRes.data;
+    currentUserName = [u.first_name, u.last_name].filter(Boolean).join(' ') || u.email || null;
+  }
+
+  if (itemsRes.error) { console.error('[StatusWidget]', itemsRes.error); return; }
 
   const today = new Date();
   today.setHours(0, 0, 0, 0);
 
   counts = { awaiting: 0, overdue: 0, approved: 0, rejected: 0, reference: 0 };
 
-  (data || []).forEach(item => {
+  (itemsRes.data || []).forEach(item => {
     if (item.rejected) { counts.rejected++; return; }
     if (item.acknowledged) { counts.approved++; return; }
 
@@ -122,7 +134,11 @@ function _render() {
   const menu = document.getElementById('statusWidgetMenu');
   if (!menu) return;
 
-  menu.innerHTML = STATUS_META.map(meta => {
+  const nameHeader = currentUserName
+    ? `<div class="px-3 py-2 text-secondary" style="background:#f8f8f8;font-size:.8rem;border-bottom:1px solid var(--tblr-border-color)">${currentUserName}</div>`
+    : `<div class="px-3 py-2 text-secondary" style="background:#f8f8f8;font-size:.8rem;border-bottom:1px solid var(--tblr-border-color)">No user selected</div>`;
+
+  menu.innerHTML = nameHeader + STATUS_META.map(meta => {
     if (meta === null) return '<hr class="dropdown-divider my-1" />';
 
     const count = counts[meta.key] ?? 0;

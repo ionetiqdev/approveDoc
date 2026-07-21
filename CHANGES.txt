@@ -1,1 +1,1 @@
-Status widget: remove stopPropagation so Bootstrap outside-click closes dropdown
+Status widget: show current user name at top of dropdown with grey background
