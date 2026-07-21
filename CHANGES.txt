@@ -1,1 +1,1 @@
-User View: acknowledged/rejected checkboxes auto-update Status; both off resets to Pending
+Testing pages: change status value ACKNOWLEDGED to APPROVED across all four testing pages (display label unchanged)
