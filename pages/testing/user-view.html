@@ -7,7 +7,7 @@
 
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/core@1.4.0/dist/css/tabler.min.css" />
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.44.0/dist/tabler-icons.min.css" />
-  <link rel="stylesheet" href="../../assets/css/theme.css?r=mrli8ugb" />
+  <link rel="stylesheet" href="../../assets/css/theme.css?r=ot13lnam" />
 
   <script>
     (function() {
@@ -80,6 +80,7 @@
               <option value="">— Choose a user —</option>
             </select>
             <span class="text-secondary ms-3 small" id="rowCount"></span>
+              <button class="btn btn-outline-secondary btn-sm ms-auto" id="testStatusBtn">Test status colours</button>
           </div>
           <div class="scroll-pane">
             <table class="table table-vcenter card-table table-hover mb-0">
@@ -87,16 +88,15 @@
                 <tr>
                   <th>Document</th>
                   <th>Due date</th>
-                  <th>Due status</th>
+                  <th>Status</th>
                   <th>Audience(s)</th>
                   <th>Date added</th>
-                  <th>Status</th>
-                  <th>Date acknowledged</th>
-                  <th>Date rejected</th>
+                  <th>Acknowledged</th>
+                  <th>Rejected</th>
                 </tr>
               </thead>
               <tbody id="itemsBody">
-                <tr><td colspan="8" class="text-center py-4 text-secondary">Choose a user above</td></tr>
+                <tr><td colspan="7" class="text-center py-4 text-secondary">Choose a user above</td></tr>
               </tbody>
             </table>
           </div>
@@ -106,17 +106,39 @@
     </div>
   </div>
 
+  <!-- Temporary: test status colour modal - remove once colours confirmed -->
+  <div class="modal modal-blur fade" id="testStatusModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered modal-sm">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Status colours</h5>
+          <button type="button" class="modal-close-btn" data-bs-dismiss="modal"><i class="ti ti-x"></i></button>
+        </div>
+        <div class="modal-body">
+          <div class="d-flex flex-column gap-2">
+            <span id="pill-ontime"></span>
+            <span id="pill-duesoon"></span>
+            <span id="pill-overdue"></span>
+            <span id="pill-acknowledged"></span>
+            <span id="pill-rejected"></span>
+            <span id="pill-nodue"></span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <script src="https://cdn.jsdelivr.net/npm/@tabler/core@1.4.0/dist/js/tabler.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="../../assets/js/version.js?r=mrli8ugb"></script>
-  <script src="../../assets/js/supabase-client.js?r=mrli8ugb"></script>
-  <script src="../../assets/js/auth.js?r=mrli8ugb"></script>
-  <script src="../../assets/js/app.js?r=mrli8ugb"></script>
-  <script src="../../assets/js/theme.js?r=mrli8ugb"></script>
-  <script src="../../assets/js/sidebar-html.js?r=mrli8ugb"></script>
-  <script src="../../assets/js/sidebar.js?r=mrli8ugb"></script>
-  <script src="../../assets/js/profile-modal.js?r=mrli8ugb"></script>
+  <script src="../../assets/js/version.js?r=ot13lnam"></script>
+  <script src="../../assets/js/supabase-client.js?r=ot13lnam"></script>
+  <script src="../../assets/js/auth.js?r=ot13lnam"></script>
+  <script src="../../assets/js/app.js?r=ot13lnam"></script>
+  <script src="../../assets/js/theme.js?r=ot13lnam"></script>
+  <script src="../../assets/js/sidebar-html.js?r=ot13lnam"></script>
+  <script src="../../assets/js/sidebar.js?r=ot13lnam"></script>
+  <script src="../../assets/js/profile-modal.js?r=ot13lnam"></script>
   <script>
 // Lookup caches
 let allDocuments = [];       // ad_document rows
@@ -175,6 +197,18 @@ let audiencesByDist = {};    // distribution_id -> audience name(s) string
     if (picker.value) loadItems(picker.value);
     else clearItems();
   });
+
+  // Temporary test button - wire after DOM is ready
+  const testModal = new bootstrap.Modal(document.getElementById('testStatusModal'));
+  document.getElementById('testStatusBtn').addEventListener('click', () => {
+    document.getElementById('pill-ontime').innerHTML       = pill('On time',      '#009432');
+    document.getElementById('pill-duesoon').innerHTML      = pill('Due soon',     '#F79F1F');
+    document.getElementById('pill-overdue').innerHTML      = pill('Overdue',      '#EA2027');
+    document.getElementById('pill-acknowledged').innerHTML = pill('Acknowledged', '#6ab04c');
+    document.getElementById('pill-rejected').innerHTML     = pill('Rejected',     '#95afc0');
+    document.getElementById('pill-nodue').innerHTML        = pill('No due date',  '#b2bec3');
+    testModal.show();
+  });
 })();
 
 async function loadItems(userId) {
@@ -191,7 +225,7 @@ async function loadItems(userId) {
 function clearItems() {
   document.getElementById('rowCount').textContent = '';
   document.getElementById('itemsBody').innerHTML =
-    '<tr><td colspan="8" class="text-center py-4 text-secondary">Choose a user above</td></tr>';
+    '<tr><td colspan="7" class="text-center py-4 text-secondary">Choose a user above</td></tr>';
 }
 
 function docName(distributionId) {
@@ -215,45 +249,25 @@ function fmt(dateStr) {
 // Acknowledged/Rejected supersede everything else.
 // "Due soon" = today is on or after warning1 (or warning2 if no warning1)
 // but not yet past due_date.
+function pill(label, colour) {
+  return `<span class="badge" style="background:${colour};color:#fff">${label}</span>`;
+}
+
 function dueStatus(item) {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
 
-  if (item.rejected) {
-    return `<span class="badge bg-danger-lt">Rejected</span>`;
-  }
-  if (item.acknowledged) {
-    return `<span class="badge bg-success-lt">Acknowledged</span>`;
-  }
-
-  if (!item.due_date) {
-    return `<span class="badge bg-secondary-lt">No due date</span>`;
-  }
+  if (item.rejected)     return pill('Rejected',     '#95afc0');
+  if (item.acknowledged) return pill('Acknowledged', '#6ab04c');
+  if (!item.due_date)    return pill('No due date',  '#b2bec3');
 
   const due = new Date(item.due_date);
-  if (due < today) {
-    return `<span class="badge bg-danger-lt">Overdue</span>`;
-  }
+  if (due < today)       return pill('Overdue',      '#EA2027');
 
-  // Within a warning window?
   const warn = item.warning1 || item.warning2;
-  if (warn) {
-    const warnDate = new Date(warn);
-    if (today >= warnDate) {
-      return `<span class="badge bg-warning-lt">Due soon</span>`;
-    }
-  }
+  if (warn && today >= new Date(warn)) return pill('Due soon', '#F79F1F');
 
-  return `<span class="badge bg-blue-lt">On time</span>`;
-}
-
-function statusBadge(status) {
-  const s = (status || '').toUpperCase();
-  if (s === 'PENDING')      return `<span class="badge bg-secondary-lt">Pending</span>`;
-  if (s === 'ACKNOWLEDGED') return `<span class="badge bg-success-lt">Acknowledged</span>`;
-  if (s === 'REJECTED')     return `<span class="badge bg-danger-lt">Rejected</span>`;
-  if (s === 'OVERDUE')      return `<span class="badge bg-warning-lt">Overdue</span>`;
-  return `<span class="badge bg-secondary-lt">${App.escHtml(status || '—')}</span>`;
+  return pill('On time', '#009432');
 }
 
 function renderTable(items) {
@@ -263,7 +277,7 @@ function renderTable(items) {
   const tbody = document.getElementById('itemsBody');
 
   if (!items.length) {
-    tbody.innerHTML = '<tr><td colspan="8" class="text-center py-4 text-secondary">No distributions found for this user</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="7" class="text-center py-4 text-secondary">No distributions found for this user</td></tr>';
     return;
   }
 
@@ -274,7 +288,6 @@ function renderTable(items) {
       <td>${dueStatus(item)}</td>
       <td class="text-secondary">${App.escHtml(audienceNames(item.distribution_id))}</td>
       <td class="text-secondary">${fmt(item.created_at)}</td>
-      <td>${statusBadge(item.status)}</td>
       <td class="text-secondary">${item.acknowledged ? fmt(item.acknowledged_date) : '—'}</td>
       <td class="text-secondary">${item.rejected ? fmt(item.rejected_date) : '—'}</td>
     </tr>`).join('');

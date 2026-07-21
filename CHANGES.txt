@@ -1,1 +1,1 @@
-Add Testing > User View page: pick a user, see all their distributed documents with due status, audiences, dates
+User View: remove Status column, rename Due Status to Status, trim date column headers, apply hex status colours, add temp test colour modal
