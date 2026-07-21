@@ -1,1 +1,1 @@
-User View: double-click row opens edit modal for all distribution item fields; refreshes table on save
+User View: tidy edit modal - remove warning dates, clean two-column layout
