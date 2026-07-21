@@ -80,11 +80,16 @@ function _injectButton() {
   themeBtn.parentNode.insertBefore(wrapper, themeBtn);
 
   // Bootstrap won't auto-initialise dynamically injected dropdowns so we
-  // do it manually. autoClose:'outside' means clicking anywhere outside
-  // the menu closes it without any extra wiring needed.
+  // do it manually. We also wire our own outside-click since Tabler's event
+  // handling can swallow the clicks Bootstrap's autoClose relies on.
   const btn  = wrapper.querySelector('#statusWidgetBtn');
-  const bsDd = new bootstrap.Dropdown(btn, { autoClose: 'outside' });
+  const bsDd = new bootstrap.Dropdown(btn);
+
   btn.addEventListener('click', () => bsDd.toggle());
+
+  document.addEventListener('click', e => {
+    if (!wrapper.contains(e.target)) bsDd.hide();
+  });
 }
 
 // ── Data loading ──────────────────────────────────────────────────────────
@@ -135,14 +140,14 @@ function _render() {
   if (!menu) return;
 
   const nameHeader = currentUserName
-    ? `<div class="px-3 py-2 text-secondary" style="background:var(--tblr-bg-surface-secondary);border-bottom:1px solid var(--tblr-border-color)">${currentUserName}</div>`
-    : `<div class="px-3 py-2 text-secondary" style="background:var(--tblr-bg-surface-secondary);border-bottom:1px solid var(--tblr-border-color)">No user selected</div>`;
+    ? `<div class="px-3 py-2 text-secondary" style="background:#f8f8f8;border-bottom:1px solid var(--tblr-border-color)">${currentUserName}</div>`
+    : `<div class="px-3 py-2 text-secondary" style="background:#f8f8f8;border-bottom:1px solid var(--tblr-border-color)">No user selected</div>`;
 
   menu.innerHTML = nameHeader + STATUS_META.map(meta => {
     if (meta === null) return '<hr class="dropdown-divider my-1" />';
 
     const count = counts[meta.key] ?? 0;
-    return `<a class="dropdown-item d-flex align-items-center justify-content-between py-2 ps-3 status-widget-item"
+    return `<a class="dropdown-item d-flex align-items-center justify-content-between py-2 status-widget-item"
         href="#" data-section="${meta.section}" data-expand="${meta.key === 'overdue' ? 'awaiting' : meta.section}">
       <span>${meta.label}</span>
       <span class="badge rounded-pill ms-3" style="background:${meta.colour};color:#fff;min-width:1.5rem">${count}</span>

@@ -1,1 +1,1 @@
-User View: replace hardcoded section/column header colours with CSS variables for dark mode compatibility
+Status widget: manual outside-click handler
