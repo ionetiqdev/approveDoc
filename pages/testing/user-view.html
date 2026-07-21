@@ -7,7 +7,7 @@
 
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/core@1.4.0/dist/css/tabler.min.css" />
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.44.0/dist/tabler-icons.min.css" />
-  <link rel="stylesheet" href="../../assets/css/theme.css?r=xrt25g1h" />
+  <link rel="stylesheet" href="../../assets/css/theme.css?r=2syk49bu" />
 
   <script>
     (function() {
@@ -80,7 +80,6 @@
               <option value="">— Choose a user —</option>
             </select>
             <span class="text-secondary ms-3 small" id="rowCount"></span>
-              <button class="btn btn-outline-secondary btn-sm ms-auto" id="testStatusBtn">Test status colours</button>
           </div>
           <div class="scroll-pane">
             <table class="table table-vcenter card-table table-hover mb-0">
@@ -106,32 +105,17 @@
     </div>
   </div>
 
-  <!-- Temporary: test status colour modal - remove once colours confirmed -->
-  <div class="modal modal-blur fade" id="testStatusModal" tabindex="-1">
-    <div class="modal-dialog modal-dialog-centered">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h5 class="modal-title">Status colours</h5>
-          <button type="button" class="modal-close-btn" data-bs-dismiss="modal"><i class="ti ti-x"></i></button>
-        </div>
-        <div class="modal-body">
-          <div id="statusColourRows"></div>
-        </div>
-      </div>
-    </div>
-  </div>
-
   <script src="https://cdn.jsdelivr.net/npm/@tabler/core@1.4.0/dist/js/tabler.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="../../assets/js/version.js?r=xrt25g1h"></script>
-  <script src="../../assets/js/supabase-client.js?r=xrt25g1h"></script>
-  <script src="../../assets/js/auth.js?r=xrt25g1h"></script>
-  <script src="../../assets/js/app.js?r=xrt25g1h"></script>
-  <script src="../../assets/js/theme.js?r=xrt25g1h"></script>
-  <script src="../../assets/js/sidebar-html.js?r=xrt25g1h"></script>
-  <script src="../../assets/js/sidebar.js?r=xrt25g1h"></script>
-  <script src="../../assets/js/profile-modal.js?r=xrt25g1h"></script>
+  <script src="../../assets/js/version.js?r=2syk49bu"></script>
+  <script src="../../assets/js/supabase-client.js?r=2syk49bu"></script>
+  <script src="../../assets/js/auth.js?r=2syk49bu"></script>
+  <script src="../../assets/js/app.js?r=2syk49bu"></script>
+  <script src="../../assets/js/theme.js?r=2syk49bu"></script>
+  <script src="../../assets/js/sidebar-html.js?r=2syk49bu"></script>
+  <script src="../../assets/js/sidebar.js?r=2syk49bu"></script>
+  <script src="../../assets/js/profile-modal.js?r=2syk49bu"></script>
   <script>
 // Lookup caches
 let allDocuments = [];       // ad_document rows
@@ -143,8 +127,8 @@ const STATUS_COLOURS = [
   { key: 'ontime',       label: 'On time',     colour: '#009432' },
   { key: 'duesoon',      label: 'Due soon',     colour: '#F79F1F' },
   { key: 'overdue',      label: 'Overdue',      colour: '#EA2027' },
-  { key: 'acknowledged', label: 'Acknowledged', colour: '#6ab04c' },
-  { key: 'rejected',     label: 'Rejected',     colour: '#778ca3' },
+  { key: 'acknowledged', label: 'Acknowledged', colour: '#8BC34A' },
+  { key: 'rejected',     label: 'Rejected',     colour: '#B33771' },
   { key: 'nodue',        label: 'No due date',  colour: '#b2bec3' },
 ];
 
@@ -198,43 +182,6 @@ const STATUS_COLOURS = [
   picker.addEventListener('change', () => {
     if (picker.value) loadItems(picker.value);
     else clearItems();
-  });
-
-  // Temporary test button - wire after DOM is ready
-  const testModal = new bootstrap.Modal(document.getElementById('testStatusModal'));
-
-  function buildColourRows() {
-    const container = document.getElementById('statusColourRows');
-    container.innerHTML = STATUS_COLOURS.map(s => `
-      <div class="d-flex align-items-center gap-3 mb-2" data-key="${s.key}">
-        <span class="status-pill-preview badge" style="background:${s.colour};color:#fff;min-width:120px;text-align:center">${s.label}</span>
-        <input type="text" class="form-control form-control-sm status-hex-input" value="${s.colour}" style="max-width:110px;font-family:monospace" maxlength="7" />
-        <input type="color" class="form-control form-control-color status-colour-picker" value="${s.colour}" style="width:38px;height:31px;padding:2px" />
-      </div>`).join('');
-
-    container.querySelectorAll('[data-key]').forEach(row => {
-      const key = row.dataset.key;
-      const entry = STATUS_COLOURS.find(s => s.key === key);
-      const hexInput = row.querySelector('.status-hex-input');
-      const colourPicker = row.querySelector('.status-colour-picker');
-      const pillPreview = row.querySelector('.status-pill-preview');
-
-      function applyColour(val) {
-        if (!/^#[0-9a-fA-F]{6}$/.test(val)) return;
-        entry.colour = val;
-        pillPreview.style.background = val;
-        hexInput.value = val;
-        colourPicker.value = val;
-      }
-
-      hexInput.addEventListener('input', () => applyColour(hexInput.value));
-      colourPicker.addEventListener('input', () => applyColour(colourPicker.value));
-    });
-  }
-
-  document.getElementById('testStatusBtn').addEventListener('click', () => {
-    buildColourRows();
-    testModal.show();
   });
 })();
 
