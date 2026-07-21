@@ -1,1 +1,1 @@
-User View: remove Documents heading, indent section headers/rows by 20px
+User View: No items aligns with section headers; section header bg #f8f8f8; col header bg #F0F0F0; count format (n)

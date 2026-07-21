@@ -7,7 +7,7 @@
 
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/core@1.4.0/dist/css/tabler.min.css" />
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.44.0/dist/tabler-icons.min.css" />
-  <link rel="stylesheet" href="../../assets/css/theme.css?r=lec65awk" />
+  <link rel="stylesheet" href="../../assets/css/theme.css?r=jew618sk" />
 
   <script>
     (function() {
@@ -56,12 +56,13 @@
     .table-scroll { flex: 1; min-height: 0; overflow-y: auto; }
 
     /* Section header rows within the single table */
-    tr.section-header td { background: var(--tblr-bg-surface-secondary); font-weight: 600; font-size: .8125rem; padding: 8px 12px; cursor: pointer; user-select: none; border-top: 2px solid var(--tblr-border-color); }
+    tr.section-header td { background: #f8f8f8; font-weight: 600; font-size: .8125rem; padding: 8px 12px; cursor: pointer; user-select: none; border-top: 2px solid var(--tblr-border-color); }
     tr.section-header td i.section-chevron { transition: transform .2s; }
     tr.section-header.collapsed td i.section-chevron { transform: rotate(-90deg); }
     tr.section-body-row.hidden { display: none; }
-    tr.section-col-titles th { font-size: .75rem; color: var(--tblr-secondary-color); font-weight: 600; padding-top: 6px; padding-bottom: 6px; padding-left: 20px; border-bottom: 1px solid var(--tblr-border-color); }
+    tr.section-col-titles th { background: #F0F0F0; font-size: .75rem; color: var(--tblr-secondary-color); font-weight: 600; padding-top: 6px; padding-bottom: 6px; padding-left: 20px; border-bottom: 1px solid var(--tblr-border-color); }
     tr.section-body-row td { padding-left: 20px; }
+    tr.section-body-row.no-items td { padding-left: 12px; }
   </style>
 </head>
 <body>
@@ -118,14 +119,14 @@
   <script src="https://cdn.jsdelivr.net/npm/@tabler/core@1.4.0/dist/js/tabler.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="../../assets/js/version.js?r=lec65awk"></script>
-  <script src="../../assets/js/supabase-client.js?r=lec65awk"></script>
-  <script src="../../assets/js/auth.js?r=lec65awk"></script>
-  <script src="../../assets/js/app.js?r=lec65awk"></script>
-  <script src="../../assets/js/theme.js?r=lec65awk"></script>
-  <script src="../../assets/js/sidebar-html.js?r=lec65awk"></script>
-  <script src="../../assets/js/sidebar.js?r=lec65awk"></script>
-  <script src="../../assets/js/profile-modal.js?r=lec65awk"></script>
+  <script src="../../assets/js/version.js?r=jew618sk"></script>
+  <script src="../../assets/js/supabase-client.js?r=jew618sk"></script>
+  <script src="../../assets/js/auth.js?r=jew618sk"></script>
+  <script src="../../assets/js/app.js?r=jew618sk"></script>
+  <script src="../../assets/js/theme.js?r=jew618sk"></script>
+  <script src="../../assets/js/sidebar-html.js?r=jew618sk"></script>
+  <script src="../../assets/js/sidebar.js?r=jew618sk"></script>
+  <script src="../../assets/js/profile-modal.js?r=jew618sk"></script>
   <script>
 // Lookup caches
 let allDocuments = [];       // ad_document rows
@@ -274,7 +275,7 @@ function sectionHeaderRow(id, title, count, startCollapsed) {
   return `<tr class="section-header${startCollapsed ? ' collapsed' : ''}" data-section="${id}">
     <td colspan="6">
       <span>${title}</span>
-      <span class="text-secondary fw-normal ms-2" style="font-size:.8rem">${count} item${count === 1 ? '' : 's'}</span>
+      <span class="text-secondary fw-normal ms-1" style="font-size:.8rem">(${count})</span>
       <i class="ti ti-chevron-down section-chevron ms-2"></i>
     </td>
   </tr>`;
@@ -311,8 +312,8 @@ function renderSections(items) {
     const headerRow = sectionHeaderRow(sec.id, sec.title, sec.items.length, sec.collapsed);
     const bodyRows = sec.items.length
       ? COL_TITLES + sec.items.map(i => rowHtml(i, sec.collapsed)).join('')
-      : `<tr class="section-body-row${sec.collapsed ? ' hidden' : ''}">
-           <td colspan="6" class="text-secondary small py-2 ps-3">No items</td>
+      : `<tr class="section-body-row no-items${sec.collapsed ? ' hidden' : ''}">
+           <td colspan="6" class="text-secondary small py-2">No items</td>
          </tr>`;
     return headerRow + bodyRows;
   }).join('');
