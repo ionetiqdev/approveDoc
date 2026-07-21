@@ -1,1 +1,1 @@
-Fix version.js build timestamp (was showing deploy time not build time); User View single table with collapsible sections
+User View: remove Documents heading, indent section headers/rows by 20px
