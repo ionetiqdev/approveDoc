@@ -1,1 +1,1 @@
-User View: No items aligns with section headers; section header bg #f8f8f8; col header bg #F0F0F0; count format (n)
+User View: no-items padding-left 20px
