@@ -1,1 +1,1 @@
-Add Testing submenu (User/Audience/Distribution) with distribution item viewer and inline editor
+Add Testing > User View page: pick a user, see all their distributed documents with due status, audiences, dates

@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="en" data-bs-theme="light" data-app-root="../../">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Testing: User View - approveDoc</title>
+
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/core@1.4.0/dist/css/tabler.min.css" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.44.0/dist/tabler-icons.min.css" />
+  <link rel="stylesheet" href="../../assets/css/theme.css?r=mrli8ugb" />
+
+  <script>
+    (function() {
+      try {
+        var root = document.documentElement.dataset.appRoot || './';
+        var absoluteRoot = new URL(root, window.location.href).pathname;
+        var suffix = ':' + absoluteRoot;
+        var savedTheme = localStorage.getItem('app_theme');
+        var theme = savedTheme || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+        document.documentElement.setAttribute('data-bs-theme', theme);
+        var accent = localStorage.getItem('app_accent' + suffix);
+        if (accent) {
+          document.documentElement.style.setProperty('--tblr-primary', accent);
+          var ah = accent.replace('#','');
+          if (ah.length === 3) ah = ah.split('').map(function(c){return c+c;}).join('');
+          document.documentElement.style.setProperty('--tblr-primary-rgb', parseInt(ah.slice(0,2),16) + ', ' + parseInt(ah.slice(2,4),16) + ', ' + parseInt(ah.slice(4,6),16));
+        }
+        var sidebarBg = localStorage.getItem('app_sidebar_bg' + suffix);
+        if (sidebarBg) {
+          document.documentElement.style.setProperty('--bg-sidebar', sidebarBg);
+          var hex = sidebarBg.replace('#', '');
+          if (hex.length === 3) hex = hex.split('').map(function(c){return c+c;}).join('');
+          var r = parseInt(hex.slice(0,2),16) / 255, g = parseInt(hex.slice(2,4),16) / 255, b = parseInt(hex.slice(4,6),16) / 255;
+          var toLinear = function(c){ return c <= 0.03928 ? c/12.92 : Math.pow((c+0.055)/1.055, 2.4); };
+          var isLight = (0.2126*toLinear(r) + 0.7152*toLinear(g) + 0.0722*toLinear(b)) > 0.5;
+          document.documentElement.style.setProperty('--sidebar-fg', isLight ? '#0f172a' : '#ffffff');
+          document.documentElement.style.setProperty('--sidebar-fg-rgb', isLight ? '15,23,42' : '255,255,255');
+        }
+      } catch(e) {}
+    })();
+  </script>
+
+  <style>
+    html, body { height: 100%; overflow: hidden; }
+    .app-content-wrapper { height: 100vh; display: flex; flex-direction: column; }
+    .page-body { flex: 1; min-height: 0; display: flex; flex-direction: column; padding-top: 1rem; padding-bottom: 1rem; }
+    .page-body > .container-fluid { flex: 1; min-height: 0; display: flex; flex-direction: column; }
+    .main-card { flex: 1; min-height: 0; display: flex; flex-direction: column; overflow: hidden; }
+    .scroll-pane { flex: 1; min-height: 0; overflow-y: auto; }
+    .main-card .card-header { background: var(--tblr-bg-surface-secondary); padding-top: 10px; padding-bottom: 10px; }
+    .main-card .card-title { font-size: 14px; }
+  </style>
+</head>
+<body>
+
+  <aside id="sidebar"></aside>
+  <div id="sidebarOverlay" class="sidebar-overlay"></div>
+
+  <div class="app-content-wrapper">
+    <header class="navbar navbar-expand-md d-print-none border-bottom">
+      <div class="container-fluid">
+        <button id="sidebarToggle" class="btn btn-icon"><i class="ti ti-menu-2"></i></button>
+        <h1 class="navbar-brand d-none d-sm-inline-block ms-2 mb-0 page-title-lg">Testing: User View</h1>
+        <div class="navbar-nav flex-row order-md-last align-items-center gap-2">
+          <div data-active-organisation></div>
+          <button class="btn btn-icon" data-theme-toggle><i class="ti ti-moon"></i></button>
+          <button class="btn btn-icon" id="headerPreferencesBtn"><i class="ti ti-adjustments"></i></button>
+          <span class="avatar avatar-sm rounded-circle bg-primary-lt" data-user-initials>?</span>
+        </div>
+      </div>
+    </header>
+
+    <div class="page-body">
+      <div class="container-fluid">
+
+        <div class="card main-card">
+          <div class="card-header">
+            <h3 class="card-title">User</h3>
+            <select id="userSelect" class="form-select form-select-sm ms-3" style="max-width:320px">
+              <option value="">— Choose a user —</option>
+            </select>
+            <span class="text-secondary ms-3 small" id="rowCount"></span>
+          </div>
+          <div class="scroll-pane">
+            <table class="table table-vcenter card-table table-hover mb-0">
+              <thead>
+                <tr>
+                  <th>Document</th>
+                  <th>Due date</th>
+                  <th>Due status</th>
+                  <th>Audience(s)</th>
+                  <th>Date added</th>
+                  <th>Status</th>
+                  <th>Date acknowledged</th>
+                  <th>Date rejected</th>
+                </tr>
+              </thead>
+              <tbody id="itemsBody">
+                <tr><td colspan="8" class="text-center py-4 text-secondary">Choose a user above</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@tabler/core@1.4.0/dist/js/tabler.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="../../assets/js/version.js?r=mrli8ugb"></script>
+  <script src="../../assets/js/supabase-client.js?r=mrli8ugb"></script>
+  <script src="../../assets/js/auth.js?r=mrli8ugb"></script>
+  <script src="../../assets/js/app.js?r=mrli8ugb"></script>
+  <script src="../../assets/js/theme.js?r=mrli8ugb"></script>
+  <script src="../../assets/js/sidebar-html.js?r=mrli8ugb"></script>
+  <script src="../../assets/js/sidebar.js?r=mrli8ugb"></script>
+  <script src="../../assets/js/profile-modal.js?r=mrli8ugb"></script>
+  <script>
+// Lookup caches
+let allDocuments = [];       // ad_document rows
+let allDistributions = [];   // ad_distribution rows (for doc_id + audience lookup)
+let allAudiences = [];       // ad_audience rows (for name lookup)
+let audiencesByDist = {};    // distribution_id -> audience name(s) string
+
+(async () => {
+  const session = await Auth.requireAuth();
+  if (!session) return;
+  SidebarHtml.inject('../../');
+  Sidebar.init();
+  Auth.refreshUI();
+
+  const orgId = Auth.getOrganisationId();
+
+  // Load all reference data in parallel
+  const [
+    { data: users },
+    { data: documents },
+    { data: distributions },
+    { data: audiences },
+    { data: distAuds },
+  ] = await Promise.all([
+    sb.from('ad_user').select('user_id, first_name, last_name, email').eq('organisation_id', orgId).order('first_name'),
+    sb.from('ad_document').select('doc_id, name').eq('organisation_id', orgId),
+    sb.from('ad_distribution').select('distribution_id, name, doc_id').eq('organisation_id', orgId),
+    sb.from('ad_audience').select('audience_id, name').eq('organisation_id', orgId),
+    sb.from('ad_distribution_audience').select('distribution_id, audience_id').eq('organisation_id', orgId),
+  ]);
+
+  allDocuments     = documents     || [];
+  allDistributions = distributions || [];
+  allAudiences     = audiences     || [];
+
+  // Pre-compute a display string of audience name(s) per distribution
+  // so we don't do per-row lookups in the render loop.
+  const audMap = Object.fromEntries((allAudiences).map(a => [a.audience_id, a.name]));
+  (distAuds || []).forEach(da => {
+    const name = audMap[da.audience_id];
+    if (!name) return;
+    if (!audiencesByDist[da.distribution_id]) audiencesByDist[da.distribution_id] = [];
+    audiencesByDist[da.distribution_id].push(name);
+  });
+
+  // Populate user picker
+  const picker = document.getElementById('userSelect');
+  (users || []).forEach(u => {
+    const opt = document.createElement('option');
+    opt.value = u.user_id;
+    opt.textContent = [u.first_name, u.last_name].filter(Boolean).join(' ') || u.email;
+    picker.appendChild(opt);
+  });
+
+  picker.addEventListener('change', () => {
+    if (picker.value) loadItems(picker.value);
+    else clearItems();
+  });
+})();
+
+async function loadItems(userId) {
+  const { data, error } = await sb.from('ad_distribution_item')
+    .select('*')
+    .eq('user_id', userId)
+    .eq('organisation_id', Auth.getOrganisationId())
+    .order('due_date', { ascending: true, nullsFirst: false });
+
+  if (error) { App.toast('Failed to load items: ' + error.message, 'danger'); return; }
+  renderTable(data || []);
+}
+
+function clearItems() {
+  document.getElementById('rowCount').textContent = '';
+  document.getElementById('itemsBody').innerHTML =
+    '<tr><td colspan="8" class="text-center py-4 text-secondary">Choose a user above</td></tr>';
+}
+
+function docName(distributionId) {
+  const dist = allDistributions.find(d => d.distribution_id === distributionId);
+  if (!dist?.doc_id) return '—';
+  const doc = allDocuments.find(d => d.doc_id === dist.doc_id);
+  return doc ? doc.name : '—';
+}
+
+function audienceNames(distributionId) {
+  const names = audiencesByDist[distributionId];
+  return names?.length ? names.join(', ') : '—';
+}
+
+function fmt(dateStr) {
+  if (!dateStr) return '—';
+  return new Date(dateStr).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+}
+
+// Due status: derived from due_date vs today and acknowledgement state.
+// Acknowledged/Rejected supersede everything else.
+// "Due soon" = today is on or after warning1 (or warning2 if no warning1)
+// but not yet past due_date.
+function dueStatus(item) {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  if (item.rejected) {
+    return `<span class="badge bg-danger-lt">Rejected</span>`;
+  }
+  if (item.acknowledged) {
+    return `<span class="badge bg-success-lt">Acknowledged</span>`;
+  }
+
+  if (!item.due_date) {
+    return `<span class="badge bg-secondary-lt">No due date</span>`;
+  }
+
+  const due = new Date(item.due_date);
+  if (due < today) {
+    return `<span class="badge bg-danger-lt">Overdue</span>`;
+  }
+
+  // Within a warning window?
+  const warn = item.warning1 || item.warning2;
+  if (warn) {
+    const warnDate = new Date(warn);
+    if (today >= warnDate) {
+      return `<span class="badge bg-warning-lt">Due soon</span>`;
+    }
+  }
+
+  return `<span class="badge bg-blue-lt">On time</span>`;
+}
+
+function statusBadge(status) {
+  const s = (status || '').toUpperCase();
+  if (s === 'PENDING')      return `<span class="badge bg-secondary-lt">Pending</span>`;
+  if (s === 'ACKNOWLEDGED') return `<span class="badge bg-success-lt">Acknowledged</span>`;
+  if (s === 'REJECTED')     return `<span class="badge bg-danger-lt">Rejected</span>`;
+  if (s === 'OVERDUE')      return `<span class="badge bg-warning-lt">Overdue</span>`;
+  return `<span class="badge bg-secondary-lt">${App.escHtml(status || '—')}</span>`;
+}
+
+function renderTable(items) {
+  document.getElementById('rowCount').textContent =
+    `${items.length} document${items.length === 1 ? '' : 's'}`;
+
+  const tbody = document.getElementById('itemsBody');
+
+  if (!items.length) {
+    tbody.innerHTML = '<tr><td colspan="8" class="text-center py-4 text-secondary">No distributions found for this user</td></tr>';
+    return;
+  }
+
+  tbody.innerHTML = items.map(item => `
+    <tr>
+      <td class="fw-semibold">${App.escHtml(docName(item.distribution_id))}</td>
+      <td class="text-secondary">${fmt(item.due_date)}</td>
+      <td>${dueStatus(item)}</td>
+      <td class="text-secondary">${App.escHtml(audienceNames(item.distribution_id))}</td>
+      <td class="text-secondary">${fmt(item.created_at)}</td>
+      <td>${statusBadge(item.status)}</td>
+      <td class="text-secondary">${item.acknowledged ? fmt(item.acknowledged_date) : '—'}</td>
+      <td class="text-secondary">${item.rejected ? fmt(item.rejected_date) : '—'}</td>
+    </tr>`).join('');
+}
+  </script>
+</body>
+</html>
