@@ -75,7 +75,7 @@ function _injectButton() {
     <button class="btn btn-icon" id="statusWidgetBtn" aria-expanded="false">
       <i class="ti ti-list-check"></i>
     </button>
-    <div class="dropdown-menu dropdown-menu-end" id="statusWidgetMenu" style="min-width:240px"></div>`;
+    <div class="dropdown-menu dropdown-menu-end" id="statusWidgetMenu" style="min-width:240px;padding-top:0"></div>`;
 
   themeBtn.parentNode.insertBefore(wrapper, themeBtn);
 
@@ -135,8 +135,8 @@ function _render() {
   if (!menu) return;
 
   const nameHeader = currentUserName
-    ? `<div class="px-3 py-2 text-secondary" style="background:#f8f8f8;font-size:.8rem;border-bottom:1px solid var(--tblr-border-color)">${currentUserName}</div>`
-    : `<div class="px-3 py-2 text-secondary" style="background:#f8f8f8;font-size:.8rem;border-bottom:1px solid var(--tblr-border-color)">No user selected</div>`;
+    ? `<div class="px-3 py-2 text-secondary" style="background:#f8f8f8;border-bottom:1px solid var(--tblr-border-color)">${currentUserName}</div>`
+    : `<div class="px-3 py-2 text-secondary" style="background:#f8f8f8;border-bottom:1px solid var(--tblr-border-color)">No user selected</div>`;
 
   menu.innerHTML = nameHeader + STATUS_META.map(meta => {
     if (meta === null) return '<hr class="dropdown-divider my-1" />';
