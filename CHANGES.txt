@@ -1,1 +1,1 @@
-User View: tidy edit modal - remove warning dates, clean two-column layout
+User View: acknowledged/rejected checkboxes auto-update Status; both off resets to Pending
