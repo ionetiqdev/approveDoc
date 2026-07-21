@@ -1,1 +1,1 @@
-Status widget: remove sticky tooltip; click outside closes dropdown
+Status widget: remove stopPropagation so Bootstrap outside-click closes dropdown

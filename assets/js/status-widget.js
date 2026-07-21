@@ -82,7 +82,7 @@ function _injectButton() {
   // the menu closes it without any extra wiring needed.
   const btn  = wrapper.querySelector('#statusWidgetBtn');
   const bsDd = new bootstrap.Dropdown(btn, { autoClose: 'outside' });
-  btn.addEventListener('click', e => { e.stopPropagation(); bsDd.toggle(); });
+  btn.addEventListener('click', () => bsDd.toggle());
 }
 
 // ── Data loading ──────────────────────────────────────────────────────────
