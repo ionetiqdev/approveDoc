@@ -1,1 +1,1 @@
-User View: split picker from content, four collapsible sections (Awaiting Action, Acknowledged, Rejected, Reference)
+User View: single table with collapsible section header rows, Instructions column, removed Acknowledged/Rejected columns

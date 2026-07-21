@@ -7,7 +7,7 @@
 
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/core@1.4.0/dist/css/tabler.min.css" />
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.44.0/dist/tabler-icons.min.css" />
-  <link rel="stylesheet" href="../../assets/css/theme.css?r=sia36tyl" />
+  <link rel="stylesheet" href="../../assets/css/theme.css?r=57sv6czo" />
 
   <script>
     (function() {
@@ -46,19 +46,21 @@
     .page-body { flex: 1; min-height: 0; display: flex; flex-direction: column; padding-top: 1rem; padding-bottom: 1rem; }
     .page-body > .container-fluid { flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 1rem; }
 
-    /* Picker card - fixed/natural height */
+    /* Picker card */
     .picker-card .card-header { background: var(--tblr-bg-surface-secondary); padding-top: 10px; padding-bottom: 10px; }
     .picker-card .card-title { font-size: 14px; }
 
-    /* Sections area - fills remaining height and scrolls */
-    .sections-area { flex: 1; min-height: 0; overflow-y: auto; display: flex; flex-direction: column; gap: 1rem; }
+    /* Table card - fills remaining space */
+    .table-card { flex: 1; min-height: 0; display: flex; flex-direction: column; overflow: hidden; }
+    .table-card .card-header { background: var(--tblr-bg-surface-secondary); padding-top: 10px; padding-bottom: 10px; flex-shrink: 0; }
+    .table-card .card-title { font-size: 14px; }
+    .table-scroll { flex: 1; min-height: 0; overflow-y: auto; }
 
-    /* Individual collapsible section */
-    .section-card .card-header { background: var(--tblr-bg-surface-secondary); padding-top: 8px; padding-bottom: 8px; cursor: pointer; user-select: none; }
-    .section-card .card-title { font-size: 14px; }
-    .section-card .section-chevron { transition: transform .2s; }
-    .section-card .card-header.collapsed .section-chevron { transform: rotate(-90deg); }
-    .section-card .section-body { overflow: hidden; }
+    /* Section header rows within the single table */
+    tr.section-header td { background: var(--tblr-bg-surface-secondary); font-weight: 600; font-size: .8125rem; padding: 8px 12px; cursor: pointer; user-select: none; border-top: 2px solid var(--tblr-border-color); }
+    tr.section-header td i.section-chevron { transition: transform .2s; }
+    tr.section-header.collapsed td i.section-chevron { transform: rotate(-90deg); }
+    tr.section-body-row.hidden { display: none; }
   </style>
 </head>
 <body>
@@ -94,10 +96,30 @@
           </div>
         </div>
 
-        <!-- Collapsible sections -->
-        <div class="sections-area" id="sectionsArea">
-          <p class="text-secondary text-center">Choose a user above to see their documents.</p>
+        <!-- Single table with collapsible section header rows -->
+        <div class="card table-card" id="tableCard" style="display:none">
+          <div class="card-header">
+            <h3 class="card-title">Documents</h3>
+            <span class="text-secondary ms-3 small" id="rowCount"></span>
+          </div>
+          <div class="table-scroll">
+            <table class="table table-vcenter card-table mb-0" id="mainTable">
+              <thead>
+                <tr>
+                  <th>Document</th>
+                  <th>Due date</th>
+                  <th>Status</th>
+                  <th>Audience(s)</th>
+                  <th>Date added</th>
+                  <th>Instructions</th>
+                </tr>
+              </thead>
+              <tbody id="mainTableBody"></tbody>
+            </table>
+          </div>
         </div>
+
+        <p class="text-secondary text-center" id="emptyMsg">Choose a user above to see their documents.</p>
 
       </div>
     </div>
@@ -106,14 +128,14 @@
   <script src="https://cdn.jsdelivr.net/npm/@tabler/core@1.4.0/dist/js/tabler.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="../../assets/js/version.js?r=sia36tyl"></script>
-  <script src="../../assets/js/supabase-client.js?r=sia36tyl"></script>
-  <script src="../../assets/js/auth.js?r=sia36tyl"></script>
-  <script src="../../assets/js/app.js?r=sia36tyl"></script>
-  <script src="../../assets/js/theme.js?r=sia36tyl"></script>
-  <script src="../../assets/js/sidebar-html.js?r=sia36tyl"></script>
-  <script src="../../assets/js/sidebar.js?r=sia36tyl"></script>
-  <script src="../../assets/js/profile-modal.js?r=sia36tyl"></script>
+  <script src="../../assets/js/version.js?r=57sv6czo"></script>
+  <script src="../../assets/js/supabase-client.js?r=57sv6czo"></script>
+  <script src="../../assets/js/auth.js?r=57sv6czo"></script>
+  <script src="../../assets/js/app.js?r=57sv6czo"></script>
+  <script src="../../assets/js/theme.js?r=57sv6czo"></script>
+  <script src="../../assets/js/sidebar-html.js?r=57sv6czo"></script>
+  <script src="../../assets/js/sidebar.js?r=57sv6czo"></script>
+  <script src="../../assets/js/profile-modal.js?r=57sv6czo"></script>
   <script>
 // Lookup caches
 let allDocuments = [];       // ad_document rows
@@ -149,7 +171,7 @@ const STATUS_COLOURS = [
   ] = await Promise.all([
     sb.from('ad_user').select('user_id, first_name, last_name, email').eq('organisation_id', orgId).order('first_name'),
     sb.from('ad_document').select('doc_id, name').eq('organisation_id', orgId),
-    sb.from('ad_distribution').select('distribution_id, name, doc_id').eq('organisation_id', orgId),
+    sb.from('ad_distribution').select('distribution_id, name, doc_id, instructions').eq('organisation_id', orgId),
     sb.from('ad_audience').select('audience_id, name').eq('organisation_id', orgId),
     sb.from('ad_distribution_audience').select('distribution_id, audience_id').eq('organisation_id', orgId),
   ]);
@@ -196,8 +218,8 @@ async function loadItems(userId) {
 
 function clearItems() {
   document.getElementById('rowCount').textContent = '';
-  document.getElementById('sectionsArea').innerHTML =
-    '<p class="text-secondary text-center">Choose a user above to see their documents.</p>';
+  document.getElementById('tableCard').style.display = 'none';
+  document.getElementById('emptyMsg').style.display = '';
 }
 
 function docName(distributionId) {
@@ -205,6 +227,11 @@ function docName(distributionId) {
   if (!dist?.doc_id) return '—';
   const doc = allDocuments.find(d => d.doc_id === dist.doc_id);
   return doc ? doc.name : '—';
+}
+
+function distInstructions(distributionId) {
+  const dist = allDistributions.find(d => d.distribution_id === distributionId);
+  return dist?.instructions || '—';
 }
 
 function audienceNames(distributionId) {
@@ -242,39 +269,25 @@ function dueStatus(item) {
   return pill('On time', c('ontime'));
 }
 
-function rowHtml(item) {
-  return `<tr>
+function rowHtml(item, hidden) {
+  return `<tr class="section-body-row${hidden ? ' hidden' : ''}">
     <td class="fw-semibold">${App.escHtml(docName(item.distribution_id))}</td>
     <td class="text-secondary">${fmt(item.due_date)}</td>
     <td>${dueStatus(item)}</td>
     <td class="text-secondary">${App.escHtml(audienceNames(item.distribution_id))}</td>
     <td class="text-secondary">${fmt(item.created_at)}</td>
-    <td class="text-secondary">${item.acknowledged ? fmt(item.acknowledged_date) : '—'}</td>
-    <td class="text-secondary">${item.rejected ? fmt(item.rejected_date) : '—'}</td>
+    <td class="text-secondary">${App.escHtml(distInstructions(item.distribution_id))}</td>
   </tr>`;
 }
 
-const TABLE_HEAD = `<thead><tr>
-  <th>Document</th><th>Due date</th><th>Status</th>
-  <th>Audience(s)</th><th>Date added</th><th>Acknowledged</th><th>Rejected</th>
-</tr></thead>`;
-
-function sectionCard(id, title, items, emptyMsg, startCollapsed = false) {
-  const headerClass = startCollapsed ? 'collapsed' : '';
-  const bodyStyle   = startCollapsed ? 'display:none' : '';
-
-  const bodyContent = items.length
-    ? `<table class="table table-vcenter card-table mb-0">${TABLE_HEAD}<tbody>${items.map(rowHtml).join('')}</tbody></table>`
-    : `<div class="text-center py-3 text-secondary small">${emptyMsg}</div>`;
-
-  return `<div class="card section-card" id="section-${id}">
-    <div class="card-header ${headerClass}" data-section="${id}">
-      <h3 class="card-title">${title}</h3>
-      <span class="text-secondary ms-2 small">${items.length} item${items.length === 1 ? '' : 's'}</span>
-      <i class="ti ti-chevron-down section-chevron ms-auto"></i>
-    </div>
-    <div class="section-body" style="${bodyStyle}">${bodyContent}</div>
-  </div>`;
+function sectionHeaderRow(id, title, count, startCollapsed) {
+  return `<tr class="section-header${startCollapsed ? ' collapsed' : ''}" data-section="${id}">
+    <td colspan="6">
+      <span>${title}</span>
+      <span class="text-secondary fw-normal ms-2" style="font-size:.8rem">${count} item${count === 1 ? '' : 's'}</span>
+      <i class="ti ti-chevron-down section-chevron ms-2"></i>
+    </td>
+  </tr>`;
 }
 
 function renderSections(items) {
@@ -282,24 +295,43 @@ function renderSections(items) {
   document.getElementById('rowCount').textContent =
     `${total} document${total === 1 ? '' : 's'}`;
 
+  document.getElementById('emptyMsg').style.display = 'none';
+  document.getElementById('tableCard').style.display = '';
+
   const awaiting     = items.filter(i => !i.acknowledged && !i.rejected);
   const acknowledged = items.filter(i => i.acknowledged);
   const rejected     = items.filter(i => i.rejected);
+  const reference    = [];
 
-  const area = document.getElementById('sectionsArea');
-  area.innerHTML = [
-    sectionCard('awaiting',     'Awaiting Action', awaiting,     'No items awaiting action'),
-    sectionCard('acknowledged', 'Acknowledged',    acknowledged, 'No acknowledged items',    false),
-    sectionCard('rejected',     'Rejected',        rejected,     'No rejected items',        false),
-    sectionCard('reference',    'Reference',       [],           'No reference items (placeholder)', true),
-  ].join('');
+  // Build one flat list of <tr>s: section header + body rows per section
+  const SECTIONS = [
+    { id: 'awaiting',     title: 'Awaiting Action', items: awaiting,     collapsed: false },
+    { id: 'acknowledged', title: 'Acknowledged',    items: acknowledged, collapsed: false },
+    { id: 'rejected',     title: 'Rejected',        items: rejected,     collapsed: false },
+    { id: 'reference',    title: 'Reference',       items: reference,    collapsed: true  },
+  ];
 
-  // Wire collapse toggles
-  area.querySelectorAll('.card-header[data-section]').forEach(header => {
+  const tbody = document.getElementById('mainTableBody');
+  tbody.innerHTML = SECTIONS.map(sec => {
+    const headerRow = sectionHeaderRow(sec.id, sec.title, sec.items.length, sec.collapsed);
+    const bodyRows  = sec.items.length
+      ? sec.items.map(i => rowHtml(i, sec.collapsed)).join('')
+      : `<tr class="section-body-row${sec.collapsed ? ' hidden' : ''}">
+           <td colspan="6" class="text-secondary small py-2 ps-3">No items</td>
+         </tr>`;
+    return headerRow + bodyRows;
+  }).join('');
+
+  // Wire collapse toggles - toggle .hidden on all following section-body-rows
+  // until the next section-header row
+  tbody.querySelectorAll('tr.section-header').forEach(header => {
     header.addEventListener('click', () => {
-      const body = header.nextElementSibling;
       const collapsed = header.classList.toggle('collapsed');
-      body.style.display = collapsed ? 'none' : '';
+      let next = header.nextElementSibling;
+      while (next && !next.classList.contains('section-header')) {
+        next.classList.toggle('hidden', collapsed);
+        next = next.nextElementSibling;
+      }
     });
   });
 }
