@@ -1,1 +1,1 @@
-User View: single table with collapsible section header rows, Instructions column, removed Acknowledged/Rejected columns
+User View: empty sections collapse by default; column titles shown per-section when it has items

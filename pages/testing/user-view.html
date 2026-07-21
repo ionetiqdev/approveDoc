@@ -7,7 +7,7 @@
 
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/core@1.4.0/dist/css/tabler.min.css" />
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.44.0/dist/tabler-icons.min.css" />
-  <link rel="stylesheet" href="../../assets/css/theme.css?r=57sv6czo" />
+  <link rel="stylesheet" href="../../assets/css/theme.css?r=8byz4j72" />
 
   <script>
     (function() {
@@ -61,6 +61,7 @@
     tr.section-header td i.section-chevron { transition: transform .2s; }
     tr.section-header.collapsed td i.section-chevron { transform: rotate(-90deg); }
     tr.section-body-row.hidden { display: none; }
+    tr.section-col-titles th { font-size: .75rem; color: var(--tblr-secondary-color); font-weight: 600; padding-top: 6px; padding-bottom: 6px; border-bottom: 1px solid var(--tblr-border-color); }
   </style>
 </head>
 <body>
@@ -104,16 +105,6 @@
           </div>
           <div class="table-scroll">
             <table class="table table-vcenter card-table mb-0" id="mainTable">
-              <thead>
-                <tr>
-                  <th>Document</th>
-                  <th>Due date</th>
-                  <th>Status</th>
-                  <th>Audience(s)</th>
-                  <th>Date added</th>
-                  <th>Instructions</th>
-                </tr>
-              </thead>
               <tbody id="mainTableBody"></tbody>
             </table>
           </div>
@@ -128,14 +119,14 @@
   <script src="https://cdn.jsdelivr.net/npm/@tabler/core@1.4.0/dist/js/tabler.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="../../assets/js/version.js?r=57sv6czo"></script>
-  <script src="../../assets/js/supabase-client.js?r=57sv6czo"></script>
-  <script src="../../assets/js/auth.js?r=57sv6czo"></script>
-  <script src="../../assets/js/app.js?r=57sv6czo"></script>
-  <script src="../../assets/js/theme.js?r=57sv6czo"></script>
-  <script src="../../assets/js/sidebar-html.js?r=57sv6czo"></script>
-  <script src="../../assets/js/sidebar.js?r=57sv6czo"></script>
-  <script src="../../assets/js/profile-modal.js?r=57sv6czo"></script>
+  <script src="../../assets/js/version.js?r=8byz4j72"></script>
+  <script src="../../assets/js/supabase-client.js?r=8byz4j72"></script>
+  <script src="../../assets/js/auth.js?r=8byz4j72"></script>
+  <script src="../../assets/js/app.js?r=8byz4j72"></script>
+  <script src="../../assets/js/theme.js?r=8byz4j72"></script>
+  <script src="../../assets/js/sidebar-html.js?r=8byz4j72"></script>
+  <script src="../../assets/js/sidebar.js?r=8byz4j72"></script>
+  <script src="../../assets/js/profile-modal.js?r=8byz4j72"></script>
   <script>
 // Lookup caches
 let allDocuments = [];       // ad_document rows
@@ -303,19 +294,24 @@ function renderSections(items) {
   const rejected     = items.filter(i => i.rejected);
   const reference    = [];
 
-  // Build one flat list of <tr>s: section header + body rows per section
+  // Collapse empty sections by default; non-empty sections start open
   const SECTIONS = [
-    { id: 'awaiting',     title: 'Awaiting Action', items: awaiting,     collapsed: false },
-    { id: 'acknowledged', title: 'Acknowledged',    items: acknowledged, collapsed: false },
-    { id: 'rejected',     title: 'Rejected',        items: rejected,     collapsed: false },
-    { id: 'reference',    title: 'Reference',       items: reference,    collapsed: true  },
-  ];
+    { id: 'awaiting',     title: 'Awaiting Action', items: awaiting     },
+    { id: 'acknowledged', title: 'Acknowledged',    items: acknowledged },
+    { id: 'rejected',     title: 'Rejected',        items: rejected     },
+    { id: 'reference',    title: 'Reference',       items: reference    },
+  ].map(sec => ({ ...sec, collapsed: sec.items.length === 0 }));
+
+  const COL_TITLES = `<tr class="section-body-row section-col-titles">
+    <th>Document</th><th>Due date</th><th>Status</th>
+    <th>Audience(s)</th><th>Date added</th><th>Instructions</th>
+  </tr>`;
 
   const tbody = document.getElementById('mainTableBody');
   tbody.innerHTML = SECTIONS.map(sec => {
     const headerRow = sectionHeaderRow(sec.id, sec.title, sec.items.length, sec.collapsed);
-    const bodyRows  = sec.items.length
-      ? sec.items.map(i => rowHtml(i, sec.collapsed)).join('')
+    const bodyRows = sec.items.length
+      ? COL_TITLES + sec.items.map(i => rowHtml(i, sec.collapsed)).join('')
       : `<tr class="section-body-row${sec.collapsed ? ' hidden' : ''}">
            <td colspan="6" class="text-secondary small py-2 ps-3">No items</td>
          </tr>`;
