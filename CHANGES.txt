@@ -1,1 +1,1 @@
-Status widget: align menu item left padding with name header
+User View: replace hardcoded section/column header colours with CSS variables for dark mode compatibility
