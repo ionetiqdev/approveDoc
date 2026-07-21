@@ -1,1 +1,1 @@
-User View: finalise status colours, remove test button and modal
+User View: split picker from content, four collapsible sections (Awaiting Action, Acknowledged, Rejected, Reference)
