@@ -7,7 +7,7 @@
 
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/core@1.4.0/dist/css/tabler.min.css" />
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.44.0/dist/tabler-icons.min.css" />
-  <link rel="stylesheet" href="../../assets/css/theme.css?r=bru7n1dl" />
+  <link rel="stylesheet" href="../../assets/css/theme.css?r=n347itx0" />
 
   <script>
     (function() {
@@ -116,23 +116,92 @@
     </div>
   </div>
 
+  <!-- Double-click edit modal (testing only) -->
+  <div class="modal modal-blur fade" id="editItemModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Edit Distribution Item</h5>
+          <button type="button" class="modal-close-btn" data-bs-dismiss="modal"><i class="ti ti-x"></i></button>
+        </div>
+        <div class="modal-body">
+          <div id="editItemError" class="alert alert-danger d-none py-2 small mb-3"></div>
+          <input type="hidden" id="editItemId" />
+          <div class="row g-3">
+            <div class="col-6">
+              <label class="form-label">Status</label>
+              <select id="editStatus" class="form-select">
+                <option value="PENDING">Pending</option>
+                <option value="ACKNOWLEDGED">Acknowledged</option>
+                <option value="REJECTED">Rejected</option>
+                <option value="OVERDUE">Overdue</option>
+              </select>
+            </div>
+            <div class="col-6">
+              <label class="form-label">Start date</label>
+              <input type="date" id="editStartDate" class="form-control" />
+            </div>
+            <div class="col-6">
+              <label class="form-label">Due date</label>
+              <input type="date" id="editDueDate" class="form-control" />
+            </div>
+            <div class="col-6">
+              <label class="form-label">Warning 1</label>
+              <input type="date" id="editWarning1" class="form-control" />
+            </div>
+            <div class="col-6">
+              <label class="form-label">Warning 2</label>
+              <input type="date" id="editWarning2" class="form-control" />
+            </div>
+            <div class="col-3">
+              <label class="form-label">Acknowledged</label>
+              <input type="checkbox" id="editAcknowledged" class="form-check-input d-block mt-2" />
+            </div>
+            <div class="col-3">
+              <label class="form-label">Acknowledged date</label>
+              <input type="date" id="editAckDate" class="form-control" />
+            </div>
+            <div class="col-3">
+              <label class="form-label">Rejected</label>
+              <input type="checkbox" id="editRejected" class="form-check-input d-block mt-2" />
+            </div>
+            <div class="col-3">
+              <label class="form-label">Rejected date</label>
+              <input type="date" id="editRejDate" class="form-control" />
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn" data-bs-dismiss="modal">Cancel</button>
+          <button type="button" class="btn btn-primary" id="saveEditItemBtn">
+            <span id="saveEditLabel">Save</span>
+            <span id="saveEditSpinner" class="spinner-border spinner-border-sm ms-2 d-none"></span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <script src="https://cdn.jsdelivr.net/npm/@tabler/core@1.4.0/dist/js/tabler.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="../../assets/js/version.js?r=bru7n1dl"></script>
-  <script src="../../assets/js/supabase-client.js?r=bru7n1dl"></script>
-  <script src="../../assets/js/auth.js?r=bru7n1dl"></script>
-  <script src="../../assets/js/app.js?r=bru7n1dl"></script>
-  <script src="../../assets/js/theme.js?r=bru7n1dl"></script>
-  <script src="../../assets/js/sidebar-html.js?r=bru7n1dl"></script>
-  <script src="../../assets/js/sidebar.js?r=bru7n1dl"></script>
-  <script src="../../assets/js/profile-modal.js?r=bru7n1dl"></script>
+  <script src="../../assets/js/version.js?r=n347itx0"></script>
+  <script src="../../assets/js/supabase-client.js?r=n347itx0"></script>
+  <script src="../../assets/js/auth.js?r=n347itx0"></script>
+  <script src="../../assets/js/app.js?r=n347itx0"></script>
+  <script src="../../assets/js/theme.js?r=n347itx0"></script>
+  <script src="../../assets/js/sidebar-html.js?r=n347itx0"></script>
+  <script src="../../assets/js/sidebar.js?r=n347itx0"></script>
+  <script src="../../assets/js/profile-modal.js?r=n347itx0"></script>
   <script>
 // Lookup caches
 let allDocuments = [];       // ad_document rows
 let allDistributions = [];   // ad_distribution rows (for doc_id + audience lookup)
 let allAudiences = [];       // ad_audience rows (for name lookup)
 let audiencesByDist = {};    // distribution_id -> audience name(s) string
+let allItems = [];           // current user's ad_distribution_item rows
+let editItemModal;
+let currentUserId = null;
 
 const STATUS_COLOURS = [
   { key: 'ontime',       label: 'On time',     colour: '#009432' },
@@ -149,6 +218,9 @@ const STATUS_COLOURS = [
   SidebarHtml.inject('../../');
   Sidebar.init();
   Auth.refreshUI();
+
+  editItemModal = new bootstrap.Modal(document.getElementById('editItemModal'));
+  document.getElementById('saveEditItemBtn').addEventListener('click', saveEditItem);
 
   const orgId = Auth.getOrganisationId();
 
@@ -191,6 +263,7 @@ const STATUS_COLOURS = [
   });
 
   picker.addEventListener('change', () => {
+    currentUserId = picker.value || null;
     if (picker.value) loadItems(picker.value);
     else clearItems();
   });
@@ -204,7 +277,8 @@ async function loadItems(userId) {
     .order('due_date', { ascending: true, nullsFirst: false });
 
   if (error) { App.toast('Failed to load items: ' + error.message, 'danger'); return; }
-  renderSections(data || []);
+  allItems = data || [];
+  renderSections(allItems);
 }
 
 function clearItems() {
@@ -261,7 +335,7 @@ function dueStatus(item) {
 }
 
 function rowHtml(item, hidden) {
-  return `<tr class="section-body-row${hidden ? ' hidden' : ''}">
+  return `<tr class="section-body-row${hidden ? ' hidden' : ''}" data-item-id="${item.distrib_item_id}" style="cursor:pointer" title="Double-click to edit">
     <td>${App.escHtml(docName(item.distribution_id))}</td>
     <td class="text-secondary">${fmt(item.due_date)}</td>
     <td>${dueStatus(item)}</td>
@@ -318,8 +392,7 @@ function renderSections(items) {
     return headerRow + bodyRows;
   }).join('');
 
-  // Wire collapse toggles - toggle .hidden on all following section-body-rows
-  // until the next section-header row
+  // Wire collapse toggles
   tbody.querySelectorAll('tr.section-header').forEach(header => {
     header.addEventListener('click', () => {
       const collapsed = header.classList.toggle('collapsed');
@@ -330,6 +403,63 @@ function renderSections(items) {
       }
     });
   });
+
+  // Wire double-click to open edit modal
+  tbody.querySelectorAll('tr.section-body-row[data-item-id]').forEach(row => {
+    row.addEventListener('dblclick', () => {
+      const item = allItems.find(i => i.distrib_item_id === row.dataset.itemId);
+      if (item) openEditModal(item);
+    });
+  });
+}
+
+function openEditModal(item) {
+  document.getElementById('editItemError').classList.add('d-none');
+  document.getElementById('editItemId').value        = item.distrib_item_id;
+  document.getElementById('editStatus').value        = item.status || 'PENDING';
+  document.getElementById('editStartDate').value     = item.start_date || '';
+  document.getElementById('editDueDate').value       = item.due_date || '';
+  document.getElementById('editWarning1').value      = item.warning1 || '';
+  document.getElementById('editWarning2').value      = item.warning2 || '';
+  document.getElementById('editAcknowledged').checked = !!item.acknowledged;
+  document.getElementById('editAckDate').value       = item.acknowledged_date || '';
+  document.getElementById('editRejected').checked    = !!item.rejected;
+  document.getElementById('editRejDate').value       = item.rejected_date || '';
+  editItemModal.show();
+}
+
+async function saveEditItem() {
+  const errorEl = document.getElementById('editItemError');
+  errorEl.classList.add('d-none');
+  document.getElementById('saveEditSpinner').classList.remove('d-none');
+  document.getElementById('saveEditItemBtn').disabled = true;
+
+  const itemId = document.getElementById('editItemId').value;
+  const { error } = await sb.from('ad_distribution_item').update({
+    status:            document.getElementById('editStatus').value,
+    start_date:        document.getElementById('editStartDate').value || null,
+    due_date:          document.getElementById('editDueDate').value || null,
+    warning1:          document.getElementById('editWarning1').value || null,
+    warning2:          document.getElementById('editWarning2').value || null,
+    acknowledged:      document.getElementById('editAcknowledged').checked,
+    acknowledged_date: document.getElementById('editAckDate').value || null,
+    rejected:          document.getElementById('editRejected').checked,
+    rejected_date:     document.getElementById('editRejDate').value || null,
+    updated_at:        new Date().toISOString(),
+  }).eq('distrib_item_id', itemId);
+
+  document.getElementById('saveEditSpinner').classList.add('d-none');
+  document.getElementById('saveEditItemBtn').disabled = false;
+
+  if (error) {
+    errorEl.textContent = 'Save failed: ' + error.message;
+    errorEl.classList.remove('d-none');
+    return;
+  }
+
+  editItemModal.hide();
+  App.toast('Saved');
+  if (currentUserId) await loadItems(currentUserId);
 }
   </script>
 </body>

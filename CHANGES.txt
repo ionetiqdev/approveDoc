@@ -1,1 +1,1 @@
-User View: remove bold from document name; remove blank card header above table; round top corners of Awaiting Action row
+User View: double-click row opens edit modal for all distribution item fields; refreshes table on save
