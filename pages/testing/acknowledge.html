@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="en" data-bs-theme="light" data-app-root="../../">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Acknowledge - approveDoc</title>
+
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/core@1.4.0/dist/css/tabler.min.css" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.44.0/dist/tabler-icons.min.css" />
+  <link rel="stylesheet" href="../../assets/css/theme.css?r=pq429ubx" />
+
+  <script>
+    (function() {
+      try {
+        var root = document.documentElement.dataset.appRoot || './';
+        var absoluteRoot = new URL(root, window.location.href).pathname;
+        var suffix = ':' + absoluteRoot;
+        var savedTheme = localStorage.getItem('app_theme');
+        var theme = savedTheme || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+        document.documentElement.setAttribute('data-bs-theme', theme);
+        var accent = localStorage.getItem('app_accent' + suffix);
+        if (accent) {
+          document.documentElement.style.setProperty('--tblr-primary', accent);
+          var ah = accent.replace('#','');
+          if (ah.length === 3) ah = ah.split('').map(function(c){return c+c;}).join('');
+          document.documentElement.style.setProperty('--tblr-primary-rgb', parseInt(ah.slice(0,2),16) + ', ' + parseInt(ah.slice(2,4),16) + ', ' + parseInt(ah.slice(4,6),16));
+        }
+        var sidebarBg = localStorage.getItem('app_sidebar_bg' + suffix);
+        if (sidebarBg) {
+          document.documentElement.style.setProperty('--bg-sidebar', sidebarBg);
+          var hex = sidebarBg.replace('#', '');
+          if (hex.length === 3) hex = hex.split('').map(function(c){return c+c;}).join('');
+          var r = parseInt(hex.slice(0,2),16) / 255, g = parseInt(hex.slice(2,4),16) / 255, b = parseInt(hex.slice(4,6),16) / 255;
+          var toLinear = function(c){ return c <= 0.03928 ? c/12.92 : Math.pow((c+0.055)/1.055, 2.4); };
+          var isLight = (0.2126*toLinear(r) + 0.7152*toLinear(g) + 0.0722*toLinear(b)) > 0.5;
+          document.documentElement.style.setProperty('--sidebar-fg', isLight ? '#0f172a' : '#ffffff');
+          document.documentElement.style.setProperty('--sidebar-fg-rgb', isLight ? '15,23,42' : '255,255,255');
+        }
+      } catch(e) {}
+    })();
+  </script>
+
+  <style>
+    html, body { height: 100%; overflow: hidden; }
+    .app-content-wrapper { height: 100vh; display: flex; flex-direction: column; }
+    .page-body { flex: 1; min-height: 0; display: flex; flex-direction: column; padding: 1rem; }
+    .content-row { flex: 1; min-height: 0; display: flex; gap: 1rem; }
+
+    /* PDF viewer panel */
+    .viewer-panel { flex: 0 0 66.666%; display: flex; flex-direction: column; min-height: 0; }
+    .viewer-panel .card { flex: 1; min-height: 0; display: flex; flex-direction: column; overflow: hidden; }
+    #pdfFrame { flex: 1; border: none; min-height: 0; }
+
+    /* Action panel */
+    .action-panel { flex: 0 0 calc(33.333% - .5rem); display: flex; flex-direction: column; min-height: 0; gap: 1rem; }
+    .action-card { flex: 1; min-height: 0; overflow-y: auto; }
+  </style>
+</head>
+<body>
+
+  <aside id="sidebar"></aside>
+  <div id="sidebarOverlay" class="sidebar-overlay"></div>
+
+  <div class="app-content-wrapper">
+    <header class="navbar navbar-expand-md d-print-none border-bottom">
+      <div class="container-fluid">
+        <button id="sidebarToggle" class="btn btn-icon"><i class="ti ti-menu-2"></i></button>
+        <h1 class="navbar-brand d-none d-sm-inline-block ms-2 mb-0 page-title-lg" id="pageTitle">Acknowledge document</h1>
+        <div class="navbar-nav flex-row order-md-last align-items-center gap-2">
+          <div data-active-organisation></div>
+          <button class="btn btn-icon" data-theme-toggle><i class="ti ti-moon"></i></button>
+          <button class="btn btn-icon" id="headerPreferencesBtn"><i class="ti ti-adjustments"></i></button>
+          <span class="avatar avatar-sm rounded-circle bg-primary-lt" data-user-initials>?</span>
+        </div>
+      </div>
+    </header>
+
+    <div class="page-body">
+
+      <!-- Back button + doc name -->
+      <div class="d-flex align-items-center gap-3 mb-3">
+        <button class="btn btn-outline-secondary btn-sm" id="backBtn">
+          <i class="ti ti-arrow-left me-1"></i>Back to document list
+        </button>
+        <span class="fw-semibold" id="docNameLabel"></span>
+        <span id="currentStatusBadge"></span>
+      </div>
+
+      <div class="content-row">
+
+        <!-- PDF viewer (left 2/3) -->
+        <div class="viewer-panel">
+          <div class="card">
+            <div id="viewerLoadingState" class="d-flex align-items-center justify-content-center h-100 text-secondary">
+              <span class="spinner-border spinner-border-sm me-2"></span>Loading document…
+            </div>
+            <iframe id="pdfFrame" style="display:none"></iframe>
+          </div>
+        </div>
+
+        <!-- Action panel (right 1/3) -->
+        <div class="action-panel">
+          <div class="card action-card">
+            <div class="card-body d-flex flex-column gap-3">
+              <div id="actionError" class="alert alert-danger d-none py-2 small"></div>
+
+              <div>
+                <h4 class="mb-1">Acknowledge</h4>
+                <p class="text-secondary small mb-2">Confirm you have read and understood this document.</p>
+                <button class="btn btn-success w-100" id="acknowledgeBtn">
+                  <i class="ti ti-check me-2"></i>Acknowledge
+                </button>
+              </div>
+
+              <hr class="my-1" />
+
+              <div>
+                <h4 class="mb-1">Reject</h4>
+                <p class="text-secondary small mb-2">Reject this document if you believe it is incorrect or does not apply to you.</p>
+                <button class="btn btn-danger w-100" id="rejectBtn">
+                  <i class="ti ti-x me-2"></i>Reject
+                </button>
+              </div>
+
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@tabler/core@1.4.0/dist/js/tabler.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="../../assets/js/version.js?r=pq429ubx"></script>
+  <script src="../../assets/js/supabase-client.js?r=pq429ubx"></script>
+  <script src="../../assets/js/auth.js?r=pq429ubx"></script>
+  <script src="../../assets/js/app.js?r=pq429ubx"></script>
+  <script src="../../assets/js/theme.js?r=pq429ubx"></script>
+  <script src="../../assets/js/sidebar-html.js?r=pq429ubx"></script>
+  <script src="../../assets/js/sidebar.js?r=pq429ubx"></script>
+  <script src="../../assets/js/profile-modal.js?r=pq429ubx"></script>
+  <script src="../../assets/js/status-widget.js?r=pq429ubx"></script>
+  <script>
+const PDF_BUCKET          = 'documents';
+const PDF_VIEWER_URL      = '../../assets/pdfjs/web/viewer.html';
+const SIGNED_URL_EXPIRY   = 60;
+
+let currentItem = null;
+
+(async () => {
+  const session = await Auth.requireAuth();
+  if (!session) return;
+  SidebarHtml.inject('../../');
+  Sidebar.init();
+  Auth.refreshUI();
+  StatusWidget.init();
+
+  // Back button returns to user-view, preserving the selected user
+  document.getElementById('backBtn').addEventListener('click', () => {
+    history.length > 1 ? history.back() : window.location.href = 'user-view.html';
+  });
+
+  // Read the item id from the querystring
+  const itemId = new URLSearchParams(window.location.search).get('item');
+  if (!itemId) {
+    App.toast('No distribution item specified', 'danger');
+    return;
+  }
+
+  await loadItem(itemId);
+
+  document.getElementById('acknowledgeBtn').addEventListener('click', () => saveAction('APPROVED'));
+  document.getElementById('rejectBtn').addEventListener('click',     () => saveAction('REJECTED'));
+})();
+
+async function loadItem(itemId) {
+  // Load the distribution item
+  const { data: item, error: itemErr } = await sb
+    .from('ad_distribution_item')
+    .select('*')
+    .eq('distrib_item_id', itemId)
+    .single();
+
+  if (itemErr || !item) {
+    App.toast('Could not load distribution item', 'danger');
+    return;
+  }
+  currentItem = item;
+
+  // Update status badge
+  renderStatusBadge(item);
+
+  // Load the distribution (to get doc_id)
+  const { data: dist } = await sb
+    .from('ad_distribution')
+    .select('name, doc_id, instructions')
+    .eq('distribution_id', item.distribution_id)
+    .single();
+
+  if (!dist?.doc_id) {
+    document.getElementById('docNameLabel').textContent = dist?.name || 'Unknown distribution';
+    document.getElementById('viewerLoadingState').innerHTML =
+      '<i class="ti ti-file-off me-2"></i>No document attached to this distribution';
+    return;
+  }
+
+  // Load the document record
+  const { data: doc } = await sb
+    .from('ad_document')
+    .select('name, doc_id')
+    .eq('doc_id', dist.doc_id)
+    .single();
+
+  document.getElementById('docNameLabel').textContent = doc?.name || dist.name;
+  document.getElementById('pageTitle').textContent    = doc?.name || 'Acknowledge document';
+
+  // Load the file record
+  const { data: files } = await sb
+    .from('ad_document_file')
+    .select('storage_path, file_name, download_file_name')
+    .eq('doc_id', dist.doc_id)
+    .order('created_at', { ascending: false })
+    .limit(1);
+
+  const pdfFile = files?.[0];
+  if (!pdfFile) {
+    document.getElementById('viewerLoadingState').innerHTML =
+      '<i class="ti ti-file-off me-2"></i>No file found for this document';
+    return;
+  }
+
+  await loadPdf(pdfFile, doc?.name || dist.name);
+}
+
+async function loadPdf(pdfFile, docName) {
+  const { data: signedData, error: signErr } = await sb.storage
+    .from(PDF_BUCKET)
+    .createSignedUrl(pdfFile.storage_path, SIGNED_URL_EXPIRY);
+
+  if (signErr || !signedData) {
+    App.toast('Could not access PDF: ' + (signErr?.message || 'Unknown error'), 'danger');
+    return;
+  }
+
+  // Fetch as blob so pdf.js's validateFileURL never blocks it
+  try {
+    const resp = await fetch(signedData.signedUrl);
+    if (!resp.ok) throw new Error('HTTP ' + resp.status);
+    const blob     = await resp.blob();
+    const fileName = pdfFile.download_file_name || docName.replace(/[^a-z0-9._-]/gi, '_') + '.pdf';
+    const named    = new File([blob], fileName, { type: 'application/pdf' });
+    const blobUrl  = URL.createObjectURL(named);
+
+    const frame = document.getElementById('pdfFrame');
+    const hash  = 'page=1&zoom=page-fit&pagemode=thumbs&toolbar=1&navpanes=1&locale=en-US';
+    frame.src   = `${PDF_VIEWER_URL}?file=${encodeURIComponent(blobUrl)}#${hash}`;
+    frame.style.display = 'block';
+    frame.onload = () => injectPdfStyles(frame);
+    document.getElementById('viewerLoadingState').style.display = 'none';
+  } catch (e) {
+    App.toast('Could not load PDF: ' + e.message, 'danger');
+  }
+}
+
+function injectPdfStyles(frame) {
+  try {
+    const doc = frame.contentDocument || frame.contentWindow.document;
+    if (!doc || doc.getElementById('ionetiq-doc-patch')) return;
+    const style = doc.createElement('style');
+    style.id = 'ionetiq-doc-patch';
+    style.textContent = `
+      #scaleSelect, #scaleSelect option,
+      .dropdownToolbarButton > select,
+      .dropdownToolbarButton > select option {
+        background-color: #3d3d3d !important;
+        color: #fff !important;
+      }`;
+    doc.head.appendChild(style);
+  } catch(e) {}
+}
+
+function renderStatusBadge(item) {
+  const colours = {
+    'APPROVED': '#8BC34A', 'REJECTED': '#B33771',
+    'OVERDUE': '#EA2027', 'PENDING': '#009432',
+  };
+  const labels  = {
+    'APPROVED': 'Acknowledged', 'REJECTED': 'Rejected',
+    'OVERDUE': 'Overdue', 'PENDING': 'Pending',
+  };
+  const s   = (item.status || 'PENDING').toUpperCase();
+  const col = colours[s] || '#b2bec3';
+  const lbl = labels[s]  || s;
+  document.getElementById('currentStatusBadge').innerHTML =
+    `<span class="badge" style="background:${col};color:#fff">${lbl}</span>`;
+}
+
+async function saveAction(newStatus) {
+  if (!currentItem) return;
+
+  const errorEl = document.getElementById('actionError');
+  errorEl.classList.add('d-none');
+
+  const today = new Date().toISOString().slice(0, 10);
+  const isApproved = newStatus === 'APPROVED';
+  const isRejected = newStatus === 'REJECTED';
+
+  const { error } = await sb.from('ad_distribution_item').update({
+    status:            newStatus,
+    acknowledged:      isApproved,
+    acknowledged_date: isApproved ? today : null,
+    rejected:          isRejected,
+    rejected_date:     isRejected ? today : null,
+    updated_at:        new Date().toISOString(),
+  }).eq('distrib_item_id', currentItem.distrib_item_id);
+
+  if (error) {
+    errorEl.textContent = 'Save failed: ' + error.message;
+    errorEl.classList.remove('d-none');
+    return;
+  }
+
+  // Update local state and re-render badge
+  currentItem.status            = newStatus;
+  currentItem.acknowledged      = isApproved;
+  currentItem.acknowledged_date = isApproved ? today : null;
+  currentItem.rejected          = isRejected;
+  currentItem.rejected_date     = isRejected ? today : null;
+  renderStatusBadge(currentItem);
+
+  App.toast(isApproved ? 'Document acknowledged' : 'Document rejected');
+  await StatusWidget.refresh();
+}
+  </script>
+</body>
+</html>

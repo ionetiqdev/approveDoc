@@ -1,1 +1,1 @@
-Status widget: manual outside-click handler
+User View: add Edit and Acknowledge icon buttons per row; new acknowledge.html page with PDF viewer and Acknowledge/Reject actions
