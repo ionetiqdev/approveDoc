@@ -1,1 +1,1 @@
-Acknowledge: fix loading overlay blocking PDF viewer - use absolute positioning so overlay hides correctly
+Acknowledge: move title/status/instructions to action panel; 75/25 split; bigger button fonts; add Reference button
