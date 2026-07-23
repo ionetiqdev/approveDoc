@@ -1,1 +1,1 @@
-User View: add Edit and Acknowledge icon buttons per row; new acknowledge.html page with PDF viewer and Acknowledge/Reject actions
+Acknowledge: better error surfacing; console logging at each PDF load step
