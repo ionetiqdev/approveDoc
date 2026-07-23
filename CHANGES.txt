@@ -1,1 +1,1 @@
-Acknowledge: better error surfacing; console logging at each PDF load step
+Acknowledge: fix loading overlay blocking PDF viewer - use absolute positioning so overlay hides correctly
