@@ -83,9 +83,16 @@ const SidebarHtml = (() => {
           </li>
 
           <li class="nav-item">
-            <a href="${root}pages/audiences_combined/index.html" class="nav-link">
+            <a href="${root}pages/audiences/index.html" class="nav-link">
               <i class="ti ti-users-group"></i>
               <span class="nav-link-text">Audiences</span>
+            </a>
+          </li>
+
+          <li class="nav-item">
+            <a href="${root}pages/audiences_adv/index.html" class="nav-link">
+              <i class="ti ti-users-group"></i>
+              <span class="nav-link-text">Audiences (Advanced)</span>
             </a>
           </li>
 
@@ -97,13 +104,6 @@ const SidebarHtml = (() => {
             </a>
           </li>
           <!-- SUBSYSTEM:documents:end -->
-
-          <li class="nav-item">
-            <a href="${root}pages/distribution/index.html" class="nav-link">
-              <i class="ti ti-send"></i>
-              <span class="nav-link-text">Distribution</span>
-            </a>
-          </li>
 
           <li class="nav-item">
             <a href="#" class="nav-link" data-submenu="reportsSubmenu">
@@ -138,7 +138,6 @@ const SidebarHtml = (() => {
                   <li class="nav-item"><a href="${root}pages/lookups/categories.html" class="nav-link"><span class="nav-link-text">Categories</span></a></li>
                   <li class="nav-item"><a href="${root}pages/lookups/approval-types.html" class="nav-link"><span class="nav-link-text">Approval Types</span></a></li>
                   <li class="nav-item"><a href="${root}pages/lookups/countries.html" class="nav-link"><span class="nav-link-text">Countries</span></a></li>
-                  <li class="nav-item"><a href="${root}pages/lookups/job-roles.html" class="nav-link"><span class="nav-link-text">Job Roles</span></a></li>
                   <li class="nav-item"><a href="${root}pages/lookups/languages.html" class="nav-link"><span class="nav-link-text">Languages</span></a></li>
                 </ul>
               </li>
@@ -153,20 +152,6 @@ const SidebarHtml = (() => {
             </a>
           </li>
           <!-- SUBSYSTEM:issues:end -->
-
-          <li class="nav-item">
-            <a href="#" class="nav-link" data-submenu="testingSubmenu">
-              <i class="ti ti-test-pipe"></i>
-              <span class="nav-link-text">Testing</span>
-              <i class="ti ti-chevron-right nav-chevron"></i>
-            </a>
-            <ul class="nav-submenu list-unstyled" id="testingSubmenu">
-              <li class="nav-item"><a href="${root}pages/testing/user.html" class="nav-link"><span class="nav-link-text">User</span></a></li>
-              <li class="nav-item"><a href="${root}pages/testing/audience.html" class="nav-link"><span class="nav-link-text">Audience</span></a></li>
-              <li class="nav-item"><a href="${root}pages/testing/distribution.html" class="nav-link"><span class="nav-link-text">Distribution</span></a></li>
-              <li class="nav-item"><a href="${root}pages/testing/user-view.html" class="nav-link"><span class="nav-link-text">User View</span></a></li>
-            </ul>
-          </li>
 
         </ul>
       </nav>

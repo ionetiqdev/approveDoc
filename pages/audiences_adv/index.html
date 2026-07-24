@@ -7,7 +7,7 @@
 
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/core@1.4.0/dist/css/tabler.min.css" />
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.44.0/dist/tabler-icons.min.css" />
-  <link rel="stylesheet" href="../../assets/css/theme.css?r=vbo9ls8q" />
+  <link rel="stylesheet" href="../../assets/css/theme.css?r=5wzpbfec" />
 
   <script>
     (function() {
@@ -244,15 +244,14 @@
   <script src="https://cdn.jsdelivr.net/npm/@tabler/core@1.4.0/dist/js/tabler.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="../../assets/js/version.js?r=vbo9ls8q"></script>
-  <script src="../../assets/js/supabase-client.js?r=vbo9ls8q"></script>
-  <script src="../../assets/js/auth.js?r=vbo9ls8q"></script>
-  <script src="../../assets/js/app.js?r=vbo9ls8q"></script>
-  <script src="../../assets/js/theme.js?r=vbo9ls8q"></script>
-  <script src="../../assets/js/sidebar-html.js?r=vbo9ls8q"></script>
-  <script src="../../assets/js/sidebar.js?r=vbo9ls8q"></script>
-  <script src="../../assets/js/profile-modal.js?r=vbo9ls8q"></script>
-  <script src="../../assets/js/status-widget.js?r=vbo9ls8q"></script>
+  <script src="../../assets/js/version.js?r=5wzpbfec"></script>
+  <script src="../../assets/js/supabase-client.js?r=5wzpbfec"></script>
+  <script src="../../assets/js/auth.js?r=5wzpbfec"></script>
+  <script src="../../assets/js/app.js?r=5wzpbfec"></script>
+  <script src="../../assets/js/theme.js?r=5wzpbfec"></script>
+  <script src="../../assets/js/sidebar-html.js?r=5wzpbfec"></script>
+  <script src="../../assets/js/sidebar.js?r=5wzpbfec"></script>
+  <script src="../../assets/js/profile-modal.js?r=5wzpbfec"></script>
   <script>
 // Audiences (Advanced): same ad_audience / ad_audience_member tables
 // as the basic Audiences page, but membership here is derived from a
@@ -262,16 +261,15 @@
 // Confirming the query writes ad_audience_criteria, recomputes who
 // matches, and replaces ad_audience_member with exactly that set.
 
-const CRITERIA_TYPES = ['country', 'location', 'department', 'job_role'];
+const CRITERIA_TYPES = ['country', 'location', 'department'];
 
 let allAudiences = [];
 let allUsers = [];           // ad_user rows for this org, enriched with country/location/department names
 let countryOptions = [];     // { value: country_code, label: name }
 let locationOptions = [];    // { value: location_id, label: name }
 let departmentOptions = [];  // { value: department_id, label: name }
-let jobRoleOptions = [];     // { value: job_role_id, label: name }
 let selectedAudienceId = null;
-let selectedCriteria = { country: new Set(), location: new Set(), department: new Set(), job_role: new Set() };
+let selectedCriteria = { country: new Set(), location: new Set(), department: new Set() };
 let newAudienceModal;
 let criteriaPickerModal;
 
@@ -281,8 +279,6 @@ let criteriaPickerModal;
   SidebarHtml.inject('../../');
   Sidebar.init();
   Auth.refreshUI();
-
-  StatusWidget.init();
 
   if (!Auth.isAdmin()) {
     App.toast('You do not have access to this page', 'danger');
@@ -303,22 +299,19 @@ let criteriaPickerModal;
 async function loadLookups() {
   const orgId = Auth.getOrganisationId();
 
-  const [countriesRes, locationsRes, departmentsRes, jobRolesRes] = await Promise.all([
+  const [countriesRes, locationsRes, departmentsRes] = await Promise.all([
     sb.from('ad_country').select('country_code, name, alpha2').order('name'),
     sb.from('ad_location').select('location_id, name').eq('organisation_id', orgId).order('name'),
     sb.from('ad_department').select('department_id, name').eq('organisation_id', orgId).order('name'),
-    sb.from('ad_job_role').select('job_role_id, name').eq('organisation_id', orgId).order('sort_order'),
   ]);
 
   if (countriesRes.error) console.error('[Audiences Adv] countries load error:', countriesRes.error);
   if (locationsRes.error) console.error('[Audiences Adv] locations load error:', locationsRes.error);
   if (departmentsRes.error) console.error('[Audiences Adv] departments load error:', departmentsRes.error);
-  if (jobRolesRes.error) console.error('[Audiences Adv] job roles load error:', jobRolesRes.error);
 
   countryOptions = (countriesRes.data || []).map(c => ({ value: c.country_code, label: c.name, alpha2: c.alpha2 }));
   locationOptions = (locationsRes.data || []).map(l => ({ value: l.location_id, label: l.name }));
   departmentOptions = (departmentsRes.data || []).map(d => ({ value: d.department_id, label: d.name }));
-  jobRoleOptions = (jobRolesRes.data || []).map(j => ({ value: j.job_role_id, label: j.name }));
 }
 
 async function loadUsers() {
@@ -450,7 +443,7 @@ async function saveAudienceDetails(audience) {
 }
 
 async function loadCriteria(audienceId) {
-  selectedCriteria = { country: new Set(), location: new Set(), department: new Set(), job_role: new Set() };
+  selectedCriteria = { country: new Set(), location: new Set(), department: new Set() };
 
   const { data, error } = await sb.from('ad_audience_criteria').select('criteria_type, criteria_value').eq('audience_id', audienceId).eq('organisation_id', Auth.getOrganisationId());
 
@@ -497,7 +490,6 @@ function getPickerOptions(type) {
   if (type === 'country') return countryOptions;
   if (type === 'location') return locationOptions;
   if (type === 'department') return departmentOptions;
-  if (type === 'job_role') return jobRoleOptions;
   return [];
 }
 
@@ -591,8 +583,6 @@ function showCriteriaBuilder(audience) {
     ${criteriaBlockHtml('location', 'Location', locationOptions)}
     <div class="criteria-and-divider">AND</div>
     ${criteriaBlockHtml('department', 'Department', departmentOptions)}
-    <div class="criteria-and-divider">AND</div>
-    ${criteriaBlockHtml('job_role', 'Job Role', jobRoleOptions)}
     <div class="d-flex gap-2 mt-3">
       <button class="btn btn-primary btn-sm" id="confirmCriteriaBtn">
         <span id="confirmCriteriaLabel">Confirm &amp; build audience</span>
@@ -622,7 +612,6 @@ function getMatchingUsers() {
     if (selectedCriteria.country.size && !selectedCriteria.country.has(u.country_code)) return false;
     if (selectedCriteria.location.size && !selectedCriteria.location.has(String(u.location_id))) return false;
     if (selectedCriteria.department.size && !selectedCriteria.department.has(String(u.department_id))) return false;
-    if (selectedCriteria.job_role.size && !selectedCriteria.job_role.has(String(u.job_role_id))) return false;
     return true;
   });
 }
@@ -647,7 +636,7 @@ function userRowHtml(user) {
 
 function renderMatchPreview() {
   const matched = getMatchingUsers();
-  const noFilterApplied = !selectedCriteria.country.size && !selectedCriteria.location.size && !selectedCriteria.department.size && !selectedCriteria.job_role.size;
+  const noFilterApplied = !selectedCriteria.country.size && !selectedCriteria.location.size && !selectedCriteria.department.size;
 
   document.getElementById('matchCount').textContent = noFilterApplied
     ? ''
@@ -674,7 +663,7 @@ async function confirmCriteria(audience) {
   const errorEl = document.getElementById('criteriaError');
   errorEl.classList.add('d-none');
 
-  const noFilterApplied = !selectedCriteria.country.size && !selectedCriteria.location.size && !selectedCriteria.department.size && !selectedCriteria.job_role.size;
+  const noFilterApplied = !selectedCriteria.country.size && !selectedCriteria.location.size && !selectedCriteria.department.size;
   if (noFilterApplied) {
     errorEl.textContent = 'Select at least one criterion before confirming.';
     errorEl.classList.remove('d-none');
