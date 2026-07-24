@@ -1,1 +1,1 @@
-User View: rebuild stat ribbon with Tabler card style, coloured left border, icon badge, and informative second lines
+User View: restyle ribbon to match screenshot - solid icon square, Label (count) on one line, small second line
