@@ -1,1 +1,1 @@
-User View: ribbon card background colours; Reference text #7F7F7F
+Login: improve error message display to surface actual Supabase error
