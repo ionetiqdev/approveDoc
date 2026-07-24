@@ -1,1 +1,1 @@
-Acknowledge: hide pdf.js secondary toolbar (>>) button and menu from users
+User View: add status count ribbon between picker and table with colour-coded stat cards
