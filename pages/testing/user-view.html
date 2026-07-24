@@ -7,7 +7,7 @@
 
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/core@1.4.0/dist/css/tabler.min.css" />
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.44.0/dist/tabler-icons.min.css" />
-  <link rel="stylesheet" href="../../assets/css/theme.css?r=o3fcwjik" />
+  <link rel="stylesheet" href="../../assets/css/theme.css?r=bep650qa" />
 
   <script>
     (function() {
@@ -181,15 +181,15 @@
   <script src="https://cdn.jsdelivr.net/npm/@tabler/core@1.4.0/dist/js/tabler.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="../../assets/js/version.js?r=o3fcwjik"></script>
-  <script src="../../assets/js/supabase-client.js?r=o3fcwjik"></script>
-  <script src="../../assets/js/auth.js?r=o3fcwjik"></script>
-  <script src="../../assets/js/app.js?r=o3fcwjik"></script>
-  <script src="../../assets/js/theme.js?r=o3fcwjik"></script>
-  <script src="../../assets/js/sidebar-html.js?r=o3fcwjik"></script>
-  <script src="../../assets/js/sidebar.js?r=o3fcwjik"></script>
-  <script src="../../assets/js/profile-modal.js?r=o3fcwjik"></script>
-  <script src="../../assets/js/status-widget.js?r=o3fcwjik"></script>
+  <script src="../../assets/js/version.js?r=bep650qa"></script>
+  <script src="../../assets/js/supabase-client.js?r=bep650qa"></script>
+  <script src="../../assets/js/auth.js?r=bep650qa"></script>
+  <script src="../../assets/js/app.js?r=bep650qa"></script>
+  <script src="../../assets/js/theme.js?r=bep650qa"></script>
+  <script src="../../assets/js/sidebar-html.js?r=bep650qa"></script>
+  <script src="../../assets/js/sidebar.js?r=bep650qa"></script>
+  <script src="../../assets/js/profile-modal.js?r=bep650qa"></script>
+  <script src="../../assets/js/status-widget.js?r=bep650qa"></script>
   <script>
 // Lookup caches
 let allDocuments = [];       // ad_document rows
@@ -206,7 +206,7 @@ const STATUS_COLOURS = [
   { key: 'overdue',      label: 'Overdue',      colour: '#EA2027' },
   { key: 'acknowledged', label: 'Acknowledged', colour: '#8BC34A' },
   { key: 'rejected',     label: 'Rejected',     colour: '#B33771' },
-  { key: 'nodue',        label: 'No due date',  colour: '#b2bec3' },
+  { key: 'nodue',        label: 'No due date',  colour: '#0070C0' },
 ];
 
 (async () => {
@@ -332,7 +332,7 @@ function pill(label, colour) {
 }
 
 function c(key) {
-  return STATUS_COLOURS.find(s => s.key === key)?.colour || '#b2bec3';
+  return STATUS_COLOURS.find(s => s.key === key)?.colour || '#0070C0';
 }
 
 function dueStatus(item) {
@@ -424,7 +424,7 @@ function renderRibbon(items) {
     { key: 'overdue',      label: 'Overdue',       count: overdueItems.length,      sub: overdueSub, colour: '#EA2027', icon: 'ti-alert-circle' },
     { key: 'acknowledged', label: 'Acknowledged',  count: acknowledgedItems.length, sub: ackSub,     colour: '#8BC34A', icon: 'ti-circle-check' },
     { key: 'rejected',     label: 'Rejected',      count: rejectedItems.length,     sub: rejSub,     colour: '#B33771', icon: 'ti-circle-x'     },
-    { key: 'reference',    label: 'Reference',     count: referenceItems.length,    sub: '',         colour: '#b2bec3', icon: 'ti-book'         },
+    { key: 'reference',    label: 'Reference',     count: referenceItems.length,    sub: '',         colour: '#0070C0', icon: 'ti-book'         },
   ];
 
   const ribbon = document.getElementById('statsRibbon');

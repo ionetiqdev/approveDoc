@@ -23,7 +23,7 @@ const STATUS_META = [
   { key: 'approved',     label: 'Acknowledged',     colour: '#8BC34A', section: 'acknowledged' },
   { key: 'rejected',     label: 'Rejected',         colour: '#B33771', section: 'rejected' },
   null, // divider
-  { key: 'reference',    label: 'Reference',        colour: '#b2bec3', section: 'reference' },
+  { key: 'reference',    label: 'Reference',        colour: '#0070C0', section: 'reference' },
 ];
 
 let counts = { awaiting: 0, overdue: 0, approved: 0, rejected: 0, reference: 0 };

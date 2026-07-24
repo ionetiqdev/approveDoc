@@ -1,1 +1,1 @@
-User View: restyle ribbon to match screenshot - solid icon square, Label (count) on one line, small second line
+Change Reference colour from #b2bec3 to #0070C0 throughout
