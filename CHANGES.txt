@@ -1,1 +1,1 @@
-User View: ribbon card height 80px
+User View: ribbon card background colours; Reference text #7F7F7F
