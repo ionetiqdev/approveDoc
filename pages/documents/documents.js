@@ -595,10 +595,10 @@ async function deleteDoc(id, e) {
 
 // ── Upload ────────────────────────────────────────────────────────────
 async function uploadAndSave(description, file, progressBar, statusEl, categoryId) {
-  if (!file) { App.toast('Please select a PDF file', 'warning'); return; }
+  if (!file) { App.toast('Please select a PDF file', 'warning'); return false; }
 
   const orgId = Auth.getOrganisationId();
-  if (!orgId) { App.toast('No organisation assigned to your account', 'danger'); return; }
+  if (!orgId) { App.toast('No organisation assigned to your account', 'danger'); return false; }
 
   const safeName = `${orgId}/${Date.now()}_${file.name.replace(/[^a-z0-9._-]/gi, '_')}`;
 
@@ -614,7 +614,7 @@ async function uploadAndSave(description, file, progressBar, statusEl, categoryI
     .select()
     .single();
 
-  if (docErr) { App.toast('Failed to create record: ' + (docErr.message || docErr.code), 'danger'); return; }
+  if (docErr) { App.toast('Failed to create record: ' + (docErr.message || docErr.code), 'danger'); return false; }
   if (progressBar) progressBar.style.width = '35%';
 
   if (statusEl) statusEl.textContent = 'Uploading file…';
@@ -625,7 +625,7 @@ async function uploadAndSave(description, file, progressBar, statusEl, categoryI
   if (upErr) {
     App.toast('Upload failed: ' + upErr.message, 'danger');
     await sb.from(DOC_CONFIG.tableDocs).delete().eq(DOC_CONFIG.colDocId, docData[DOC_CONFIG.colDocId]);
-    return;
+    return false;
   }
   if (progressBar) progressBar.style.width = '70%';
 
@@ -641,7 +641,7 @@ async function uploadAndSave(description, file, progressBar, statusEl, categoryI
     mime_type: 'application/pdf'
   });
 
-  if (fileErr) { App.toast('File reference failed: ' + fileErr.message, 'danger'); return; }
+  if (fileErr) { App.toast('File reference failed: ' + fileErr.message, 'danger'); return false; }
 
   if (progressBar) progressBar.style.width = '100%';
   if (statusEl) statusEl.textContent = 'Done!';
@@ -649,6 +649,7 @@ async function uploadAndSave(description, file, progressBar, statusEl, categoryI
   App.toast('Document uploaded successfully');
   await loadDocuments();
   selectDoc(docData[DOC_CONFIG.colDocId]);
+  return true;
 }
 
 function bindUpload() {
@@ -665,16 +666,24 @@ function bindUpload() {
     progBar.style.width = '0%';
     saveBtn.disabled = true;
 
-    await uploadAndSave(desc, file, progBar, status, catId);
+    const success = await uploadAndSave(desc, file, progBar, status, catId);
 
-    setTimeout(() => {
-      bootstrap.Modal.getInstance(document.getElementById('addDocModal')).hide();
-      document.getElementById('docModalDescription').value = '';
-      document.getElementById('docModalCategory').value = '';
-      document.getElementById('docModalFile').value = '';
+    saveBtn.disabled = false;
+
+    if (success) {
+      setTimeout(() => {
+        bootstrap.Modal.getInstance(document.getElementById('addDocModal')).hide();
+        document.getElementById('docModalDescription').value = '';
+        document.getElementById('docModalCategory').value = '';
+        document.getElementById('docModalFile').value = '';
+        progWrap.style.display = 'none';
+      }, 600);
+    } else {
+      // Upload failed - reset the progress bar and re-enable the form
+      // so the user can try again without the modal getting stuck.
       progWrap.style.display = 'none';
-      saveBtn.disabled = false;
-    }, 600);
+      progBar.style.width = '0%';
+    }
   });
 
   if (docDropZone) {
@@ -735,15 +744,21 @@ function bindDropPromptModal() {
     progBar.style.width = '0%';
     saveBtn.disabled = true;
 
-    await uploadAndSave(desc, _pendingDropFile, progBar, status, catId);
+    const success = await uploadAndSave(desc, _pendingDropFile, progBar, status, catId);
 
-    setTimeout(() => {
-      bootstrap.Modal.getInstance(document.getElementById('dropPromptModal')).hide();
+    saveBtn.disabled = false;
+
+    if (success) {
+      setTimeout(() => {
+        bootstrap.Modal.getInstance(document.getElementById('dropPromptModal')).hide();
+        progWrap.style.display = 'none';
+        _pendingDropFile = null;
+        docFileInput.value = '';
+      }, 600);
+    } else {
       progWrap.style.display = 'none';
-      saveBtn.disabled = false;
-      _pendingDropFile = null;
-      docFileInput.value = '';
-    }, 600);
+      progBar.style.width = '0%';
+    }
   });
 }
 
