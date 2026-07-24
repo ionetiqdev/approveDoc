@@ -1,1 +1,1 @@
-Acknowledge: button text 18px, 10px padding-left on text spans
+Acknowledge: hide pdf.js secondary toolbar (>>) button and menu from users

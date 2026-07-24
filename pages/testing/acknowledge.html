@@ -7,7 +7,7 @@
 
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/core@1.4.0/dist/css/tabler.min.css" />
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.44.0/dist/tabler-icons.min.css" />
-  <link rel="stylesheet" href="../../assets/css/theme.css?r=d23hygor" />
+  <link rel="stylesheet" href="../../assets/css/theme.css?r=g0rs5wl1" />
 
   <script>
     (function() {
@@ -127,7 +127,7 @@
               </button>
 
               <button class="btn w-100" id="referenceBtn" style="font-size:18px;padding:.6rem 1rem;background:#e0e0e0;color:#1a237e">
-                <i class="ti ti-books" style="font-size:28px;vertical-align:middle"></i>
+                <i class="ti ti-book" style="font-size:28px;vertical-align:middle"></i>
                 <span style="vertical-align:middle;padding-left:10px"> Add to reference</span>
               </button>
 
@@ -139,24 +139,48 @@
     </div>
   </div>
 
+  <!-- Rejection reason modal -->
+  <div class="modal modal-blur fade" id="rejectModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Reason for rejection</h5>
+        </div>
+        <div class="modal-body">
+          <div id="rejectModalError" class="alert alert-danger d-none py-2 small mb-3"></div>
+          <p class="text-secondary small mb-2">Please explain why you are rejecting this document. This will be recorded.</p>
+          <textarea id="rejectReason" class="form-control" rows="4" placeholder="Enter your reason…"></textarea>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn" id="rejectCancelBtn">Cancel</button>
+          <button type="button" class="btn btn-danger" id="rejectConfirmBtn">
+            <span id="rejectConfirmLabel">Confirm rejection</span>
+            <span id="rejectConfirmSpinner" class="spinner-border spinner-border-sm ms-2 d-none"></span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <script src="https://cdn.jsdelivr.net/npm/@tabler/core@1.4.0/dist/js/tabler.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="../../assets/js/version.js?r=d23hygor"></script>
-  <script src="../../assets/js/supabase-client.js?r=d23hygor"></script>
-  <script src="../../assets/js/auth.js?r=d23hygor"></script>
-  <script src="../../assets/js/app.js?r=d23hygor"></script>
-  <script src="../../assets/js/theme.js?r=d23hygor"></script>
-  <script src="../../assets/js/sidebar-html.js?r=d23hygor"></script>
-  <script src="../../assets/js/sidebar.js?r=d23hygor"></script>
-  <script src="../../assets/js/profile-modal.js?r=d23hygor"></script>
-  <script src="../../assets/js/status-widget.js?r=d23hygor"></script>
+  <script src="../../assets/js/version.js?r=g0rs5wl1"></script>
+  <script src="../../assets/js/supabase-client.js?r=g0rs5wl1"></script>
+  <script src="../../assets/js/auth.js?r=g0rs5wl1"></script>
+  <script src="../../assets/js/app.js?r=g0rs5wl1"></script>
+  <script src="../../assets/js/theme.js?r=g0rs5wl1"></script>
+  <script src="../../assets/js/sidebar-html.js?r=g0rs5wl1"></script>
+  <script src="../../assets/js/sidebar.js?r=g0rs5wl1"></script>
+  <script src="../../assets/js/profile-modal.js?r=g0rs5wl1"></script>
+  <script src="../../assets/js/status-widget.js?r=g0rs5wl1"></script>
   <script>
 const PDF_BUCKET          = 'documents';
 const PDF_VIEWER_URL      = '../../assets/pdfjs/web/viewer.html';
 const SIGNED_URL_EXPIRY   = 60;
 
 let currentItem = null;
+let rejectModal  = null;
 
 (async () => {
   const session = await Auth.requireAuth();
@@ -166,23 +190,57 @@ let currentItem = null;
   Auth.refreshUI();
   StatusWidget.init();
 
-  // Back button returns to user-view, preserving the selected user
+  rejectModal = new bootstrap.Modal(document.getElementById('rejectModal'), { keyboard: false, backdrop: 'static' });
+
   document.getElementById('backBtn').addEventListener('click', () => {
     history.length > 1 ? history.back() : window.location.href = 'user-view.html';
   });
 
-  // Read the item id from the querystring
   const itemId = new URLSearchParams(window.location.search).get('item');
-  if (!itemId) {
-    App.toast('No distribution item specified', 'danger');
-    return;
-  }
+  if (!itemId) { App.toast('No distribution item specified', 'danger'); return; }
 
   await loadItem(itemId);
 
-  document.getElementById('acknowledgeBtn').addEventListener('click', () => saveAction('APPROVED'));
-  document.getElementById('rejectBtn').addEventListener('click',     () => saveAction('REJECTED'));
-  document.getElementById('referenceBtn').addEventListener('click',  () => { /* TODO: add to reference */ });
+  document.getElementById('acknowledgeBtn').addEventListener('click', async () => {
+    await saveAction('APPROVED', null);
+    returnToList();
+  });
+
+  document.getElementById('rejectBtn').addEventListener('click', () => {
+    document.getElementById('rejectReason').value = '';
+    document.getElementById('rejectModalError').classList.add('d-none');
+    rejectModal.show();
+    setTimeout(() => document.getElementById('rejectReason').focus(), 300);
+  });
+
+  document.getElementById('rejectCancelBtn').addEventListener('click', () => rejectModal.hide());
+
+  document.getElementById('rejectConfirmBtn').addEventListener('click', async () => {
+    const reason = document.getElementById('rejectReason').value.trim();
+    const errorEl = document.getElementById('rejectModalError');
+    errorEl.classList.add('d-none');
+
+    if (!reason) {
+      errorEl.textContent = 'Please enter a reason for rejection.';
+      errorEl.classList.remove('d-none');
+      return;
+    }
+
+    document.getElementById('rejectConfirmSpinner').classList.remove('d-none');
+    document.getElementById('rejectConfirmBtn').disabled = true;
+
+    const ok = await saveAction('REJECTED', reason);
+
+    document.getElementById('rejectConfirmSpinner').classList.add('d-none');
+    document.getElementById('rejectConfirmBtn').disabled = false;
+
+    if (ok) {
+      rejectModal.hide();
+      returnToList();
+    }
+  });
+
+  document.getElementById('referenceBtn').addEventListener('click', () => { /* TODO: add to reference */ });
 })();
 
 async function loadItem(itemId) {
@@ -303,6 +361,11 @@ function injectPdfStyles(frame) {
       .dropdownToolbarButton > select option {
         background-color: #3d3d3d !important;
         color: #fff !important;
+      }
+      /* Hide the overflow (>>) button and its entire secondary toolbar menu */
+      #secondaryToolbarToggle,
+      #secondaryToolbar {
+        display: none !important;
       }`;
     doc.head.appendChild(style);
   } catch(e) {}
@@ -324,13 +387,17 @@ function renderStatusBadge(item) {
     `<span class="badge" style="background:${col};color:#fff">${lbl}</span>`;
 }
 
-async function saveAction(newStatus) {
-  if (!currentItem) return;
+function returnToList() {
+  history.length > 1 ? history.back() : window.location.href = 'user-view.html';
+}
+
+async function saveAction(newStatus, reason) {
+  if (!currentItem) return false;
 
   const errorEl = document.getElementById('actionError');
   errorEl.classList.add('d-none');
 
-  const today = new Date().toISOString().slice(0, 10);
+  const today      = new Date().toISOString().slice(0, 10);
   const isApproved = newStatus === 'APPROVED';
   const isRejected = newStatus === 'REJECTED';
 
@@ -340,25 +407,27 @@ async function saveAction(newStatus) {
     acknowledged_date: isApproved ? today : null,
     rejected:          isRejected,
     rejected_date:     isRejected ? today : null,
+    rejected_reason:   isRejected ? (reason || null) : null,
     updated_at:        new Date().toISOString(),
   }).eq('distrib_item_id', currentItem.distrib_item_id);
 
   if (error) {
     errorEl.textContent = 'Save failed: ' + error.message;
     errorEl.classList.remove('d-none');
-    return;
+    return false;
   }
 
-  // Update local state and re-render badge
   currentItem.status            = newStatus;
   currentItem.acknowledged      = isApproved;
   currentItem.acknowledged_date = isApproved ? today : null;
   currentItem.rejected          = isRejected;
   currentItem.rejected_date     = isRejected ? today : null;
+  currentItem.rejected_reason   = isRejected ? reason : null;
   renderStatusBadge(currentItem);
 
   App.toast(isApproved ? 'Document acknowledged' : 'Document rejected');
   await StatusWidget.refresh();
+  return true;
 }
   </script>
 </body>
