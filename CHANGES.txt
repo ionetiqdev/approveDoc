@@ -1,1 +1,1 @@
-User View: fix ribbon card body padding - override Tabler important rule so icon sits truly centred
+User View: ribbon card height 80px
