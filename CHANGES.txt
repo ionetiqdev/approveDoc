@@ -1,1 +1,1 @@
-Audiences: replace native browser confirm() on delete with Tabler modal
+Standardise all delete modals: 16px bold title with name, 14px red warning, consistent template
