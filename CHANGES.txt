@@ -1,1 +1,1 @@
-Avatar hover tooltip - show larger version of avatar with name on mouseenter
+Avatar tooltip: smart positioning - flip above/right if would overflow viewport

@@ -244,12 +244,22 @@ const Auth = (() => {
 
       document.body.appendChild(tooltip);
 
-      // Position below and to the left of the avatar
+      // Position tooltip - flip above if not enough room below, flip left if overflow right
       const rect = el.getBoundingClientRect();
-      const tw = 136; // approx tooltip width
+      const tw = 136;
+      const th = 160; // approx tooltip height (image + label + padding)
+
       let left = rect.right - tw;
       let top  = rect.bottom + 8;
-      if (left < 8) left = 8;
+
+      // Flip above if not enough room below
+      if (top + th > window.innerHeight - 8) top = rect.top - th - 8;
+      // Flip right-aligned if going off left edge
+      if (left < 8) left = rect.left;
+      // Clamp right edge
+      if (left + tw > window.innerWidth - 8) left = window.innerWidth - tw - 8;
+      // Clamp top edge
+      if (top < 8) top = 8;
       tooltip.style.left = left + 'px';
       tooltip.style.top  = top  + 'px';
 
