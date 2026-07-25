@@ -76,20 +76,19 @@ const App = (() => {
       if (!modal) {
         modal = document.createElement('div');
         modal.id = 'confirmModal';
-        modal.className = 'modal fade';
+        modal.className = 'modal modal-blur fade';
         modal.setAttribute('tabindex', '-1');
         modal.innerHTML = `
-          <div class="modal-dialog modal-dialog-centered" style="max-width:600px">
+          <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
-              <div class="modal-header">
-                <h5 class="modal-title" id="confirmTitle">${title}</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+              <div class="modal-status bg-danger"></div>
+              <div class="modal-body text-center py-4" style="min-height:175px">
+                <i class="ti ti-trash text-danger mb-3" style="font-size:2.2rem"></i>
+                <div id="confirmTitle" style="font-size:16px;font-weight:600;margin-top:20px;margin-bottom:4px">${title}</div>
+                <div id="confirmMessage" style="font-size:14px;color:#d63939;margin-top:10px">${message}</div>
               </div>
-              <div class="modal-body">
-                <p class="text-secondary mb-0" id="confirmMessage" style="min-height:3em;line-height:1.5;white-space:pre-line">${message}</p>
-              </div>
-              <div class="modal-footer" style="gap:1rem">
-                <button type="button" class="btn btn-secondary" id="confirmCancel">Cancel</button>
+              <div class="modal-footer">
+                <button type="button" class="btn" id="confirmCancel" data-bs-dismiss="modal">Cancel</button>
                 <button type="button" class="btn ${confirmClass}" id="confirmOk">${confirmText}</button>
               </div>
             </div>

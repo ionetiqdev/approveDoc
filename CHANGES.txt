@@ -1,1 +1,1 @@
-Delete modals: remove modal-sm (doubles width), add min-height (25% taller)
+Delete modals: consistent template across all pages - 16px title with name, 14px red warning, correct padding, App.confirm updated
