@@ -7,7 +7,7 @@
 
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/core@1.4.0/dist/css/tabler.min.css" />
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.44.0/dist/tabler-icons.min.css" />
-  <link rel="stylesheet" href="../../assets/css/theme.css?r=9bp4yctk" />
+  <link rel="stylesheet" href="../../assets/css/theme.css?r=nibc87z5" />
 
   <script>
     (function() {
@@ -91,12 +91,13 @@
       <div class="container-fluid">
 
         <!-- User picker -->
-        <div class="card picker-card">
+        <div class="card picker-card" id="pickerCard">
           <div class="card-header">
-            <h3 class="card-title">User</h3>
-            <select id="userSelect" class="form-select form-select-sm ms-3" style="max-width:320px">
+            <h3 class="card-title" id="pickerTitle">User</h3>
+            <select id="userSelect" class="form-select form-select-sm ms-3" style="max-width:320px;display:none">
               <option value="">— Choose a user —</option>
             </select>
+            <span class="fw-semibold ms-3" id="currentUserLabel" style="display:none"></span>
             <span class="text-secondary ms-3 small" id="rowCount"></span>
           </div>
         </div>
@@ -181,15 +182,15 @@
   <script src="https://cdn.jsdelivr.net/npm/@tabler/core@1.4.0/dist/js/tabler.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="../../assets/js/version.js?r=9bp4yctk"></script>
-  <script src="../../assets/js/supabase-client.js?r=9bp4yctk"></script>
-  <script src="../../assets/js/auth.js?r=9bp4yctk"></script>
-  <script src="../../assets/js/app.js?r=9bp4yctk"></script>
-  <script src="../../assets/js/theme.js?r=9bp4yctk"></script>
-  <script src="../../assets/js/sidebar-html.js?r=9bp4yctk"></script>
-  <script src="../../assets/js/sidebar.js?r=9bp4yctk"></script>
-  <script src="../../assets/js/profile-modal.js?r=9bp4yctk"></script>
-  <script src="../../assets/js/status-widget.js?r=9bp4yctk"></script>
+  <script src="../../assets/js/version.js?r=nibc87z5"></script>
+  <script src="../../assets/js/supabase-client.js?r=nibc87z5"></script>
+  <script src="../../assets/js/auth.js?r=nibc87z5"></script>
+  <script src="../../assets/js/app.js?r=nibc87z5"></script>
+  <script src="../../assets/js/theme.js?r=nibc87z5"></script>
+  <script src="../../assets/js/sidebar-html.js?r=nibc87z5"></script>
+  <script src="../../assets/js/sidebar.js?r=nibc87z5"></script>
+  <script src="../../assets/js/profile-modal.js?r=nibc87z5"></script>
+  <script src="../../assets/js/status-widget.js?r=nibc87z5"></script>
   <script>
 // Lookup caches
 let allDocuments = [];       // ad_document rows
@@ -221,9 +222,11 @@ const STATUS_COLOURS = [
 
   await StatusWidget.init();
 
-  const orgId = Auth.getOrganisationId();
+  const orgId   = Auth.getOrganisationId();
+  const isAdmin = Auth.isAdmin();
+  const profile = Auth.getProfile();
 
-  // Load all reference data in parallel
+  // Load reference data
   const [
     { data: users },
     { data: documents },
@@ -242,8 +245,6 @@ const STATUS_COLOURS = [
   allDistributions = distributions || [];
   allAudiences     = audiences     || [];
 
-  // Pre-compute a display string of audience name(s) per distribution
-  // so we don't do per-row lookups in the render loop.
   const audMap = Object.fromEntries((allAudiences).map(a => [a.audience_id, a.name]));
   (distAuds || []).forEach(da => {
     const name = audMap[da.audience_id];
@@ -252,37 +253,55 @@ const STATUS_COLOURS = [
     audiencesByDist[da.distribution_id].push(name);
   });
 
-  // Populate user picker
-  const picker = document.getElementById('userSelect');
-  (users || []).forEach(u => {
-    const opt = document.createElement('option');
-    opt.value = u.user_id;
-    opt.textContent = [u.first_name, u.last_name].filter(Boolean).join(' ') || u.email;
-    picker.appendChild(opt);
-  });
-
-  picker.addEventListener('change', () => {
-    currentUserId = picker.value || null;
-    StatusWidget.setUser(currentUserId);
-    if (picker.value) loadItems(picker.value);
-    else clearItems();
-  });
-
-  // If arriving from the status widget, pre-select the stored user and
-  // load their items with only the relevant section expanded.
   const expandParam = new URLSearchParams(window.location.search).get('expand');
-  const storedUser  = localStorage.getItem('approvedoc_status_user_id');
-  if (storedUser && (users || []).find(u => u.user_id === storedUser)) {
-    picker.value  = storedUser;
-    currentUserId = storedUser;
-    const data = await sb.from('ad_distribution_item')
-      .select('*').eq('user_id', storedUser)
-      .eq('organisation_id', Auth.getOrganisationId())
-      .order('due_date', { ascending: true, nullsFirst: false });
-    allItems = data.data || [];
-    renderSections(allItems, expandParam || null);
-    document.getElementById('rowCount').textContent =
-      `${allItems.length} document${allItems.length === 1 ? '' : 's'}`;
+
+  if (isAdmin) {
+    // Admin mode — show user picker
+    const picker = document.getElementById('userSelect');
+    picker.style.display = '';
+    (users || []).forEach(u => {
+      const opt = document.createElement('option');
+      opt.value = u.user_id;
+      opt.textContent = [u.first_name, u.last_name].filter(Boolean).join(' ') || u.email;
+      picker.appendChild(opt);
+    });
+
+    picker.addEventListener('change', () => {
+      currentUserId = picker.value || null;
+      StatusWidget.setUser(currentUserId);
+      if (picker.value) loadItems(picker.value);
+      else clearItems();
+    });
+
+    // Pre-select stored user if arriving from status widget
+    const storedUser = localStorage.getItem('approvedoc_status_user_id');
+    if (storedUser && (users || []).find(u => u.user_id === storedUser)) {
+      picker.value  = storedUser;
+      currentUserId = storedUser;
+      const { data } = await sb.from('ad_distribution_item')
+        .select('*').eq('user_id', storedUser)
+        .eq('organisation_id', orgId)
+        .order('due_date', { ascending: true, nullsFirst: false });
+      allItems = data || [];
+      renderSections(allItems, expandParam || null);
+    }
+  } else {
+    // User mode — hide picker, auto-load current user's own data
+    const myId   = session.user.id;
+    const myName = profile?.display_name || session.user.email;
+    currentUserId = myId;
+
+    document.getElementById('pickerTitle').style.display = 'none';
+    const label = document.getElementById('currentUserLabel');
+    label.textContent  = myName;
+    label.style.display = '';
+
+    StatusWidget.setUser(myId);
+    await loadItems(myId);
+
+    if (expandParam) {
+      renderSections(allItems, expandParam);
+    }
   }
 })();
 

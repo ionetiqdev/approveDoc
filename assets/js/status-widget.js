@@ -40,7 +40,14 @@ window.StatusWidget = {
 
 async function init() {
   _injectButton();
-  currentUserId = localStorage.getItem(STORAGE_KEY) || null;
+  // For regular users, always show their own counts regardless of localStorage.
+  // For admins, use the stored user from the Testing > User View picker.
+  if (typeof Auth !== 'undefined' && !Auth.isAdmin()) {
+    const session = Auth.getSession();
+    currentUserId = session?.user?.id || null;
+  } else {
+    currentUserId = localStorage.getItem(STORAGE_KEY) || null;
+  }
   if (currentUserId) await _loadCounts();
   _render();
 }

@@ -1,1 +1,1 @@
-Avatar tooltip: smart positioning - flip above/right if would overflow viewport
+User View: role-aware - admin sees user picker, user role auto-loads own data; status widget uses own ID for non-admins
