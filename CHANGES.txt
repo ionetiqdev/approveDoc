@@ -1,1 +1,1 @@
-Standardise all delete modals: 16px bold title with name, 14px red warning, consistent template
+Delete modals: remove modal-sm (doubles width), add min-height (25% taller)
