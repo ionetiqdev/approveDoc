@@ -1,1 +1,1 @@
-Sidebar: role-based menu - user sees Dashboard/My Documents/Reports/Preferences only; admin sees full menu
+Audiences: replace native browser confirm() on delete with Tabler modal

@@ -7,7 +7,7 @@
 
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/core@1.4.0/dist/css/tabler.min.css" />
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.44.0/dist/tabler-icons.min.css" />
-  <link rel="stylesheet" href="../../assets/css/theme.css?r=so8zu2xn" />
+  <link rel="stylesheet" href="../../assets/css/theme.css?r=va6te739" />
 
   <script>
     (function() {
@@ -298,15 +298,15 @@
   <script src="https://cdn.jsdelivr.net/npm/@tabler/core@1.4.0/dist/js/tabler.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="../../assets/js/version.js?r=so8zu2xn"></script>
-  <script src="../../assets/js/supabase-client.js?r=so8zu2xn"></script>
-  <script src="../../assets/js/auth.js?r=so8zu2xn"></script>
-  <script src="../../assets/js/app.js?r=so8zu2xn"></script>
-  <script src="../../assets/js/theme.js?r=so8zu2xn"></script>
-  <script src="../../assets/js/sidebar-html.js?r=so8zu2xn"></script>
-  <script src="../../assets/js/sidebar.js?r=so8zu2xn"></script>
-  <script src="../../assets/js/profile-modal.js?r=so8zu2xn"></script>
-  <script src="../../assets/js/status-widget.js?r=so8zu2xn"></script>
+  <script src="../../assets/js/version.js?r=va6te739"></script>
+  <script src="../../assets/js/supabase-client.js?r=va6te739"></script>
+  <script src="../../assets/js/auth.js?r=va6te739"></script>
+  <script src="../../assets/js/app.js?r=va6te739"></script>
+  <script src="../../assets/js/theme.js?r=va6te739"></script>
+  <script src="../../assets/js/sidebar-html.js?r=va6te739"></script>
+  <script src="../../assets/js/sidebar.js?r=va6te739"></script>
+  <script src="../../assets/js/profile-modal.js?r=va6te739"></script>
+  <script src="../../assets/js/status-widget.js?r=va6te739"></script>
   <script>
 // Audiences: top half is a master/detail pair (audience list + its
 // details/create form), bottom half is a two-list view of which
@@ -637,22 +637,36 @@ async function saveAudience(existing) {
   }
 }
 
-async function deleteAudience(audience) {
-  if (!confirm(`Delete "${audience.name}"? This cannot be undone.`)) return;
+let _deleteAudienceModal = null;
+let _pendingDeleteAudience = null;
 
-  const { error } = await sb.from('ad_audience').delete().eq('audience_id', audience.audience_id);
-  if (error) { App.toast('Delete failed: ' + error.message, 'danger'); return; }
+function deleteAudience(audience) {
+  _pendingDeleteAudience = audience;
+  document.getElementById('deleteAudienceModalName').textContent = audience.name;
+  if (!_deleteAudienceModal) {
+    _deleteAudienceModal = new bootstrap.Modal(document.getElementById('deleteAudienceModal'));
+    document.getElementById('deleteAudienceConfirmBtn').addEventListener('click', async () => {
+      if (!_pendingDeleteAudience) return;
+      _deleteAudienceModal.hide();
+      const aud = _pendingDeleteAudience;
+      _pendingDeleteAudience = null;
 
-  App.toast('Deleted');
-  selectedAudienceId = null;
-  document.getElementById('detailCardTitle').textContent = 'Select an audience';
-  document.getElementById('detailCardBody').innerHTML = `<p class="text-secondary">Choose an audience from the list on the left to see and edit its details here.</p>`;
-  resetMemberLists();
-  document.getElementById('criteriaCardTitle').textContent = 'Criteria';
-  document.getElementById('criteriaCardBody').innerHTML = `<p class="text-secondary">Choose an audience above to build or edit its criteria here.</p>`;
-  document.getElementById('matchListBody').innerHTML = `<div class="text-center py-4 text-secondary small">Select an audience above</div>`;
-  document.getElementById('matchCount').textContent = '';
-  await loadAudiences();
+      const { error } = await sb.from('ad_audience').delete().eq('audience_id', aud.audience_id);
+      if (error) { App.toast('Delete failed: ' + error.message, 'danger'); return; }
+
+      App.toast('Deleted');
+      selectedAudienceId = null;
+      document.getElementById('detailCardTitle').textContent = 'Select an audience';
+      document.getElementById('detailCardBody').innerHTML = `<p class="text-secondary">Choose an audience from the list on the left to see and edit its details here.</p>`;
+      resetMemberLists();
+      document.getElementById('criteriaCardTitle').textContent = 'Criteria';
+      document.getElementById('criteriaCardBody').innerHTML = `<p class="text-secondary">Choose an audience above to build or edit its criteria here.</p>`;
+      document.getElementById('matchListBody').innerHTML = `<div class="text-center py-4 text-secondary small">Select an audience above</div>`;
+      document.getElementById('matchCount').textContent = '';
+      await loadAudiences();
+    });
+  }
+  _deleteAudienceModal.show();
 }
 
 async function loadMembership(audienceId) {
@@ -1099,5 +1113,24 @@ function showCriteriaError(message) {
   document.getElementById('confirmCriteriaBtn').disabled = false;
 }
   </script>
+<!-- Delete audience confirmation modal -->
+<div class="modal modal-blur fade" id="deleteAudienceModal" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered modal-sm">
+    <div class="modal-content">
+      <div class="modal-status bg-danger"></div>
+      <div class="modal-body text-center py-4">
+        <i class="ti ti-trash text-danger mb-2" style="font-size:2.2rem"></i>
+        <h6 class="mb-1">Delete this audience?</h6>
+        <p class="text-secondary small mb-0" id="deleteAudienceModalName"></p>
+        <p class="text-danger small mt-2 mb-0">This will also remove all audience members and criteria.</p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn" data-bs-dismiss="modal">Cancel</button>
+        <button type="button" class="btn btn-danger" id="deleteAudienceConfirmBtn">Delete</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 </body>
 </html>
