@@ -170,6 +170,10 @@ const Auth = (() => {
     if (['super_admin', 'admin', 'user'].includes(role)) {
       document.querySelectorAll('[data-require-role="user"]').forEach(el => el.classList.remove('role-hidden'));
     }
+    // "user-only" - visible ONLY to user role, not admin/super_admin
+    if (role === 'user') {
+      document.querySelectorAll('[data-require-role="user-only"]').forEach(el => el.classList.remove('role-hidden'));
+    }
 
     _renderOrganisationSwitcher();
   }

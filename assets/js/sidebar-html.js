@@ -82,7 +82,15 @@ const SidebarHtml = (() => {
             </a>
           </li>
 
-          <li class="nav-item">
+          <!-- User role: My Documents (goes straight to their own User View) -->
+          <li class="nav-item role-hidden" data-require-role="user-only">
+            <a href="${root}pages/testing/user-view.html" class="nav-link">
+              <i class="ti ti-files"></i>
+              <span class="nav-link-text">My Documents</span>
+            </a>
+          </li>
+
+          <li class="nav-item role-hidden" data-require-role="admin">
             <a href="${root}pages/audiences_combined/index.html" class="nav-link">
               <i class="ti ti-users-group"></i>
               <span class="nav-link-text">Audiences</span>
@@ -90,7 +98,7 @@ const SidebarHtml = (() => {
           </li>
 
           <!-- SUBSYSTEM:documents:start -->
-          <li class="nav-item">
+          <li class="nav-item role-hidden" data-require-role="admin">
             <a href="${root}pages/documents/index.html" class="nav-link">
               <i class="ti ti-files"></i>
               <span class="nav-link-text">Documents</span>
@@ -98,7 +106,7 @@ const SidebarHtml = (() => {
           </li>
           <!-- SUBSYSTEM:documents:end -->
 
-          <li class="nav-item">
+          <li class="nav-item role-hidden" data-require-role="admin">
             <a href="${root}pages/distribution/index.html" class="nav-link">
               <i class="ti ti-send"></i>
               <span class="nav-link-text">Distribution</span>
@@ -154,7 +162,7 @@ const SidebarHtml = (() => {
           </li>
           <!-- SUBSYSTEM:issues:end -->
 
-          <li class="nav-item">
+          <li class="nav-item role-hidden" data-require-role="admin">
             <a href="#" class="nav-link" data-submenu="testingSubmenu">
               <i class="ti ti-test-pipe"></i>
               <span class="nav-link-text">Testing</span>

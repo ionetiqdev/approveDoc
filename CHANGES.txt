@@ -1,1 +1,1 @@
-User View: hide picker card for user role; add name/email to header
+Sidebar: role-based menu - user sees Dashboard/My Documents/Reports/Preferences only; admin sees full menu
