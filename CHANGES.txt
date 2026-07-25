@@ -1,1 +1,1 @@
-User View: role-aware - admin sees user picker, user role auto-loads own data; status widget uses own ID for non-admins
+User View: hide picker card for user role; add name/email to header

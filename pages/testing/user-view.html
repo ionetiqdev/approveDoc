@@ -7,7 +7,7 @@
 
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/core@1.4.0/dist/css/tabler.min.css" />
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.44.0/dist/tabler-icons.min.css" />
-  <link rel="stylesheet" href="../../assets/css/theme.css?r=nibc87z5" />
+  <link rel="stylesheet" href="../../assets/css/theme.css?r=d5g0tjme" />
 
   <script>
     (function() {
@@ -83,6 +83,10 @@
           <button class="btn btn-icon" data-theme-toggle><i class="ti ti-moon"></i></button>
           <button class="btn btn-icon" id="headerPreferencesBtn"><i class="ti ti-adjustments"></i></button>
           <span class="avatar avatar-sm rounded-circle bg-primary-lt" data-user-initials>?</span>
+          <span class="d-none d-xl-block">
+            <span class="d-block fw-semibold" style="font-size:.8125rem" data-user-name>—</span>
+            <span class="d-block text-secondary" style="font-size:.7rem" data-user-email>—</span>
+          </span>
         </div>
       </div>
     </header>
@@ -182,15 +186,15 @@
   <script src="https://cdn.jsdelivr.net/npm/@tabler/core@1.4.0/dist/js/tabler.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="../../assets/js/version.js?r=nibc87z5"></script>
-  <script src="../../assets/js/supabase-client.js?r=nibc87z5"></script>
-  <script src="../../assets/js/auth.js?r=nibc87z5"></script>
-  <script src="../../assets/js/app.js?r=nibc87z5"></script>
-  <script src="../../assets/js/theme.js?r=nibc87z5"></script>
-  <script src="../../assets/js/sidebar-html.js?r=nibc87z5"></script>
-  <script src="../../assets/js/sidebar.js?r=nibc87z5"></script>
-  <script src="../../assets/js/profile-modal.js?r=nibc87z5"></script>
-  <script src="../../assets/js/status-widget.js?r=nibc87z5"></script>
+  <script src="../../assets/js/version.js?r=d5g0tjme"></script>
+  <script src="../../assets/js/supabase-client.js?r=d5g0tjme"></script>
+  <script src="../../assets/js/auth.js?r=d5g0tjme"></script>
+  <script src="../../assets/js/app.js?r=d5g0tjme"></script>
+  <script src="../../assets/js/theme.js?r=d5g0tjme"></script>
+  <script src="../../assets/js/sidebar-html.js?r=d5g0tjme"></script>
+  <script src="../../assets/js/sidebar.js?r=d5g0tjme"></script>
+  <script src="../../assets/js/profile-modal.js?r=d5g0tjme"></script>
+  <script src="../../assets/js/status-widget.js?r=d5g0tjme"></script>
   <script>
 // Lookup caches
 let allDocuments = [];       // ad_document rows
@@ -291,10 +295,7 @@ const STATUS_COLOURS = [
     const myName = profile?.display_name || session.user.email;
     currentUserId = myId;
 
-    document.getElementById('pickerTitle').style.display = 'none';
-    const label = document.getElementById('currentUserLabel');
-    label.textContent  = myName;
-    label.style.display = '';
+    document.getElementById('pickerCard').style.display = 'none';
 
     StatusWidget.setUser(myId);
     await loadItems(myId);
