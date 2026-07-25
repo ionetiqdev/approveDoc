@@ -1,1 +1,1 @@
-Login: improve error message display to surface actual Supabase error
+Avatar hover tooltip - show larger version of avatar with name on mouseenter

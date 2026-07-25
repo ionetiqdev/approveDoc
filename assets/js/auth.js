@@ -150,6 +150,7 @@ const Auth = (() => {
         img.style.cssText = 'width:100%;height:100%;object-fit:cover;border-radius:50%';
         el.textContent = '';
         el.appendChild(img);
+        _wireAvatarTooltip(el, avatarUrl, name);
       } else {
         el.textContent = initials;
       }
@@ -212,6 +213,57 @@ const Auth = (() => {
       if (ok) window.location.reload();
     }
   });
+
+  function _wireAvatarTooltip(el, avatarUrl, name) {
+    let tooltip = null;
+
+    el.addEventListener('mouseenter', () => {
+      tooltip = document.createElement('div');
+      tooltip.style.cssText = [
+        'position:fixed',
+        'z-index:9999',
+        'background:#fff',
+        'border-radius:12px',
+        'box-shadow:0 8px 32px rgba(0,0,0,.22)',
+        'padding:8px',
+        'pointer-events:none',
+        'transition:opacity .15s',
+        'opacity:0',
+      ].join(';');
+
+      const img = document.createElement('img');
+      img.src = avatarUrl;
+      img.alt = name;
+      img.style.cssText = 'width:120px;height:120px;object-fit:cover;border-radius:8px;display:block';
+      tooltip.appendChild(img);
+
+      const label = document.createElement('div');
+      label.textContent = name;
+      label.style.cssText = 'text-align:center;font-size:.8rem;font-weight:600;margin-top:6px;color:#374151';
+      tooltip.appendChild(label);
+
+      document.body.appendChild(tooltip);
+
+      // Position below and to the left of the avatar
+      const rect = el.getBoundingClientRect();
+      const tw = 136; // approx tooltip width
+      let left = rect.right - tw;
+      let top  = rect.bottom + 8;
+      if (left < 8) left = 8;
+      tooltip.style.left = left + 'px';
+      tooltip.style.top  = top  + 'px';
+
+      // Fade in
+      requestAnimationFrame(() => { tooltip.style.opacity = '1'; });
+    });
+
+    el.addEventListener('mouseleave', () => {
+      if (tooltip) {
+        tooltip.remove();
+        tooltip = null;
+      }
+    });
+  }
 
   function _formatRole(role) {
     const map = { super_admin: 'Super Admin', admin: 'Admin', user: 'User', view: 'View' };
