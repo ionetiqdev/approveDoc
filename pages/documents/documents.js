@@ -368,14 +368,15 @@ function renderDocList(docs) {
     </div>`;
   }).join('');
 
-  docList.querySelectorAll('.select-doc-trigger').forEach(el => {
+  docList.querySelectorAll('.doc-list-item').forEach(el => {
+    el.style.cursor = 'pointer';
     el.addEventListener('click', () => selectDoc(el.dataset.id));
   });
   docList.querySelectorAll('.edit-doc-trigger').forEach(el => {
-    el.addEventListener('click', e => openEditDocModal(el.dataset.id, e));
+    el.addEventListener('click', e => { e.stopPropagation(); openEditDocModal(el.dataset.id, e); });
   });
   docList.querySelectorAll('.delete-doc-trigger').forEach(el => {
-    el.addEventListener('click', e => deleteDoc(el.dataset.id, e));
+    el.addEventListener('click', e => { e.stopPropagation(); deleteDoc(el.dataset.id, e); });
   });
 }
 
