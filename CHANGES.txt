@@ -1,1 +1,1 @@
-Docs: remove Viewer Settings and Categories buttons; Prefs: left padding on user fields, Download toggle, fix settings read/write
+Documents: fix null reference error on removed docPrefsBtn

@@ -93,7 +93,7 @@ function bindPrefsModal() {
   // a new modal object every time" rather than reusing one instance.
   const instance = bootstrap.Modal.getOrCreateInstance(modalEl);
 
-  document.getElementById('docPrefsBtn').addEventListener('click', () => instance.show());
+  document.getElementById('docPrefsBtn')?.addEventListener('click', () => instance.show());
 
   modalEl.addEventListener('show.bs.modal', () => {
     document.getElementById('docPrefUploadButton').checked   = DOC_FEATURES.upload?.modalButton !== false;
