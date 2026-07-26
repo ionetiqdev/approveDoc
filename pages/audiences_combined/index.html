@@ -7,7 +7,7 @@
 
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/core@1.4.0/dist/css/tabler.min.css" />
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.44.0/dist/tabler-icons.min.css" />
-  <link rel="stylesheet" href="../../assets/css/theme.css?r=ehpj83mx" />
+  <link rel="stylesheet" href="../../assets/css/theme.css?r=oc3ulh6v" />
 
   <script>
     (function() {
@@ -186,8 +186,9 @@
               <h3 class="card-title">Not in this audience</h3>
               <span class="text-secondary ms-auto small" id="notInCount"></span>
             </div>
-            <div class="px-2 py-2" style="border-bottom:1px solid var(--tblr-border-color)">
+            <div class="px-2 py-2 d-flex gap-2" style="border-bottom:1px solid var(--tblr-border-color)">
               <input type="text" id="notInFilter" class="form-control form-control-sm" placeholder="Filter…" autocomplete="off">
+              <button class="btn btn-sm btn-icon" id="notInFilterClear" title="Clear filter" tabindex="-1"><i class="ti ti-x"></i></button>
             </div>
             <div class="scroll-pane member-list-pane" id="notInListBody" data-side="notIn">
               <div class="text-center py-4 text-secondary small">Select an audience above</div>
@@ -199,8 +200,9 @@
               <h3 class="card-title">In this audience</h3>
               <span class="text-secondary ms-auto small" id="inCount"></span>
             </div>
-            <div class="px-2 py-2" style="border-bottom:1px solid var(--tblr-border-color)">
+            <div class="px-2 py-2 d-flex gap-2" style="border-bottom:1px solid var(--tblr-border-color)">
               <input type="text" id="inFilter" class="form-control form-control-sm" placeholder="Filter…" autocomplete="off">
+              <button class="btn btn-sm btn-icon" id="inFilterClear" title="Clear filter" tabindex="-1"><i class="ti ti-x"></i></button>
             </div>
             <div class="scroll-pane member-list-pane" id="inListBody" data-side="in">
               <div class="text-center py-4 text-secondary small">Select an audience above</div>
@@ -304,15 +306,15 @@
   <script src="https://cdn.jsdelivr.net/npm/@tabler/core@1.4.0/dist/js/tabler.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="../../assets/js/version.js?r=ehpj83mx"></script>
-  <script src="../../assets/js/supabase-client.js?r=ehpj83mx"></script>
-  <script src="../../assets/js/auth.js?r=ehpj83mx"></script>
-  <script src="../../assets/js/app.js?r=ehpj83mx"></script>
-  <script src="../../assets/js/theme.js?r=ehpj83mx"></script>
-  <script src="../../assets/js/sidebar-html.js?r=ehpj83mx"></script>
-  <script src="../../assets/js/sidebar.js?r=ehpj83mx"></script>
-  <script src="../../assets/js/profile-modal.js?r=ehpj83mx"></script>
-  <script src="../../assets/js/status-widget.js?r=ehpj83mx"></script>
+  <script src="../../assets/js/version.js?r=oc3ulh6v"></script>
+  <script src="../../assets/js/supabase-client.js?r=oc3ulh6v"></script>
+  <script src="../../assets/js/auth.js?r=oc3ulh6v"></script>
+  <script src="../../assets/js/app.js?r=oc3ulh6v"></script>
+  <script src="../../assets/js/theme.js?r=oc3ulh6v"></script>
+  <script src="../../assets/js/sidebar-html.js?r=oc3ulh6v"></script>
+  <script src="../../assets/js/sidebar.js?r=oc3ulh6v"></script>
+  <script src="../../assets/js/profile-modal.js?r=oc3ulh6v"></script>
+  <script src="../../assets/js/status-widget.js?r=oc3ulh6v"></script>
   <script>
 // Audiences: top half is a master/detail pair (audience list + its
 // details/create form), bottom half is a two-list view of which
@@ -366,6 +368,15 @@ let pickerWorkingSet = new Set();
 
   document.getElementById('notInFilter').addEventListener('input', () => filterMemberList('notIn'));
   document.getElementById('inFilter').addEventListener('input',    () => filterMemberList('in'));
+
+  document.getElementById('notInFilterClear').addEventListener('click', () => {
+    document.getElementById('notInFilter').value = '';
+    filterMemberList('notIn');
+  });
+  document.getElementById('inFilterClear').addEventListener('click', () => {
+    document.getElementById('inFilter').value = '';
+    filterMemberList('in');
+  });
 })();
 
 function openNewAudienceModal() {

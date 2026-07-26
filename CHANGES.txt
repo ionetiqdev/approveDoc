@@ -1,1 +1,1 @@
-Audiences: add text filter to both member list panes
+Audiences: add clear button to member list filter inputs
