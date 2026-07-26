@@ -1,1 +1,1 @@
-Fix document prefs: DOC_DEFAULT_FEATURES only exists on docs page so guard was preventing saves from all other pages
+Documents: loadDocFeatures runs after initApp/loadDocuments so nothing overwrites it

@@ -37,12 +37,12 @@ const newDocBtn         = document.getElementById('newDocBtn');
   Sidebar.init();
   Auth.refreshUI();
 
-  loadDocFeatures();
   bindPrefsModal();
   bindEditModal();
   bindUpload();
   bindCategoriesModal();
-  initApp();
+  await initApp();
+  loadDocFeatures();
 })();
 
 // ── Feature flags (per-user override via Auth preferences) ───────────
