@@ -64,10 +64,10 @@ function applyDocFeatures() {
   const f = DOC_FEATURES;
 
   if (newDocBtn && f.upload) {
-    newDocBtn.style.display = (f.upload.enabled && f.upload.modalButton) ? '' : 'none';
+    newDocBtn.classList.toggle('d-none', !(f.upload.enabled && f.upload.modalButton));
   }
   if (docDropZoneWrap && f.upload) {
-    docDropZoneWrap.style.display = (f.upload.enabled && f.upload.dropZone) ? '' : 'none';
+    docDropZoneWrap.classList.toggle('d-none', !(f.upload.enabled && f.upload.dropZone));
   }
 }
 

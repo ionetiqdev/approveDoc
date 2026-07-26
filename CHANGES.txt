@@ -1,1 +1,1 @@
-Documents: fix null reference error on removed docPrefsBtn
+Documents: fix applyDocFeatures to use d-none class; Document tab padding between switches
