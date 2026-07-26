@@ -1,1 +1,1 @@
-Preferences: col-3/col-9 on Current User tab; remove horizontal dividers
+Preferences: 20px padding above avatar, display name, and new password sections

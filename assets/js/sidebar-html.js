@@ -297,7 +297,7 @@ const SidebarHtml = (() => {
                   <!-- Current User tab -->
                   <div class="tab-pane" id="prefTabProfile" style="min-height:490px">
                     <div id="prefProfileError" class="alert alert-danger d-none py-2 small mb-3"></div>
-                    <div class="mb-3">
+                    <div class="mb-3" style="padding-top:20px;padding-left:20px">
                       <div class="row align-items-center">
                         <div class="col-auto">
                           <input type="file" id="prefAvatarFile" accept="image/*" style="display:none">
@@ -313,7 +313,7 @@ const SidebarHtml = (() => {
                         </div>
                       </div>
                     </div>
-                    <div class="mb-3">
+                    <div class="mb-3" style="padding-top:20px">
                       <div class="row align-items-center mb-3">
                         <label class="col-3 col-form-label text-end">Display name</label>
                         <div class="col-9"><input type="text" class="form-control" id="prefDisplayName"></div>
@@ -327,7 +327,7 @@ const SidebarHtml = (() => {
                         <div class="col-9"><input type="text" class="form-control" id="prefJobTitle"></div>
                       </div>
                     </div>
-                    <div>
+                    <div style="padding-top:20px">
                       <div class="row align-items-center mb-3">
                         <label class="col-3 col-form-label text-end">New password</label>
                         <div class="col-9"><input type="password" class="form-control" id="prefNewPassword" autocomplete="new-password" placeholder="Leave blank to keep current"></div>
