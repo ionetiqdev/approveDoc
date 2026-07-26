@@ -1,1 +1,1 @@
-Fix: remove old docPrefsModal from index.html - duplicate IDs were causing getElementById to read wrong checkboxes
+Documents: guard bindPrefsModal against missing docPrefsModal

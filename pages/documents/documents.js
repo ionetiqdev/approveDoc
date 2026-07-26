@@ -88,6 +88,7 @@ function applyDocFeatures() {
 // ── Preferences modal ──────────────────────────────────────────────────
 function bindPrefsModal() {
   const modalEl = document.getElementById('docPrefsModal');
+  if (!modalEl) return;
 
   // CRITICAL: create exactly ONE bootstrap.Modal instance for this
   // element, once, here - and use this same instance for every open
