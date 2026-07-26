@@ -1,1 +1,1 @@
-Audiences: add clear button to member list filter inputs
+Audiences: filter clear icon inside input field using input-group
