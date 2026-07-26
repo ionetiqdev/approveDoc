@@ -420,7 +420,7 @@ const SidebarHtml = (() => {
       const docTabLi = document.getElementById('prefTabDocumentLi');
       if (!docTabLi) return;
 
-      // Only show Document tab on the documents page
+      // Show Document tab only on the documents page
       if (typeof DOC_DEFAULT_FEATURES === 'undefined') return;
       docTabLi.style.display = '';
 
@@ -496,8 +496,9 @@ const SidebarHtml = (() => {
         window.Theme.setAccent(accentInput.value);
       }
 
-      // Document viewer settings
-      if (typeof DOC_DEFAULT_FEATURES !== 'undefined') {
+      // Document viewer settings (saved regardless of page)
+      const docTabLi = document.getElementById('prefTabDocumentLi');
+      if (docTabLi && docTabLi.style.display !== 'none') {
         const saved = Auth.getPreference('docViewerPrefs', null) || {};
         const override = {
           upload: Object.assign({}, saved.upload, {
@@ -513,10 +514,9 @@ const SidebarHtml = (() => {
           }),
         };
         await Auth.setPreference('docViewerPrefs', override);
-        // If we're on the documents page, reload features immediately
         if (typeof loadDocFeatures === 'function') {
           loadDocFeatures();
-          renderDocList(filterDocs());
+          if (typeof renderDocList === 'function') renderDocList(filterDocs());
         }
       }
 

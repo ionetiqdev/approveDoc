@@ -1,1 +1,1 @@
-Documents: fix all feature flags by removing role-hidden conflict; fix applyDocFeatures to handle all controls; consistent switch spacing
+Fix document prefs: DOC_DEFAULT_FEATURES only exists on docs page so guard was preventing saves from all other pages
