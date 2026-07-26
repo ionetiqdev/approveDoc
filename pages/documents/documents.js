@@ -38,8 +38,6 @@ const newDocBtn         = document.getElementById('newDocBtn');
   Auth.refreshUI();
 
   loadDocFeatures();
-  // Re-apply after a tick in case auth.js async operations restore role-hidden elements
-  setTimeout(() => loadDocFeatures(), 100);
   bindPrefsModal();
   bindEditModal();
   bindUpload();
@@ -64,17 +62,26 @@ function loadDocFeatures() {
 
 function applyDocFeatures() {
   const f = DOC_FEATURES;
-  console.log('[DocFeatures] applying:', JSON.stringify(f.upload), JSON.stringify(f.delete));
 
-  if (newDocBtn && f.upload) {
-    const show = f.upload.enabled !== false && f.upload.modalButton !== false;
-    console.log('[DocFeatures] newDocBtn show:', show);
-    newDocBtn.classList.toggle('d-none', !show);
+  // New document button
+  if (newDocBtn) {
+    newDocBtn.classList.toggle('d-none', f.upload?.enabled === false || f.upload?.modalButton === false);
   }
-  if (docDropZoneWrap && f.upload) {
-    const show = f.upload.enabled !== false && f.upload.dropZone !== false;
-    console.log('[DocFeatures] dropZone show:', show);
-    docDropZoneWrap.classList.toggle('d-none', !show);
+
+  // Drop zone
+  if (docDropZoneWrap) {
+    docDropZoneWrap.classList.toggle('d-none', f.upload?.enabled === false || f.upload?.dropZone === false);
+  }
+
+  // Download button in viewer toolbar
+  const dlBtn = document.getElementById('docDownloadBtn');
+  if (dlBtn) {
+    dlBtn.classList.toggle('d-none', f.pdfButtons?.download === false);
+  }
+
+  // Delete — re-render list so rows reflect current setting
+  if (typeof renderDocList === 'function' && typeof filterDocs === 'function') {
+    renderDocList(filterDocs());
   }
 }
 

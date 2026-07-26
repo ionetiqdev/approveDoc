@@ -1,1 +1,1 @@
-Documents: diagnose feature flags with console logging; re-apply after auth settle
+Documents: fix all feature flags by removing role-hidden conflict; fix applyDocFeatures to handle all controls; consistent switch spacing

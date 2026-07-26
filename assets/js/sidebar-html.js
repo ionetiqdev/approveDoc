@@ -276,23 +276,23 @@ const SidebarHtml = (() => {
 
                   <!-- Document viewer tab -->
                   <div class="tab-pane" id="prefTabDocument" style="min-height:490px;padding-top:20px;padding-left:20px">
-                    <div class="form-check form-switch mb-2" style="padding-top:10px">
+                    <div class="form-check form-switch" style="padding-bottom:12px">
                       <input class="form-check-input" type="checkbox" id="docPrefUploadButton">
                       <label class="form-check-label" for="docPrefUploadButton">"New document" button</label>
                     </div>
-                    <div class="form-check form-switch mb-2" style="padding-top:10px">
+                    <div class="form-check form-switch" style="padding-bottom:12px">
                       <input class="form-check-input" type="checkbox" id="docPrefDropZone">
                       <label class="form-check-label" for="docPrefDropZone">Drag-and-drop upload area</label>
                     </div>
-                    <div class="form-check form-switch mb-2" style="padding-top:10px">
+                    <div class="form-check form-switch" style="padding-bottom:12px">
                       <input class="form-check-input" type="checkbox" id="docPrefPromptOnDrop">
                       <label class="form-check-label" for="docPrefPromptOnDrop">Prompt for name &amp; category on drop</label>
                     </div>
-                    <div class="form-check form-switch mb-2" style="padding-top:10px">
+                    <div class="form-check form-switch" style="padding-bottom:12px">
                       <input class="form-check-input" type="checkbox" id="docPrefDeleteEnabled">
                       <label class="form-check-label" for="docPrefDeleteEnabled">Delete button on documents</label>
                     </div>
-                    <div class="form-check form-switch">
+                    <div class="form-check form-switch" style="padding-bottom:12px">
                       <input class="form-check-input" type="checkbox" id="docPrefDownload">
                       <label class="form-check-label" for="docPrefDownload">Download button in viewer</label>
                     </div>
