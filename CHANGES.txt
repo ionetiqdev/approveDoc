@@ -1,1 +1,1 @@
-Preferences: fixed size, Current User tab, card borders, right-justified labels, avatar click to change
+Preferences: modal-lg size, tabs in modal-header flush to border, card borders per tab, right-justified labels
