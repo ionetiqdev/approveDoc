@@ -1,1 +1,1 @@
-Preferences: rebuild as tabbed modal - Display, Document viewer, Profile (name/avatar/password)
+Preferences: fixed size, Current User tab, card borders, right-justified labels, avatar click to change

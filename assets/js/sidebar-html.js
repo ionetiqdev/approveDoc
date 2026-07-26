@@ -220,7 +220,7 @@ const SidebarHtml = (() => {
     modal.id = 'preferencesModal';
     modal.tabIndex = -1;
     modal.innerHTML = `
-      <div class="modal-dialog modal-dialog-centered modal-lg">
+      <div class="modal-dialog modal-dialog-centered" style="max-width:560px">
         <div class="modal-content">
           <div class="modal-header">
             <h5 class="modal-title">Preferences</h5>
@@ -241,39 +241,41 @@ const SidebarHtml = (() => {
                 </li>
                 <li class="nav-item">
                   <a class="nav-link" data-bs-toggle="tab" href="#prefTabProfile">
-                    <i class="ti ti-user me-1"></i>Profile
+                    <i class="ti ti-user me-1"></i>Current User
                   </a>
                 </li>
               </ul>
-              <div class="tab-content p-4">
+              <div class="tab-content p-3">
 
                 <!-- Display tab -->
                 <div class="tab-pane active" id="prefTabDisplay">
-                  <div class="mb-3 row align-items-center">
-                    <label class="col-4 form-label mb-0">Accent colour</label>
-                    <div class="col-8">
-                      <input type="color" class="form-control form-control-color" id="accentColourPicker" value="#2563eb" />
+                  <div class="card p-3">
+                    <div class="row align-items-center mb-3">
+                      <label class="col-4 col-form-label text-end">Accent colour</label>
+                      <div class="col-8">
+                        <input type="color" class="form-control form-control-color" id="accentColourPicker" value="#2563eb" />
+                      </div>
                     </div>
-                  </div>
-                  <div class="mb-3 row align-items-center">
-                    <label class="col-4 form-label mb-0">Sidebar colour</label>
-                    <div class="col-8">
-                      <input type="color" class="form-control form-control-color" id="sidebarColourPicker" value="#182433" />
+                    <div class="row align-items-center mb-3">
+                      <label class="col-4 col-form-label text-end">Sidebar colour</label>
+                      <div class="col-8">
+                        <input type="color" class="form-control form-control-color" id="sidebarColourPicker" value="#182433" />
+                      </div>
                     </div>
-                  </div>
-                  <div class="row align-items-center">
-                    <label class="col-4 form-label mb-0">Dark mode</label>
-                    <div class="col-8">
-                      <div class="form-check form-switch">
-                        <input class="form-check-input" type="checkbox" role="switch" id="darkModeSwitch" data-theme-toggle />
+                    <div class="row align-items-center">
+                      <label class="col-4 col-form-label text-end">Dark mode</label>
+                      <div class="col-8">
+                        <div class="form-check form-switch mt-1">
+                          <input class="form-check-input" type="checkbox" role="switch" id="darkModeSwitch" data-theme-toggle />
+                        </div>
                       </div>
                     </div>
                   </div>
                 </div>
 
-                <!-- Document viewer tab (only shown on documents page) -->
+                <!-- Document viewer tab -->
                 <div class="tab-pane" id="prefTabDocument">
-                  <div class="mb-2">
+                  <div class="card p-3">
                     <div class="form-check form-switch mb-2">
                       <input class="form-check-input" type="checkbox" id="docPrefUploadButton">
                       <label class="form-check-label" for="docPrefUploadButton">"New document" button</label>
@@ -293,52 +295,50 @@ const SidebarHtml = (() => {
                   </div>
                 </div>
 
-                <!-- Profile tab -->
+                <!-- Current User tab -->
                 <div class="tab-pane" id="prefTabProfile">
                   <div id="prefProfileError" class="alert alert-danger d-none py-2 small mb-3"></div>
 
-                  <div class="row g-3 mb-4 align-items-center">
-                    <div class="col-auto">
-                      <div class="avatar avatar-xl rounded-circle bg-primary-lt" id="prefAvatarPreview">?</div>
-                    </div>
-                    <div class="col">
-                      <label class="form-label">Avatar</label>
-                      <input type="file" class="form-control" id="prefAvatarFile" accept="image/*">
-                      <div class="form-text">JPEG or PNG, square, 400×400px recommended</div>
-                    </div>
-                  </div>
-
-                  <div class="mb-3 row">
-                    <label class="col-4 form-label">Display name</label>
-                    <div class="col-8">
-                      <input type="text" class="form-control" id="prefDisplayName">
-                    </div>
-                  </div>
-                  <div class="mb-3 row">
-                    <label class="col-4 form-label">Email</label>
-                    <div class="col-8">
-                      <input type="text" class="form-control" id="prefEmail" disabled>
-                    </div>
-                  </div>
-                  <div class="mb-3 row">
-                    <label class="col-4 form-label">Job title</label>
-                    <div class="col-8">
-                      <input type="text" class="form-control" id="prefJobTitle">
+                  <div class="card p-3 mb-3">
+                    <div class="row align-items-center">
+                      <div class="col-4 text-end">
+                        <input type="file" id="prefAvatarFile" accept="image/*" style="display:none">
+                        <div id="prefAvatarPreview"
+                          class="avatar avatar-xl rounded-circle bg-primary-lt ms-auto"
+                          style="cursor:pointer;width:72px;height:72px;overflow:hidden;display:flex;align-items:center;justify-content:center"
+                          title="Click to change avatar">?</div>
+                      </div>
+                      <div class="col-8">
+                        <div class="fw-semibold" id="prefAvatarName">—</div>
+                        <div class="text-secondary small" id="prefAvatarEmail">—</div>
+                        <div class="text-secondary small mt-1" style="font-size:.7rem">Click avatar to change</div>
+                      </div>
                     </div>
                   </div>
 
-                  <hr>
-
-                  <div class="mb-3 row">
-                    <label class="col-4 form-label">New password</label>
-                    <div class="col-8">
-                      <input type="password" class="form-control" id="prefNewPassword" autocomplete="new-password" placeholder="Leave blank to keep current">
+                  <div class="card p-3 mb-3">
+                    <div class="row align-items-center mb-3">
+                      <label class="col-4 col-form-label text-end">Display name</label>
+                      <div class="col-8"><input type="text" class="form-control" id="prefDisplayName"></div>
+                    </div>
+                    <div class="row align-items-center mb-3">
+                      <label class="col-4 col-form-label text-end">Email</label>
+                      <div class="col-8"><input type="text" class="form-control" id="prefEmail" disabled></div>
+                    </div>
+                    <div class="row align-items-center">
+                      <label class="col-4 col-form-label text-end">Job title</label>
+                      <div class="col-8"><input type="text" class="form-control" id="prefJobTitle"></div>
                     </div>
                   </div>
-                  <div class="mb-3 row">
-                    <label class="col-4 form-label">Confirm password</label>
-                    <div class="col-8">
-                      <input type="password" class="form-control" id="prefConfirmPassword" autocomplete="new-password">
+
+                  <div class="card p-3">
+                    <div class="row align-items-center mb-3">
+                      <label class="col-4 col-form-label text-end">New password</label>
+                      <div class="col-8"><input type="password" class="form-control" id="prefNewPassword" autocomplete="new-password" placeholder="Leave blank to keep current"></div>
+                    </div>
+                    <div class="row align-items-center">
+                      <label class="col-4 col-form-label text-end">Confirm</label>
+                      <div class="col-8"><input type="password" class="form-control" id="prefConfirmPassword" autocomplete="new-password"></div>
                     </div>
                   </div>
                 </div>
@@ -353,6 +353,18 @@ const SidebarHtml = (() => {
         </div>
       </div>`;
     document.body.appendChild(modal);
+
+    // Wire avatar click → hidden file input
+    document.getElementById('prefAvatarPreview')?.addEventListener('click', () => {
+      document.getElementById('prefAvatarFile')?.click();
+    });
+    document.getElementById('prefAvatarFile')?.addEventListener('change', function() {
+      const file = this.files[0];
+      if (!file) return;
+      const url = URL.createObjectURL(file);
+      const prev = document.getElementById('prefAvatarPreview');
+      prev.innerHTML = `<img src="${url}" style="width:100%;height:100%;object-fit:cover">`;
+    });
   }
 
   function _bindPreferences() {
@@ -378,27 +390,30 @@ const SidebarHtml = (() => {
       const email       = document.getElementById('prefEmail');
       const jobTitle    = document.getElementById('prefJobTitle');
       const avatarPrev  = document.getElementById('prefAvatarPreview');
+      const avatarName  = document.getElementById('prefAvatarName');
+      const avatarEmail = document.getElementById('prefAvatarEmail');
 
-      if (displayName) displayName.value = profile?.display_name || '';
-      if (email)       email.value       = session?.user?.email  || profile?.email || '';
-      if (jobTitle)    jobTitle.value    = profile?.job_title    || '';
+      const nameVal  = profile?.display_name || '';
+      const emailVal = session?.user?.email || profile?.email || '';
 
-      // Avatar preview
-      if (avatarPrev && profile?.avatar_url) {
-        avatarPrev.innerHTML = `<img src="${profile.avatar_url}" style="width:100%;height:100%;object-fit:cover;border-radius:50%">`;
-      } else if (avatarPrev) {
-        const name = profile?.display_name || '';
-        const initials = name.split(' ').map(w => w[0]).filter(Boolean).join('').toUpperCase().slice(0, 2) || '?';
-        avatarPrev.textContent = initials;
+      if (displayName)  displayName.value  = nameVal;
+      if (email)        email.value        = emailVal;
+      if (jobTitle)     jobTitle.value     = profile?.job_title || '';
+      if (avatarName)   avatarName.textContent  = nameVal  || '—';
+      if (avatarEmail)  avatarEmail.textContent = emailVal || '—';
+
+      if (avatarPrev) {
+        if (profile?.avatar_url) {
+          avatarPrev.innerHTML = `<img src="${profile.avatar_url}" style="width:100%;height:100%;object-fit:cover">`;
+        } else {
+          const initials = nameVal.split(' ').map(w => w[0]).filter(Boolean).join('').toUpperCase().slice(0, 2) || '?';
+          avatarPrev.textContent = initials;
+        }
       }
 
-      // Preview new avatar before upload
-      document.getElementById('prefAvatarFile')?.addEventListener('change', function() {
-        const file = this.files[0];
-        if (!file) return;
-        const url = URL.createObjectURL(file);
-        avatarPrev.innerHTML = `<img src="${url}" style="width:100%;height:100%;object-fit:cover;border-radius:50%">`;
-      });
+      // Clear file input so change event fires even if same file selected again
+      const fileInput = document.getElementById('prefAvatarFile');
+      if (fileInput) fileInput.value = '';
     }
 
     function _populateDocumentTab() {
