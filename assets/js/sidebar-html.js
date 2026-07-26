@@ -254,19 +254,19 @@ const SidebarHtml = (() => {
                   <div class="tab-pane active" id="prefTabDisplay" style="min-height:490px;padding-top:20px">
                     <div class="row align-items-center mb-3">
                       <label class="col-3 col-form-label text-end">Accent colour</label>
-                      <div class="col-8">
-                        <input type="color" class="form-control form-control-color" id="accentColourPicker" value="#2563eb" />
+                      <div class="col-9">
+                        <input type="color" class="form-control form-control-color" id="accentColourPicker" value="#2563eb" style="width:120px;height:30px;padding:3px;border-radius:0" />
                       </div>
                     </div>
                     <div class="row align-items-center mb-3">
                       <label class="col-3 col-form-label text-end">Sidebar colour</label>
-                      <div class="col-8">
-                        <input type="color" class="form-control form-control-color" id="sidebarColourPicker" value="#182433" />
+                      <div class="col-9">
+                        <input type="color" class="form-control form-control-color" id="sidebarColourPicker" value="#182433" style="width:120px;height:30px;padding:3px;border-radius:0" />
                       </div>
                     </div>
                     <div class="row align-items-center">
                       <label class="col-3 col-form-label text-end">Dark mode</label>
-                      <div class="col-8">
+                      <div class="col-9">
                         <div class="form-check form-switch mt-1">
                           <input class="form-check-input" type="checkbox" role="switch" id="darkModeSwitch" data-theme-toggle />
                         </div>

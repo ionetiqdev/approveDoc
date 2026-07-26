@@ -1,1 +1,1 @@
-Prefs: fix avatar upload - correct bucket (user-avatars) and path (userId/avatar.png); add cache-bust to URL
+Prefs display tab: dark mode in col-9, colour pickers 120x30 square corners
