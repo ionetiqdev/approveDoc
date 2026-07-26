@@ -1,1 +1,1 @@
-Preferences: correct Tabler tab pattern - card-header-tabs, fixed min-height so dialog stays same size
+Preferences: min-height on every tab-pane so dialog never resizes; margin around card; correct tab structure

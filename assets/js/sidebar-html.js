@@ -226,8 +226,8 @@ const SidebarHtml = (() => {
             <h5 class="modal-title">Preferences</h5>
             <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
           </div>
-          <div class="modal-body p-0">
-            <div class="card mb-0" style="border:none;border-radius:0">
+          <div class="modal-body p-3">
+            <div class="card mb-0">
               <div class="card-header">
                 <ul class="nav nav-tabs card-header-tabs" data-bs-toggle="tabs" id="prefTabs">
                   <li class="nav-item">
@@ -247,11 +247,11 @@ const SidebarHtml = (() => {
                   </li>
                 </ul>
               </div>
-              <div class="card-body" style="min-height:380px">
-                <div class="tab-content h-100">
+              <div class="card-body">
+                <div class="tab-content">
 
                   <!-- Display tab -->
-                  <div class="tab-pane active" id="prefTabDisplay">
+                  <div class="tab-pane active" id="prefTabDisplay" style="min-height:380px">
                     <div class="row align-items-center mb-3">
                       <label class="col-4 col-form-label text-end">Accent colour</label>
                       <div class="col-8">
@@ -275,7 +275,7 @@ const SidebarHtml = (() => {
                   </div>
 
                   <!-- Document viewer tab -->
-                  <div class="tab-pane" id="prefTabDocument">
+                  <div class="tab-pane" id="prefTabDocument" style="min-height:380px">
                     <div class="form-check form-switch mb-2">
                       <input class="form-check-input" type="checkbox" id="docPrefUploadButton">
                       <label class="form-check-label" for="docPrefUploadButton">"New document" button</label>
@@ -295,7 +295,7 @@ const SidebarHtml = (() => {
                   </div>
 
                   <!-- Current User tab -->
-                  <div class="tab-pane" id="prefTabProfile">
+                  <div class="tab-pane" id="prefTabProfile" style="min-height:380px">
                     <div id="prefProfileError" class="alert alert-danger d-none py-2 small mb-3"></div>
                     <div class="card mb-3">
                       <div class="card-body py-3">
