@@ -216,28 +216,134 @@ const SidebarHtml = (() => {
   function _injectPreferencesModal() {
     if (document.getElementById('preferencesModal')) return;
     const modal = document.createElement('div');
-    modal.className = 'modal fade';
+    modal.className = 'modal modal-blur fade';
     modal.id = 'preferencesModal';
     modal.tabIndex = -1;
     modal.innerHTML = `
-      <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-dialog modal-dialog-centered modal-lg">
         <div class="modal-content">
           <div class="modal-header">
-            <h6 class="modal-title fw-semibold mb-0">Preferences</h6>
+            <h5 class="modal-title">Preferences</h5>
             <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
           </div>
-          <div class="modal-body">
-            <div class="mb-3">
-              <label class="form-label">Accent colour</label>
-              <input type="color" class="form-control form-control-color" id="accentColourPicker" value="#2563eb" />
-            </div>
-            <div class="mb-3">
-              <label class="form-label">Sidebar colour</label>
-              <input type="color" class="form-control form-control-color" id="sidebarColourPicker" value="#182433" />
-            </div>
-            <div class="form-check form-switch">
-              <input class="form-check-input" type="checkbox" role="switch" id="darkModeSwitch" data-theme-toggle />
-              <label class="form-check-label" for="darkModeSwitch">Dark mode</label>
+          <div class="modal-body p-0">
+            <div class="card-tabs">
+              <ul class="nav nav-tabs px-3 pt-2" id="prefTabs">
+                <li class="nav-item">
+                  <a class="nav-link active" data-bs-toggle="tab" href="#prefTabDisplay">
+                    <i class="ti ti-palette me-1"></i>Display
+                  </a>
+                </li>
+                <li class="nav-item" id="prefTabDocumentLi" style="display:none">
+                  <a class="nav-link" data-bs-toggle="tab" href="#prefTabDocument">
+                    <i class="ti ti-file-settings me-1"></i>Document
+                  </a>
+                </li>
+                <li class="nav-item">
+                  <a class="nav-link" data-bs-toggle="tab" href="#prefTabProfile">
+                    <i class="ti ti-user me-1"></i>Profile
+                  </a>
+                </li>
+              </ul>
+              <div class="tab-content p-4">
+
+                <!-- Display tab -->
+                <div class="tab-pane active" id="prefTabDisplay">
+                  <div class="mb-3 row align-items-center">
+                    <label class="col-4 form-label mb-0">Accent colour</label>
+                    <div class="col-8">
+                      <input type="color" class="form-control form-control-color" id="accentColourPicker" value="#2563eb" />
+                    </div>
+                  </div>
+                  <div class="mb-3 row align-items-center">
+                    <label class="col-4 form-label mb-0">Sidebar colour</label>
+                    <div class="col-8">
+                      <input type="color" class="form-control form-control-color" id="sidebarColourPicker" value="#182433" />
+                    </div>
+                  </div>
+                  <div class="row align-items-center">
+                    <label class="col-4 form-label mb-0">Dark mode</label>
+                    <div class="col-8">
+                      <div class="form-check form-switch">
+                        <input class="form-check-input" type="checkbox" role="switch" id="darkModeSwitch" data-theme-toggle />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Document viewer tab (only shown on documents page) -->
+                <div class="tab-pane" id="prefTabDocument">
+                  <div class="mb-2">
+                    <div class="form-check form-switch mb-2">
+                      <input class="form-check-input" type="checkbox" id="docPrefUploadButton">
+                      <label class="form-check-label" for="docPrefUploadButton">"New document" button</label>
+                    </div>
+                    <div class="form-check form-switch mb-2">
+                      <input class="form-check-input" type="checkbox" id="docPrefDropZone">
+                      <label class="form-check-label" for="docPrefDropZone">Drag-and-drop upload area</label>
+                    </div>
+                    <div class="form-check form-switch mb-2">
+                      <input class="form-check-input" type="checkbox" id="docPrefPromptOnDrop">
+                      <label class="form-check-label" for="docPrefPromptOnDrop">Prompt for name &amp; category on drop</label>
+                    </div>
+                    <div class="form-check form-switch">
+                      <input class="form-check-input" type="checkbox" id="docPrefDeleteEnabled">
+                      <label class="form-check-label" for="docPrefDeleteEnabled">Delete button on documents</label>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Profile tab -->
+                <div class="tab-pane" id="prefTabProfile">
+                  <div id="prefProfileError" class="alert alert-danger d-none py-2 small mb-3"></div>
+
+                  <div class="row g-3 mb-4 align-items-center">
+                    <div class="col-auto">
+                      <div class="avatar avatar-xl rounded-circle bg-primary-lt" id="prefAvatarPreview">?</div>
+                    </div>
+                    <div class="col">
+                      <label class="form-label">Avatar</label>
+                      <input type="file" class="form-control" id="prefAvatarFile" accept="image/*">
+                      <div class="form-text">JPEG or PNG, square, 400×400px recommended</div>
+                    </div>
+                  </div>
+
+                  <div class="mb-3 row">
+                    <label class="col-4 form-label">Display name</label>
+                    <div class="col-8">
+                      <input type="text" class="form-control" id="prefDisplayName">
+                    </div>
+                  </div>
+                  <div class="mb-3 row">
+                    <label class="col-4 form-label">Email</label>
+                    <div class="col-8">
+                      <input type="text" class="form-control" id="prefEmail" disabled>
+                    </div>
+                  </div>
+                  <div class="mb-3 row">
+                    <label class="col-4 form-label">Job title</label>
+                    <div class="col-8">
+                      <input type="text" class="form-control" id="prefJobTitle">
+                    </div>
+                  </div>
+
+                  <hr>
+
+                  <div class="mb-3 row">
+                    <label class="col-4 form-label">New password</label>
+                    <div class="col-8">
+                      <input type="password" class="form-control" id="prefNewPassword" autocomplete="new-password" placeholder="Leave blank to keep current">
+                    </div>
+                  </div>
+                  <div class="mb-3 row">
+                    <label class="col-4 form-label">Confirm password</label>
+                    <div class="col-8">
+                      <input type="password" class="form-control" id="prefConfirmPassword" autocomplete="new-password">
+                    </div>
+                  </div>
+                </div>
+
+              </div>
             </div>
           </div>
           <div class="modal-footer">
@@ -263,28 +369,72 @@ const SidebarHtml = (() => {
       return (sidebarInput?.value || '') + '|' + (accentInput?.value || '');
     }
 
+    function _populateProfile() {
+      const profile = Auth.getProfile();
+      const session = Auth.getSession();
+      if (!profile && !session) return;
+
+      const displayName = document.getElementById('prefDisplayName');
+      const email       = document.getElementById('prefEmail');
+      const jobTitle    = document.getElementById('prefJobTitle');
+      const avatarPrev  = document.getElementById('prefAvatarPreview');
+
+      if (displayName) displayName.value = profile?.display_name || '';
+      if (email)       email.value       = session?.user?.email  || profile?.email || '';
+      if (jobTitle)    jobTitle.value    = profile?.job_title    || '';
+
+      // Avatar preview
+      if (avatarPrev && profile?.avatar_url) {
+        avatarPrev.innerHTML = `<img src="${profile.avatar_url}" style="width:100%;height:100%;object-fit:cover;border-radius:50%">`;
+      } else if (avatarPrev) {
+        const name = profile?.display_name || '';
+        const initials = name.split(' ').map(w => w[0]).filter(Boolean).join('').toUpperCase().slice(0, 2) || '?';
+        avatarPrev.textContent = initials;
+      }
+
+      // Preview new avatar before upload
+      document.getElementById('prefAvatarFile')?.addEventListener('change', function() {
+        const file = this.files[0];
+        if (!file) return;
+        const url = URL.createObjectURL(file);
+        avatarPrev.innerHTML = `<img src="${url}" style="width:100%;height:100%;object-fit:cover;border-radius:50%">`;
+      });
+    }
+
+    function _populateDocumentTab() {
+      const docTabLi = document.getElementById('prefTabDocumentLi');
+      if (typeof DOC_FEATURES === 'undefined' || !docTabLi) return;
+      docTabLi.style.display = '';
+
+      document.getElementById('docPrefUploadButton').checked  = DOC_FEATURES.upload?.modalButton   !== false;
+      document.getElementById('docPrefDropZone').checked      = DOC_FEATURES.upload?.dropZone       !== false;
+      document.getElementById('docPrefPromptOnDrop').checked  = DOC_FEATURES.upload?.promptOnDrop   !== false;
+      document.getElementById('docPrefDeleteEnabled').checked = DOC_FEATURES.delete?.enabled        !== false;
+    }
+
     const openPreferences = e => {
       e?.preventDefault();
       const modalEl = document.getElementById('preferencesModal');
       if (!modalEl) return;
 
-      // Populate pickers from whatever is currently SAVED, every time
-      // the dialog opens - not from any in-progress unsaved drag from
-      // a previous open-then-cancel.
       const sidebarInput = document.getElementById('sidebarColourPicker');
       const accentInput  = document.getElementById('accentColourPicker');
       if (sidebarInput) sidebarInput.value = localStorage.getItem(sidebarKey) || '#182433';
-      if (accentInput)  accentInput.value  = localStorage.getItem(accentKey) || '#206bc4';
+      if (accentInput)  accentInput.value  = localStorage.getItem(accentKey)  || '#206bc4';
+
+      _populateProfile();
+      _populateDocumentTab();
+
+      // Reset password fields and error
+      ['prefNewPassword','prefConfirmPassword'].forEach(id => {
+        const el = document.getElementById(id); if (el) el.value = '';
+      });
+      const errEl = document.getElementById('prefProfileError');
+      if (errEl) errEl.classList.add('d-none');
 
       lastPreferencesSnapshot = _snapshot();
       preferencesModalInstance = preferencesModalInstance || new bootstrap.Modal(modalEl);
 
-      // Wire the close-guard exactly ONCE per modal, not on every
-      // open - otherwise repeated opens stack multiple hide.bs.modal
-      // listeners, each holding its own stale snapshot from whichever
-      // open it was created on. The guard reads lastPreferencesSnapshot
-      // from this same closure on every check, so it always sees the
-      // current value regardless of which open set it most recently.
       if (!guardWired) {
         App.guardModalClose(modalEl, preferencesModalInstance, () => _snapshot() !== lastPreferencesSnapshot);
         guardWired = true;
@@ -292,16 +442,17 @@ const SidebarHtml = (() => {
 
       preferencesModalInstance.show();
     };
+
     document.getElementById('preferencesBtn')?.addEventListener('click', openPreferences);
     document.getElementById('headerPreferencesBtn')?.addEventListener('click', openPreferences);
 
-    // No live preview, no live save - both colours only take effect
-    // when Save is clicked. Cancel (or closing) leaves everything
-    // exactly as it was before the dialog opened.
-    document.getElementById('savePreferencesBtn')?.addEventListener('click', () => {
+    document.getElementById('savePreferencesBtn')?.addEventListener('click', async () => {
       const sidebarInput = document.getElementById('sidebarColourPicker');
       const accentInput  = document.getElementById('accentColourPicker');
+      const errEl        = document.getElementById('prefProfileError');
+      if (errEl) errEl.classList.add('d-none');
 
+      // Display settings
       if (sidebarInput) {
         localStorage.setItem(sidebarKey, sidebarInput.value);
         _applySidebarColours(sidebarInput.value);
@@ -311,7 +462,56 @@ const SidebarHtml = (() => {
         window.Theme.setAccent(accentInput.value);
       }
 
-      lastPreferencesSnapshot = _snapshot(); // just saved - new clean baseline, so closing right after doesn't re-trigger the guard
+      // Document viewer settings (if on documents page)
+      if (typeof DOC_FEATURES !== 'undefined' && typeof saveDocPrefs === 'function') {
+        saveDocPrefs();
+      }
+
+      // Profile updates
+      const session     = Auth.getSession();
+      const profile     = Auth.getProfile();
+      const displayName = document.getElementById('prefDisplayName')?.value.trim();
+      const jobTitle    = document.getElementById('prefJobTitle')?.value.trim();
+      const newPass     = document.getElementById('prefNewPassword')?.value;
+      const confPass    = document.getElementById('prefConfirmPassword')?.value;
+      const avatarFile  = document.getElementById('prefAvatarFile')?.files[0];
+
+      if (newPass || confPass) {
+        if (newPass !== confPass) {
+          if (errEl) { errEl.textContent = 'Passwords do not match.'; errEl.classList.remove('d-none'); }
+          // Switch to profile tab
+          document.querySelector('#prefTabs a[href="#prefTabProfile"]')?.click();
+          return;
+        }
+        const { error: passErr } = await sb.auth.updateUser({ password: newPass });
+        if (passErr) {
+          if (errEl) { errEl.textContent = 'Password update failed: ' + passErr.message; errEl.classList.remove('d-none'); }
+          document.querySelector('#prefTabs a[href="#prefTabProfile"]')?.click();
+          return;
+        }
+      }
+
+      if (displayName || jobTitle !== undefined) {
+        await sb.from('profiles').update({
+          display_name: displayName || profile?.display_name,
+          job_title:    jobTitle    || null,
+          updated_at:   new Date().toISOString(),
+        }).eq('id', session?.user?.id);
+      }
+
+      if (avatarFile && session?.user?.id) {
+        const orgId      = Auth.getOrganisationId();
+        const storagePath = `${orgId}/${session.user.id}/avatar.png`;
+        const fileData   = await avatarFile.arrayBuffer();
+        const { error: upErr } = await sb.storage.from('avatars')
+          .upload(storagePath, fileData, { contentType: avatarFile.type, upsert: true });
+        if (!upErr) {
+          const { data: { publicUrl } } = sb.storage.from('avatars').getPublicUrl(storagePath);
+          await sb.from('profiles').update({ avatar_url: publicUrl }).eq('id', session.user.id);
+        }
+      }
+
+      lastPreferencesSnapshot = _snapshot();
       preferencesModalInstance?.hide();
       if (window.App) App.toast('Preferences saved');
     });

@@ -102,25 +102,28 @@ function bindPrefsModal() {
     document.getElementById('docPrefDeleteEnabled').checked  = DOC_FEATURES.delete?.enabled !== false;
   });
 
-  document.getElementById('docPrefSaveBtn').addEventListener('click', async () => {
-    const override = {
-      upload:  {
-        modalButton:  document.getElementById('docPrefUploadButton').checked,
-        dropZone:     document.getElementById('docPrefDropZone').checked,
-        promptOnDrop: document.getElementById('docPrefPromptOnDrop').checked
-      },
-      delete:  { enabled: document.getElementById('docPrefDeleteEnabled').checked }
-    };
-    await Auth.setPreference('docViewerPrefs', override);
-
+  document.getElementById('docPrefSaveBtn')?.addEventListener('click', async () => {
+    await saveDocPrefs();
     modalEl.addEventListener('hidden.bs.modal', () => {
       loadDocFeatures();
       renderDocList(filterDocs());
-      App.toast('Viewer settings saved');
     }, { once: true });
-
     instance.hide();
   });
+}
+
+async function saveDocPrefs() {
+  const override = {
+    upload: {
+      modalButton:  document.getElementById('docPrefUploadButton')?.checked ?? true,
+      dropZone:     document.getElementById('docPrefDropZone')?.checked     ?? true,
+      promptOnDrop: document.getElementById('docPrefPromptOnDrop')?.checked ?? true,
+    },
+    delete: { enabled: document.getElementById('docPrefDeleteEnabled')?.checked ?? true },
+  };
+  await Auth.setPreference('docViewerPrefs', override);
+  loadDocFeatures();
+  renderDocList(filterDocs());
 }
 
 // ── Build pdf.js URL hash ─────────────────────────────────────────────

@@ -1,1 +1,1 @@
-Documents: click anywhere on list row to open document
+Preferences: rebuild as tabbed modal - Display, Document viewer, Profile (name/avatar/password)
