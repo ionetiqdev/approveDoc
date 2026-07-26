@@ -288,9 +288,13 @@ const SidebarHtml = (() => {
                       <input class="form-check-input" type="checkbox" id="docPrefPromptOnDrop">
                       <label class="form-check-label" for="docPrefPromptOnDrop">Prompt for name &amp; category on drop</label>
                     </div>
-                    <div class="form-check form-switch">
+                    <div class="form-check form-switch mb-2">
                       <input class="form-check-input" type="checkbox" id="docPrefDeleteEnabled">
                       <label class="form-check-label" for="docPrefDeleteEnabled">Delete button on documents</label>
+                    </div>
+                    <div class="form-check form-switch">
+                      <input class="form-check-input" type="checkbox" id="docPrefDownload">
+                      <label class="form-check-label" for="docPrefDownload">Download button in viewer</label>
                     </div>
                   </div>
 
@@ -313,7 +317,7 @@ const SidebarHtml = (() => {
                         </div>
                       </div>
                     </div>
-                    <div class="mb-3" style="padding-top:20px">
+                    <div class="mb-3" style="padding-top:20px;padding-left:20px">
                       <div class="row align-items-center mb-3">
                         <label class="col-3 col-form-label text-end">Display name</label>
                         <div class="col-9"><input type="text" class="form-control" id="prefDisplayName"></div>
@@ -327,7 +331,7 @@ const SidebarHtml = (() => {
                         <div class="col-9"><input type="text" class="form-control" id="prefJobTitle"></div>
                       </div>
                     </div>
-                    <div style="padding-top:20px">
+                    <div style="padding-top:20px;padding-left:20px">
                       <div class="row align-items-center mb-3">
                         <label class="col-3 col-form-label text-end">New password</label>
                         <div class="col-9"><input type="password" class="form-control" id="prefNewPassword" autocomplete="new-password" placeholder="Leave blank to keep current"></div>
@@ -414,13 +418,23 @@ const SidebarHtml = (() => {
 
     function _populateDocumentTab() {
       const docTabLi = document.getElementById('prefTabDocumentLi');
-      if (typeof DOC_FEATURES === 'undefined' || !docTabLi) return;
+      if (!docTabLi) return;
+
+      // Only show Document tab on the documents page
+      if (typeof DOC_DEFAULT_FEATURES === 'undefined') return;
       docTabLi.style.display = '';
 
-      document.getElementById('docPrefUploadButton').checked  = DOC_FEATURES.upload?.modalButton   !== false;
-      document.getElementById('docPrefDropZone').checked      = DOC_FEATURES.upload?.dropZone       !== false;
-      document.getElementById('docPrefPromptOnDrop').checked  = DOC_FEATURES.upload?.promptOnDrop   !== false;
-      document.getElementById('docPrefDeleteEnabled').checked = DOC_FEATURES.delete?.enabled        !== false;
+      // Read from saved prefs, falling back to DOC_DEFAULT_FEATURES
+      const saved   = Auth.getPreference('docViewerPrefs', null) || {};
+      const upload  = Object.assign({}, DOC_DEFAULT_FEATURES.upload,   saved.upload   || {});
+      const del     = Object.assign({}, DOC_DEFAULT_FEATURES.delete,   saved.delete   || {});
+      const buttons = Object.assign({}, DOC_DEFAULT_FEATURES.pdfButtons, saved.pdfButtons || {});
+
+      document.getElementById('docPrefUploadButton').checked  = upload.modalButton   !== false;
+      document.getElementById('docPrefDropZone').checked      = upload.dropZone      !== false;
+      document.getElementById('docPrefPromptOnDrop').checked  = upload.promptOnDrop  !== false;
+      document.getElementById('docPrefDeleteEnabled').checked = del.enabled          !== false;
+      document.getElementById('docPrefDownload').checked      = buttons.download     !== false;
     }
 
     const openPreferences = e => {
@@ -482,9 +496,28 @@ const SidebarHtml = (() => {
         window.Theme.setAccent(accentInput.value);
       }
 
-      // Document viewer settings (if on documents page)
-      if (typeof DOC_FEATURES !== 'undefined' && typeof saveDocPrefs === 'function') {
-        saveDocPrefs();
+      // Document viewer settings
+      if (typeof DOC_DEFAULT_FEATURES !== 'undefined') {
+        const saved = Auth.getPreference('docViewerPrefs', null) || {};
+        const override = {
+          upload: Object.assign({}, saved.upload, {
+            modalButton:  document.getElementById('docPrefUploadButton')?.checked  ?? true,
+            dropZone:     document.getElementById('docPrefDropZone')?.checked      ?? true,
+            promptOnDrop: document.getElementById('docPrefPromptOnDrop')?.checked  ?? true,
+          }),
+          delete: Object.assign({}, saved.delete, {
+            enabled: document.getElementById('docPrefDeleteEnabled')?.checked ?? true,
+          }),
+          pdfButtons: Object.assign({}, saved.pdfButtons, {
+            download: document.getElementById('docPrefDownload')?.checked ?? true,
+          }),
+        };
+        await Auth.setPreference('docViewerPrefs', override);
+        // If we're on the documents page, reload features immediately
+        if (typeof loadDocFeatures === 'function') {
+          loadDocFeatures();
+          renderDocList(filterDocs());
+        }
       }
 
       // Profile updates

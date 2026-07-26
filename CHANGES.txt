@@ -1,1 +1,1 @@
-Preferences: 20px padding above avatar, display name, and new password sections
+Docs: remove Viewer Settings and Categories buttons; Prefs: left padding on user fields, Download toggle, fix settings read/write
