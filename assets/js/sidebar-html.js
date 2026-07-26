@@ -253,19 +253,19 @@ const SidebarHtml = (() => {
                   <!-- Display tab -->
                   <div class="tab-pane active" id="prefTabDisplay" style="min-height:490px;padding-top:20px">
                     <div class="row align-items-center mb-3">
-                      <label class="col-4 col-form-label text-end">Accent colour</label>
+                      <label class="col-3 col-form-label text-end">Accent colour</label>
                       <div class="col-8">
                         <input type="color" class="form-control form-control-color" id="accentColourPicker" value="#2563eb" />
                       </div>
                     </div>
                     <div class="row align-items-center mb-3">
-                      <label class="col-4 col-form-label text-end">Sidebar colour</label>
+                      <label class="col-3 col-form-label text-end">Sidebar colour</label>
                       <div class="col-8">
                         <input type="color" class="form-control form-control-color" id="sidebarColourPicker" value="#182433" />
                       </div>
                     </div>
                     <div class="row align-items-center">
-                      <label class="col-4 col-form-label text-end">Dark mode</label>
+                      <label class="col-3 col-form-label text-end">Dark mode</label>
                       <div class="col-8">
                         <div class="form-check form-switch mt-1">
                           <input class="form-check-input" type="checkbox" role="switch" id="darkModeSwitch" data-theme-toggle />
@@ -297,7 +297,7 @@ const SidebarHtml = (() => {
                   <!-- Current User tab -->
                   <div class="tab-pane" id="prefTabProfile" style="min-height:490px">
                     <div id="prefProfileError" class="alert alert-danger d-none py-2 small mb-3"></div>
-                    <div class="mb-3 pb-3 border-bottom">
+                    <div class="mb-3">
                       <div class="row align-items-center">
                         <div class="col-auto">
                           <input type="file" id="prefAvatarFile" accept="image/*" style="display:none">
@@ -313,28 +313,28 @@ const SidebarHtml = (() => {
                         </div>
                       </div>
                     </div>
-                    <div class="mb-3 pb-3 border-bottom">
+                    <div class="mb-3">
                       <div class="row align-items-center mb-3">
-                        <label class="col-4 col-form-label text-end">Display name</label>
-                        <div class="col-8"><input type="text" class="form-control" id="prefDisplayName"></div>
+                        <label class="col-3 col-form-label text-end">Display name</label>
+                        <div class="col-9"><input type="text" class="form-control" id="prefDisplayName"></div>
                       </div>
                       <div class="row align-items-center mb-3">
-                        <label class="col-4 col-form-label text-end">Email</label>
-                        <div class="col-8"><input type="text" class="form-control" id="prefEmail" disabled></div>
+                        <label class="col-3 col-form-label text-end">Email</label>
+                        <div class="col-9"><input type="text" class="form-control" id="prefEmail" disabled></div>
                       </div>
                       <div class="row align-items-center">
-                        <label class="col-4 col-form-label text-end">Job title</label>
-                        <div class="col-8"><input type="text" class="form-control" id="prefJobTitle"></div>
+                        <label class="col-3 col-form-label text-end">Job title</label>
+                        <div class="col-9"><input type="text" class="form-control" id="prefJobTitle"></div>
                       </div>
                     </div>
                     <div>
                       <div class="row align-items-center mb-3">
-                        <label class="col-4 col-form-label text-end">New password</label>
-                        <div class="col-8"><input type="password" class="form-control" id="prefNewPassword" autocomplete="new-password" placeholder="Leave blank to keep current"></div>
+                        <label class="col-3 col-form-label text-end">New password</label>
+                        <div class="col-9"><input type="password" class="form-control" id="prefNewPassword" autocomplete="new-password" placeholder="Leave blank to keep current"></div>
                       </div>
                       <div class="row align-items-center">
-                        <label class="col-4 col-form-label text-end">Confirm</label>
-                        <div class="col-8"><input type="password" class="form-control" id="prefConfirmPassword" autocomplete="new-password"></div>
+                        <label class="col-3 col-form-label text-end">Confirm</label>
+                        <div class="col-9"><input type="password" class="form-control" id="prefConfirmPassword" autocomplete="new-password"></div>
                       </div>
                     </div>
                   </div>

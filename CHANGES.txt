@@ -1,1 +1,1 @@
-Preferences: remove card borders from Current User tab groups, use border-bottom dividers instead
+Preferences: col-3/col-9 on Current User tab; remove horizontal dividers
