@@ -333,12 +333,31 @@ const SidebarHtml = (() => {
                     </div>
                     <div style="padding-top:20px;padding-left:20px">
                       <div class="row align-items-center mb-3">
+                        <label class="col-3 col-form-label text-end">Current password</label>
+                        <div class="col-9">
+                          <div class="input-group">
+                            <input type="password" class="form-control" id="prefCurrentPassword" autocomplete="current-password" placeholder="Required to change password">
+                            <button class="btn btn-outline-secondary pref-eye-btn" type="button" data-target="prefCurrentPassword" tabindex="-1"><i class="ti ti-eye"></i></button>
+                          </div>
+                        </div>
+                      </div>
+                      <div class="row align-items-center mb-3">
                         <label class="col-3 col-form-label text-end">New password</label>
-                        <div class="col-9"><input type="password" class="form-control" id="prefNewPassword" autocomplete="new-password" placeholder="Leave blank to keep current"></div>
+                        <div class="col-9">
+                          <div class="input-group">
+                            <input type="password" class="form-control" id="prefNewPassword" autocomplete="new-password" placeholder="Leave blank to keep current">
+                            <button class="btn btn-outline-secondary pref-eye-btn" type="button" data-target="prefNewPassword" tabindex="-1"><i class="ti ti-eye"></i></button>
+                          </div>
+                        </div>
                       </div>
                       <div class="row align-items-center">
                         <label class="col-3 col-form-label text-end">Confirm</label>
-                        <div class="col-9"><input type="password" class="form-control" id="prefConfirmPassword" autocomplete="new-password"></div>
+                        <div class="col-9">
+                          <div class="input-group">
+                            <input type="password" class="form-control" id="prefConfirmPassword" autocomplete="new-password">
+                            <button class="btn btn-outline-secondary pref-eye-btn" type="button" data-target="prefConfirmPassword" tabindex="-1"><i class="ti ti-eye"></i></button>
+                          </div>
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -364,6 +383,17 @@ const SidebarHtml = (() => {
       const url = URL.createObjectURL(file);
       const prev = document.getElementById('prefAvatarPreview');
       prev.innerHTML = `<img src="${url}" style="width:100%;height:100%;object-fit:cover">`;
+    });
+
+    // Eye toggle buttons
+    modal.querySelectorAll('.pref-eye-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const input = document.getElementById(btn.dataset.target);
+        if (!input) return;
+        const show = input.type === 'password';
+        input.type = show ? 'text' : 'password';
+        btn.querySelector('i').className = show ? 'ti ti-eye-off' : 'ti ti-eye';
+      });
     });
   }
 
@@ -451,7 +481,7 @@ const SidebarHtml = (() => {
       _populateDocumentTab();
 
       // Reset password fields and error
-      ['prefNewPassword','prefConfirmPassword'].forEach(id => {
+      ['prefNewPassword','prefConfirmPassword','prefCurrentPassword'].forEach(id => {
         const el = document.getElementById(id); if (el) el.value = '';
       });
       const errEl = document.getElementById('prefProfileError');
@@ -528,14 +558,35 @@ const SidebarHtml = (() => {
       const jobTitle    = document.getElementById('prefJobTitle')?.value.trim();
       const newPass     = document.getElementById('prefNewPassword')?.value;
       const confPass    = document.getElementById('prefConfirmPassword')?.value;
+      const currPass    = document.getElementById('prefCurrentPassword')?.value;
       const avatarFile  = document.getElementById('prefAvatarFile')?.files[0];
       const userId      = session?.user?.id || profile?.id;
 
       if (!userId) { console.error('[Prefs] No user ID available'); }
 
-      if (newPass || confPass) {
+      if (newPass || confPass || currPass) {
+        if (!currPass) {
+          if (errEl) { errEl.textContent = 'Please enter your current password.'; errEl.classList.remove('d-none'); }
+          document.querySelector('#prefTabs a[href="#prefTabProfile"]')?.click();
+          return;
+        }
         if (newPass !== confPass) {
-          if (errEl) { errEl.textContent = 'Passwords do not match.'; errEl.classList.remove('d-none'); }
+          if (errEl) { errEl.textContent = 'New passwords do not match.'; errEl.classList.remove('d-none'); }
+          document.querySelector('#prefTabs a[href="#prefTabProfile"]')?.click();
+          return;
+        }
+        if (!newPass) {
+          if (errEl) { errEl.textContent = 'Please enter a new password.'; errEl.classList.remove('d-none'); }
+          document.querySelector('#prefTabs a[href="#prefTabProfile"]')?.click();
+          return;
+        }
+        // Verify current password by re-signing in
+        const { error: signErr } = await sb.auth.signInWithPassword({
+          email: session?.user?.email || profile?.email,
+          password: currPass,
+        });
+        if (signErr) {
+          if (errEl) { errEl.textContent = 'Current password is incorrect.'; errEl.classList.remove('d-none'); }
           document.querySelector('#prefTabs a[href="#prefTabProfile"]')?.click();
           return;
         }
@@ -545,6 +596,11 @@ const SidebarHtml = (() => {
           document.querySelector('#prefTabs a[href="#prefTabProfile"]')?.click();
           return;
         }
+        // Clear password fields and show success
+        ['prefCurrentPassword','prefNewPassword','prefConfirmPassword'].forEach(id => {
+          const el = document.getElementById(id); if (el) el.value = '';
+        });
+        App.toast('Password changed successfully');
       }
 
       if (userId) {
