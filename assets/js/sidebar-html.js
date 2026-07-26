@@ -496,27 +496,28 @@ const SidebarHtml = (() => {
         window.Theme.setAccent(accentInput.value);
       }
 
-      // Document viewer settings (saved regardless of page)
-      const docTabLi = document.getElementById('prefTabDocumentLi');
-      if (docTabLi && docTabLi.style.display !== 'none') {
+      // Document viewer settings
+      const uploadBtn = document.getElementById('docPrefUploadButton');
+      if (uploadBtn !== null) {
         const saved = Auth.getPreference('docViewerPrefs', null) || {};
         const override = {
           upload: Object.assign({}, saved.upload, {
-            modalButton:  document.getElementById('docPrefUploadButton')?.checked  ?? true,
-            dropZone:     document.getElementById('docPrefDropZone')?.checked      ?? true,
-            promptOnDrop: document.getElementById('docPrefPromptOnDrop')?.checked  ?? true,
+            modalButton:  document.getElementById('docPrefUploadButton').checked,
+            dropZone:     document.getElementById('docPrefDropZone').checked,
+            promptOnDrop: document.getElementById('docPrefPromptOnDrop').checked,
           }),
           delete: Object.assign({}, saved.delete, {
-            enabled: document.getElementById('docPrefDeleteEnabled')?.checked ?? true,
+            enabled: document.getElementById('docPrefDeleteEnabled').checked,
           }),
           pdfButtons: Object.assign({}, saved.pdfButtons, {
-            download: document.getElementById('docPrefDownload')?.checked ?? true,
+            download: document.getElementById('docPrefDownload').checked,
           }),
         };
         await Auth.setPreference('docViewerPrefs', override);
+        console.log('[Prefs] saved docViewerPrefs:', JSON.stringify(override));
         if (typeof loadDocFeatures === 'function') {
           loadDocFeatures();
-          if (typeof renderDocList === 'function') renderDocList(filterDocs());
+          console.log('[Prefs] DOC_FEATURES after reload:', JSON.stringify(DOC_FEATURES));
         }
       }
 

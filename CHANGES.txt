@@ -1,1 +1,1 @@
-Documents: loadDocFeatures runs after initApp/loadDocuments so nothing overwrites it
+Fix: remove old docPrefsModal from index.html - duplicate IDs were causing getElementById to read wrong checkboxes
