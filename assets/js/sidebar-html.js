@@ -555,16 +555,15 @@ const SidebarHtml = (() => {
         };
 
         if (avatarFile) {
-          const orgId       = Auth.getOrganisationId();
-          const storagePath = `${orgId}/${userId}/avatar.png`;
+          const storagePath = `${userId}/avatar.png`;
           const fileData    = await avatarFile.arrayBuffer();
-          const { error: upErr } = await sb.storage.from('avatars')
+          const { error: upErr } = await sb.storage.from('user-avatars')
             .upload(storagePath, fileData, { contentType: avatarFile.type, upsert: true });
           if (upErr) {
             console.error('[Prefs] Avatar upload failed:', upErr.message);
           } else {
-            const { data: { publicUrl } } = sb.storage.from('avatars').getPublicUrl(storagePath);
-            profileUpdate.avatar_url = publicUrl;
+            const { data: { publicUrl } } = sb.storage.from('user-avatars').getPublicUrl(storagePath);
+            profileUpdate.avatar_url = `${publicUrl}?t=${Date.now()}`;
           }
         }
 
