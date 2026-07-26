@@ -222,36 +222,36 @@ const SidebarHtml = (() => {
     modal.innerHTML = `
       <div class="modal-dialog modal-dialog-centered modal-lg">
         <div class="modal-content">
-          <div class="modal-header d-block p-0 border-0">
-            <div class="d-flex align-items-center justify-content-between px-4 pt-3 pb-0">
-              <h5 class="modal-title mb-0">Preferences</h5>
-              <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <ul class="nav nav-tabs px-4 mt-2" id="prefTabs">
-              <li class="nav-item">
-                <a class="nav-link active" data-bs-toggle="tab" href="#prefTabDisplay">
-                  <i class="ti ti-palette me-1"></i>Display
-                </a>
-              </li>
-              <li class="nav-item" id="prefTabDocumentLi" style="display:none">
-                <a class="nav-link" data-bs-toggle="tab" href="#prefTabDocument">
-                  <i class="ti ti-file-settings me-1"></i>Document
-                </a>
-              </li>
-              <li class="nav-item">
-                <a class="nav-link" data-bs-toggle="tab" href="#prefTabProfile">
-                  <i class="ti ti-user me-1"></i>Current User
-                </a>
-              </li>
-            </ul>
+          <div class="modal-header">
+            <h5 class="modal-title">Preferences</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
           </div>
-          <div class="modal-body">
-            <div class="tab-content">
+          <div class="modal-body p-0">
+            <div class="card mb-0" style="border:none;border-radius:0">
+              <div class="card-header">
+                <ul class="nav nav-tabs card-header-tabs" data-bs-toggle="tabs" id="prefTabs">
+                  <li class="nav-item">
+                    <a class="nav-link active" href="#prefTabDisplay" data-bs-toggle="tab">
+                      <i class="ti ti-palette me-1"></i>Display
+                    </a>
+                  </li>
+                  <li class="nav-item" id="prefTabDocumentLi" style="display:none">
+                    <a class="nav-link" href="#prefTabDocument" data-bs-toggle="tab">
+                      <i class="ti ti-file-settings me-1"></i>Document
+                    </a>
+                  </li>
+                  <li class="nav-item">
+                    <a class="nav-link" href="#prefTabProfile" data-bs-toggle="tab">
+                      <i class="ti ti-user me-1"></i>Current User
+                    </a>
+                  </li>
+                </ul>
+              </div>
+              <div class="card-body" style="min-height:380px">
+                <div class="tab-content h-100">
 
-              <!-- Display tab -->
-              <div class="tab-pane active" id="prefTabDisplay">
-                <div class="card">
-                  <div class="card-body">
+                  <!-- Display tab -->
+                  <div class="tab-pane active" id="prefTabDisplay">
                     <div class="row align-items-center mb-3">
                       <label class="col-4 col-form-label text-end">Accent colour</label>
                       <div class="col-8">
@@ -273,13 +273,9 @@ const SidebarHtml = (() => {
                       </div>
                     </div>
                   </div>
-                </div>
-              </div>
 
-              <!-- Document viewer tab -->
-              <div class="tab-pane" id="prefTabDocument">
-                <div class="card">
-                  <div class="card-body">
+                  <!-- Document viewer tab -->
+                  <div class="tab-pane" id="prefTabDocument">
                     <div class="form-check form-switch mb-2">
                       <input class="form-check-input" type="checkbox" id="docPrefUploadButton">
                       <label class="form-check-label" for="docPrefUploadButton">"New document" button</label>
@@ -297,60 +293,60 @@ const SidebarHtml = (() => {
                       <label class="form-check-label" for="docPrefDeleteEnabled">Delete button on documents</label>
                     </div>
                   </div>
+
+                  <!-- Current User tab -->
+                  <div class="tab-pane" id="prefTabProfile">
+                    <div id="prefProfileError" class="alert alert-danger d-none py-2 small mb-3"></div>
+                    <div class="card mb-3">
+                      <div class="card-body py-3">
+                        <div class="row align-items-center">
+                          <div class="col-auto">
+                            <input type="file" id="prefAvatarFile" accept="image/*" style="display:none">
+                            <div id="prefAvatarPreview"
+                              class="avatar avatar-xl rounded-circle bg-primary-lt"
+                              style="cursor:pointer;width:72px;height:72px;overflow:hidden;display:flex;align-items:center;justify-content:center;font-size:1.5rem"
+                              title="Click to change avatar">?</div>
+                          </div>
+                          <div class="col">
+                            <div class="fw-semibold" id="prefAvatarName">—</div>
+                            <div class="text-secondary small" id="prefAvatarEmail">—</div>
+                            <div class="text-muted mt-1" style="font-size:.7rem">Click avatar to change</div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    <div class="card mb-3">
+                      <div class="card-body py-3">
+                        <div class="row align-items-center mb-3">
+                          <label class="col-4 col-form-label text-end">Display name</label>
+                          <div class="col-8"><input type="text" class="form-control" id="prefDisplayName"></div>
+                        </div>
+                        <div class="row align-items-center mb-3">
+                          <label class="col-4 col-form-label text-end">Email</label>
+                          <div class="col-8"><input type="text" class="form-control" id="prefEmail" disabled></div>
+                        </div>
+                        <div class="row align-items-center">
+                          <label class="col-4 col-form-label text-end">Job title</label>
+                          <div class="col-8"><input type="text" class="form-control" id="prefJobTitle"></div>
+                        </div>
+                      </div>
+                    </div>
+                    <div class="card">
+                      <div class="card-body py-3">
+                        <div class="row align-items-center mb-3">
+                          <label class="col-4 col-form-label text-end">New password</label>
+                          <div class="col-8"><input type="password" class="form-control" id="prefNewPassword" autocomplete="new-password" placeholder="Leave blank to keep current"></div>
+                        </div>
+                        <div class="row align-items-center">
+                          <label class="col-4 col-form-label text-end">Confirm</label>
+                          <div class="col-8"><input type="password" class="form-control" id="prefConfirmPassword" autocomplete="new-password"></div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
                 </div>
               </div>
-
-              <!-- Current User tab -->
-              <div class="tab-pane" id="prefTabProfile">
-                <div id="prefProfileError" class="alert alert-danger d-none py-2 small mb-3"></div>
-                <div class="card mb-3">
-                  <div class="card-body">
-                    <div class="row align-items-center">
-                      <div class="col-auto">
-                        <input type="file" id="prefAvatarFile" accept="image/*" style="display:none">
-                        <div id="prefAvatarPreview"
-                          class="avatar avatar-xl rounded-circle bg-primary-lt"
-                          style="cursor:pointer;width:72px;height:72px;overflow:hidden;display:flex;align-items:center;justify-content:center;font-size:1.5rem"
-                          title="Click to change avatar">?</div>
-                      </div>
-                      <div class="col">
-                        <div class="fw-semibold" id="prefAvatarName">—</div>
-                        <div class="text-secondary small" id="prefAvatarEmail">—</div>
-                        <div class="text-muted mt-1" style="font-size:.7rem">Click avatar to change</div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-                <div class="card mb-3">
-                  <div class="card-body">
-                    <div class="row align-items-center mb-3">
-                      <label class="col-4 col-form-label text-end">Display name</label>
-                      <div class="col-8"><input type="text" class="form-control" id="prefDisplayName"></div>
-                    </div>
-                    <div class="row align-items-center mb-3">
-                      <label class="col-4 col-form-label text-end">Email</label>
-                      <div class="col-8"><input type="text" class="form-control" id="prefEmail" disabled></div>
-                    </div>
-                    <div class="row align-items-center">
-                      <label class="col-4 col-form-label text-end">Job title</label>
-                      <div class="col-8"><input type="text" class="form-control" id="prefJobTitle"></div>
-                    </div>
-                  </div>
-                </div>
-                <div class="card">
-                  <div class="card-body">
-                    <div class="row align-items-center mb-3">
-                      <label class="col-4 col-form-label text-end">New password</label>
-                      <div class="col-8"><input type="password" class="form-control" id="prefNewPassword" autocomplete="new-password" placeholder="Leave blank to keep current"></div>
-                    </div>
-                    <div class="row align-items-center">
-                      <label class="col-4 col-form-label text-end">Confirm</label>
-                      <div class="col-8"><input type="password" class="form-control" id="prefConfirmPassword" autocomplete="new-password"></div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
             </div>
           </div>
           <div class="modal-footer">

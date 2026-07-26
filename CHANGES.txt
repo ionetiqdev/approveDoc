@@ -1,1 +1,1 @@
-Preferences: modal-lg size, tabs in modal-header flush to border, card borders per tab, right-justified labels
+Preferences: correct Tabler tab pattern - card-header-tabs, fixed min-height so dialog stays same size
