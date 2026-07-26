@@ -529,11 +529,13 @@ const SidebarHtml = (() => {
       const newPass     = document.getElementById('prefNewPassword')?.value;
       const confPass    = document.getElementById('prefConfirmPassword')?.value;
       const avatarFile  = document.getElementById('prefAvatarFile')?.files[0];
+      const userId      = session?.user?.id || profile?.id;
+
+      if (!userId) { console.error('[Prefs] No user ID available'); }
 
       if (newPass || confPass) {
         if (newPass !== confPass) {
           if (errEl) { errEl.textContent = 'Passwords do not match.'; errEl.classList.remove('d-none'); }
-          // Switch to profile tab
           document.querySelector('#prefTabs a[href="#prefTabProfile"]')?.click();
           return;
         }
@@ -545,24 +547,47 @@ const SidebarHtml = (() => {
         }
       }
 
-      if (displayName || jobTitle !== undefined) {
-        await sb.from('profiles').update({
+      if (userId) {
+        const profileUpdate = {
           display_name: displayName || profile?.display_name,
-          job_title:    jobTitle    || null,
+          job_title:    jobTitle || null,
           updated_at:   new Date().toISOString(),
-        }).eq('id', session?.user?.id);
+        };
+
+        if (avatarFile) {
+          const orgId       = Auth.getOrganisationId();
+          const storagePath = `${orgId}/${userId}/avatar.png`;
+          const fileData    = await avatarFile.arrayBuffer();
+          const { error: upErr } = await sb.storage.from('avatars')
+            .upload(storagePath, fileData, { contentType: avatarFile.type, upsert: true });
+          if (upErr) {
+            console.error('[Prefs] Avatar upload failed:', upErr.message);
+          } else {
+            const { data: { publicUrl } } = sb.storage.from('avatars').getPublicUrl(storagePath);
+            profileUpdate.avatar_url = publicUrl;
+          }
+        }
+
+        const { error: profErr } = await sb.from('profiles').update(profileUpdate).eq('id', userId);
+        if (profErr) {
+          console.error('[Prefs] Profile update failed:', profErr.message);
+          if (errEl) { errEl.textContent = 'Save failed: ' + profErr.message; errEl.classList.remove('d-none'); return; }
+        } else {
+          // Update in-memory profile so avatar and name refresh immediately
+          if (profile) {
+            profile.display_name = profileUpdate.display_name;
+            profile.job_title    = profileUpdate.job_title;
+            if (profileUpdate.avatar_url) profile.avatar_url = profileUpdate.avatar_url;
+          }
+          Auth.refreshUI();
+        }
       }
 
-      if (avatarFile && session?.user?.id) {
-        const orgId      = Auth.getOrganisationId();
-        const storagePath = `${orgId}/${session.user.id}/avatar.png`;
-        const fileData   = await avatarFile.arrayBuffer();
-        const { error: upErr } = await sb.storage.from('avatars')
-          .upload(storagePath, fileData, { contentType: avatarFile.type, upsert: true });
-        if (!upErr) {
-          const { data: { publicUrl } } = sb.storage.from('avatars').getPublicUrl(storagePath);
-          await sb.from('profiles').update({ avatar_url: publicUrl }).eq('id', session.user.id);
-        }
+      // Persist dark mode
+      const darkMode = document.getElementById('darkModeSwitch')?.checked;
+      if (darkMode !== undefined) {
+        localStorage.setItem('app_theme', darkMode ? 'dark' : 'light');
+        document.documentElement.setAttribute('data-bs-theme', darkMode ? 'dark' : 'light');
       }
 
       lastPreferencesSnapshot = _snapshot();

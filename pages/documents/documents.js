@@ -613,6 +613,7 @@ async function deleteDoc(id, e) {
     docPdfFrame.src = '';
     docEmptyState.style.display = 'flex';
     docViewerToolbar.style.display = 'none';
+    docViewerName.textContent = '';
   }
 
   await loadDocuments();
