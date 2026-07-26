@@ -38,6 +38,8 @@ const newDocBtn         = document.getElementById('newDocBtn');
   Auth.refreshUI();
 
   loadDocFeatures();
+  // Re-apply after a tick in case auth.js async operations restore role-hidden elements
+  setTimeout(() => loadDocFeatures(), 100);
   bindPrefsModal();
   bindEditModal();
   bindUpload();
@@ -62,12 +64,17 @@ function loadDocFeatures() {
 
 function applyDocFeatures() {
   const f = DOC_FEATURES;
+  console.log('[DocFeatures] applying:', JSON.stringify(f.upload), JSON.stringify(f.delete));
 
   if (newDocBtn && f.upload) {
-    newDocBtn.classList.toggle('d-none', !(f.upload.enabled && f.upload.modalButton));
+    const show = f.upload.enabled !== false && f.upload.modalButton !== false;
+    console.log('[DocFeatures] newDocBtn show:', show);
+    newDocBtn.classList.toggle('d-none', !show);
   }
   if (docDropZoneWrap && f.upload) {
-    docDropZoneWrap.classList.toggle('d-none', !(f.upload.enabled && f.upload.dropZone));
+    const show = f.upload.enabled !== false && f.upload.dropZone !== false;
+    console.log('[DocFeatures] dropZone show:', show);
+    docDropZoneWrap.classList.toggle('d-none', !show);
   }
 }
 
