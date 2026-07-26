@@ -1,1 +1,1 @@
-Documents: rename Description to Name; add Description textarea mapped to ad_document.description column
+Documents: category pill top-right of list row; description shown below document name

@@ -320,7 +320,7 @@ async function loadDocuments() {
 
   const { data, error } = await sb
     .from(DOC_CONFIG.tableDocs)
-    .select(`${DOC_CONFIG.colDocId}, ${DOC_CONFIG.colDocDesc}, ${DOC_CONFIG.colDocCatId}, ${DOC_CONFIG.tableFiles}(id, file_name, storage_path, download_file_name, mime_type, created_at)`)
+    .select(`${DOC_CONFIG.colDocId}, ${DOC_CONFIG.colDocDesc}, description, ${DOC_CONFIG.colDocCatId}, ${DOC_CONFIG.tableFiles}(id, file_name, storage_path, download_file_name, mime_type, created_at)`)
     .eq(DOC_CONFIG.colOrgId, orgId)
     .order(DOC_CONFIG.colDocId);
 
@@ -351,12 +351,16 @@ function renderDocList(docs) {
   const showDelete = DOC_FEATURES.delete?.enabled !== false && Auth.canEdit();
   docList.innerHTML = docs.map(d => {
     const catName = categoryName(d[DOC_CONFIG.colDocCatId]);
+    const desc    = d.description || '';
     return `
     <div class="doc-list-item ${d[DOC_CONFIG.colDocId] === currentDocId ? 'active' : ''}" data-id="${d[DOC_CONFIG.colDocId]}">
-      <div class="d-flex align-items-center gap-2">
-        <div class="doc-list-title flex-grow-1 select-doc-trigger" data-id="${d[DOC_CONFIG.colDocId]}" style="cursor:pointer">
-          ${App.escHtml(d[DOC_CONFIG.colDocDesc] || 'Untitled document')}
-          ${catName ? `<div class="text-secondary" style="font-size:.7rem;margin-top:.1rem">${App.escHtml(catName)}</div>` : ''}
+      <div class="d-flex align-items-start gap-2">
+        <div class="select-doc-trigger flex-grow-1" data-id="${d[DOC_CONFIG.colDocId]}" style="cursor:pointer;min-width:0">
+          <div class="d-flex align-items-center justify-content-between gap-2">
+            <div class="doc-list-title" style="min-width:0">${App.escHtml(d[DOC_CONFIG.colDocDesc] || 'Untitled document')}</div>
+            ${catName ? `<span class="badge bg-blue-lt text-nowrap flex-shrink-0">${App.escHtml(catName)}</span>` : ''}
+          </div>
+          ${desc ? `<div class="text-secondary" style="font-size:.72rem;margin-top:2px">${App.escHtml(desc)}</div>` : ''}
         </div>
         <button class="btn btn-icon btn-icon-lg edit-doc-trigger flex-shrink-0" data-id="${d[DOC_CONFIG.colDocId]}" title="Edit"><i class="ti ti-edit"></i></button>
         ${showDelete ? `<button class="btn btn-icon btn-icon-lg text-danger delete-doc-trigger flex-shrink-0" data-id="${d[DOC_CONFIG.colDocId]}" title="Delete"><i class="ti ti-trash"></i></button>` : ''}
