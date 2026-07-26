@@ -7,7 +7,7 @@
 
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/core@1.4.0/dist/css/tabler.min.css" />
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.44.0/dist/tabler-icons.min.css" />
-  <link rel="stylesheet" href="../../assets/css/theme.css?r=e62bpioy" />
+  <link rel="stylesheet" href="../../assets/css/theme.css?r=ehpj83mx" />
 
   <script>
     (function() {
@@ -186,6 +186,9 @@
               <h3 class="card-title">Not in this audience</h3>
               <span class="text-secondary ms-auto small" id="notInCount"></span>
             </div>
+            <div class="px-2 py-2" style="border-bottom:1px solid var(--tblr-border-color)">
+              <input type="text" id="notInFilter" class="form-control form-control-sm" placeholder="Filter…" autocomplete="off">
+            </div>
             <div class="scroll-pane member-list-pane" id="notInListBody" data-side="notIn">
               <div class="text-center py-4 text-secondary small">Select an audience above</div>
             </div>
@@ -195,6 +198,9 @@
             <div class="card-header">
               <h3 class="card-title">In this audience</h3>
               <span class="text-secondary ms-auto small" id="inCount"></span>
+            </div>
+            <div class="px-2 py-2" style="border-bottom:1px solid var(--tblr-border-color)">
+              <input type="text" id="inFilter" class="form-control form-control-sm" placeholder="Filter…" autocomplete="off">
             </div>
             <div class="scroll-pane member-list-pane" id="inListBody" data-side="in">
               <div class="text-center py-4 text-secondary small">Select an audience above</div>
@@ -298,15 +304,15 @@
   <script src="https://cdn.jsdelivr.net/npm/@tabler/core@1.4.0/dist/js/tabler.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="../../assets/js/version.js?r=e62bpioy"></script>
-  <script src="../../assets/js/supabase-client.js?r=e62bpioy"></script>
-  <script src="../../assets/js/auth.js?r=e62bpioy"></script>
-  <script src="../../assets/js/app.js?r=e62bpioy"></script>
-  <script src="../../assets/js/theme.js?r=e62bpioy"></script>
-  <script src="../../assets/js/sidebar-html.js?r=e62bpioy"></script>
-  <script src="../../assets/js/sidebar.js?r=e62bpioy"></script>
-  <script src="../../assets/js/profile-modal.js?r=e62bpioy"></script>
-  <script src="../../assets/js/status-widget.js?r=e62bpioy"></script>
+  <script src="../../assets/js/version.js?r=ehpj83mx"></script>
+  <script src="../../assets/js/supabase-client.js?r=ehpj83mx"></script>
+  <script src="../../assets/js/auth.js?r=ehpj83mx"></script>
+  <script src="../../assets/js/app.js?r=ehpj83mx"></script>
+  <script src="../../assets/js/theme.js?r=ehpj83mx"></script>
+  <script src="../../assets/js/sidebar-html.js?r=ehpj83mx"></script>
+  <script src="../../assets/js/sidebar.js?r=ehpj83mx"></script>
+  <script src="../../assets/js/profile-modal.js?r=ehpj83mx"></script>
+  <script src="../../assets/js/status-widget.js?r=ehpj83mx"></script>
   <script>
 // Audiences: top half is a master/detail pair (audience list + its
 // details/create form), bottom half is a two-list view of which
@@ -357,6 +363,9 @@ let pickerWorkingSet = new Set();
   document.getElementById('newAudienceBtn').addEventListener('click', openNewAudienceModal);
   document.getElementById('saveNewAudienceBtn').addEventListener('click', saveNewAudience);
   document.getElementById('newAudienceModal').addEventListener('hidden.bs.modal', resetNewAudienceModal);
+
+  document.getElementById('notInFilter').addEventListener('input', () => filterMemberList('notIn'));
+  document.getElementById('inFilter').addEventListener('input',    () => filterMemberList('in'));
 })();
 
 function openNewAudienceModal() {
@@ -688,6 +697,8 @@ function resetMemberLists() {
   document.getElementById('inListBody').innerHTML = `<div class="text-center py-4 text-secondary small">Select an audience above</div>`;
   document.getElementById('notInCount').textContent = '';
   document.getElementById('inCount').textContent = '';
+  const nf = document.getElementById('notInFilter'); if (nf) nf.value = '';
+  const inf = document.getElementById('inFilter');   if (inf) inf.value = '';
 }
 
 function userRowHtml(user) {
@@ -701,7 +712,7 @@ function userRowHtml(user) {
 
   const checked = checkedUserIds.has(user.user_id) ? 'checked' : '';
 
-  return `<div class="member-list-item" draggable="true" data-user-id="${user.user_id}">
+  return `<div class="member-list-item" draggable="true" data-user-id="${user.user_id}" data-name="${fullName.toLowerCase()}">
     <input type="checkbox" class="form-check-input member-checkbox" data-user-id="${user.user_id}" draggable="false" ${checked} />
     ${avatar}
     <div>
@@ -731,6 +742,22 @@ function renderMemberLists() {
 
   wireUpRowInteractions(notInPane, 'notIn');
   wireUpRowInteractions(inPane, 'in');
+
+  // Re-apply any active filters after re-render
+  filterMemberList('notIn');
+  filterMemberList('in');
+}
+
+function filterMemberList(side) {
+  const filterId  = side === 'notIn' ? 'notInFilter' : 'inFilter';
+  const paneId    = side === 'notIn' ? 'notInListBody' : 'inListBody';
+  const term      = (document.getElementById(filterId)?.value || '').toLowerCase().trim();
+  const pane      = document.getElementById(paneId);
+  if (!pane) return;
+  pane.querySelectorAll('.member-list-item').forEach(row => {
+    const name = (row.dataset.name || row.textContent || '').toLowerCase();
+    row.style.display = (!term || name.includes(term)) ? '' : 'none';
+  });
 }
 
 // Wires checkbox toggling, double-click transfer, and drag-start on

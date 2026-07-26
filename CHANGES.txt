@@ -1,1 +1,1 @@
-Delete modals: consistent template across all pages - 16px title with name, 14px red warning, correct padding, App.confirm updated
+Audiences: add text filter to both member list panes
