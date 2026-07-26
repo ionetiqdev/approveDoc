@@ -526,9 +526,10 @@ function openEditDocModal(id, e) {
   const doc = allDocs.find(d => d[DOC_CONFIG.colDocId] === id);
   if (!doc) return;
 
-  document.getElementById('editDocId').value          = id;
-  document.getElementById('editDocDescription').value = doc[DOC_CONFIG.colDocDesc] || '';
-  document.getElementById('editDocCategory').value     = doc[DOC_CONFIG.colDocCatId] || '';
+  document.getElementById('editDocId').value               = id;
+  document.getElementById('editDocDescription').value      = doc[DOC_CONFIG.colDocDesc] || '';
+  document.getElementById('editDocDescriptionText').value  = doc.description || '';
+  document.getElementById('editDocCategory').value         = doc[DOC_CONFIG.colDocCatId] || '';
 
   new bootstrap.Modal(document.getElementById('editDocModal')).show();
 }
@@ -536,12 +537,13 @@ function openEditDocModal(id, e) {
 function bindEditModal() {
   document.getElementById('editDocSaveBtn').addEventListener('click', async () => {
     const id   = document.getElementById('editDocId').value;
-    const desc = document.getElementById('editDocDescription').value.trim();
-    const cat  = document.getElementById('editDocCategory').value || null;
+    const desc        = document.getElementById('editDocDescription').value.trim();
+    const descText    = document.getElementById('editDocDescriptionText').value.trim();
+    const cat         = document.getElementById('editDocCategory').value || null;
 
-    if (!desc) { App.toast('Description is required', 'warning'); return; }
+    if (!desc) { App.toast('Name is required', 'warning'); return; }
 
-    const payload = { [DOC_CONFIG.colDocDesc]: desc, [DOC_CONFIG.colDocCatId]: cat };
+    const payload = { [DOC_CONFIG.colDocDesc]: desc, description: descText || null, [DOC_CONFIG.colDocCatId]: cat };
     const { error } = await sb.from(DOC_CONFIG.tableDocs).update(payload).eq(DOC_CONFIG.colDocId, id);
 
     if (error) { App.toast('Update failed: ' + error.message, 'danger'); return; }
@@ -594,7 +596,7 @@ async function deleteDoc(id, e) {
 }
 
 // ── Upload ────────────────────────────────────────────────────────────
-async function uploadAndSave(description, file, progressBar, statusEl, categoryId) {
+async function uploadAndSave(description, file, progressBar, statusEl, categoryId, descriptionText) {
   if (!file) { App.toast('Please select a PDF file', 'warning'); return false; }
 
   const orgId = Auth.getOrganisationId();
@@ -607,6 +609,7 @@ async function uploadAndSave(description, file, progressBar, statusEl, categoryI
 
   const docPayload = { [DOC_CONFIG.colDocDesc]: description || file.name, [DOC_CONFIG.colOrgId]: orgId };
   if (categoryId) docPayload[DOC_CONFIG.colDocCatId] = categoryId;
+  if (descriptionText) docPayload.description = descriptionText;
 
   const { data: docData, error: docErr } = await sb
     .from(DOC_CONFIG.tableDocs)
@@ -655,6 +658,7 @@ async function uploadAndSave(description, file, progressBar, statusEl, categoryI
 function bindUpload() {
   document.getElementById('docModalSaveBtn').addEventListener('click', async () => {
     const desc     = document.getElementById('docModalDescription').value.trim();
+    const descText = document.getElementById('docModalDescriptionText').value.trim();
     const catId    = document.getElementById('docModalCategory').value || null;
     const file     = document.getElementById('docModalFile').files[0];
     const progWrap = document.getElementById('docModalProgress');
@@ -666,7 +670,7 @@ function bindUpload() {
     progBar.style.width = '0%';
     saveBtn.disabled = true;
 
-    const success = await uploadAndSave(desc, file, progBar, status, catId);
+    const success = await uploadAndSave(desc, file, progBar, status, catId, descText);
 
     saveBtn.disabled = false;
 
@@ -674,6 +678,7 @@ function bindUpload() {
       setTimeout(() => {
         bootstrap.Modal.getInstance(document.getElementById('addDocModal')).hide();
         document.getElementById('docModalDescription').value = '';
+        document.getElementById('docModalDescriptionText').value = '';
         document.getElementById('docModalCategory').value = '';
         document.getElementById('docModalFile').value = '';
         progWrap.style.display = 'none';
@@ -725,6 +730,7 @@ async function handleDroppedFile(file) {
   _pendingDropFile = file;
   document.getElementById('dropPromptFileName').textContent  = file.name;
   document.getElementById('dropPromptDescription').value     = file.name.replace(/\.pdf$/i, '');
+  document.getElementById('dropPromptDescriptionText').value = '';
   document.getElementById('dropPromptCategory').value        = '';
   new bootstrap.Modal(document.getElementById('dropPromptModal')).show();
 }
@@ -732,6 +738,7 @@ async function handleDroppedFile(file) {
 function bindDropPromptModal() {
   document.getElementById('dropPromptSaveBtn').addEventListener('click', async () => {
     const desc     = document.getElementById('dropPromptDescription').value.trim();
+    const descText = document.getElementById('dropPromptDescriptionText').value.trim();
     const catId    = document.getElementById('dropPromptCategory').value || null;
     const progWrap = document.getElementById('dropPromptProgress');
     const progBar  = document.getElementById('dropPromptProgressBar');
@@ -744,7 +751,7 @@ function bindDropPromptModal() {
     progBar.style.width = '0%';
     saveBtn.disabled = true;
 
-    const success = await uploadAndSave(desc, _pendingDropFile, progBar, status, catId);
+    const success = await uploadAndSave(desc, _pendingDropFile, progBar, status, catId, descText);
 
     saveBtn.disabled = false;
 

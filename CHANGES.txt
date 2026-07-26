@@ -1,1 +1,1 @@
-Audiences: filter clear icon inside input field using input-group
+Documents: rename Description to Name; add Description textarea mapped to ad_document.description column
