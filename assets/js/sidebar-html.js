@@ -251,7 +251,7 @@ const SidebarHtml = (() => {
                 <div class="tab-content">
 
                   <!-- Display tab -->
-                  <div class="tab-pane active" id="prefTabDisplay" style="min-height:380px">
+                  <div class="tab-pane active" id="prefTabDisplay" style="min-height:490px;padding-top:20px">
                     <div class="row align-items-center mb-3">
                       <label class="col-4 col-form-label text-end">Accent colour</label>
                       <div class="col-8">
@@ -275,7 +275,7 @@ const SidebarHtml = (() => {
                   </div>
 
                   <!-- Document viewer tab -->
-                  <div class="tab-pane" id="prefTabDocument" style="min-height:380px">
+                  <div class="tab-pane" id="prefTabDocument" style="min-height:490px;padding-top:20px;padding-left:20px">
                     <div class="form-check form-switch mb-2">
                       <input class="form-check-input" type="checkbox" id="docPrefUploadButton">
                       <label class="form-check-label" for="docPrefUploadButton">"New document" button</label>
@@ -295,7 +295,7 @@ const SidebarHtml = (() => {
                   </div>
 
                   <!-- Current User tab -->
-                  <div class="tab-pane" id="prefTabProfile" style="min-height:380px">
+                  <div class="tab-pane" id="prefTabProfile" style="min-height:490px">
                     <div id="prefProfileError" class="alert alert-danger d-none py-2 small mb-3"></div>
                     <div class="card mb-3">
                       <div class="card-body py-3">
@@ -458,6 +458,15 @@ const SidebarHtml = (() => {
       }
 
       preferencesModalInstance.show();
+
+      // After the modal is visible, equalise all tab pane heights to the tallest one
+      modalEl.addEventListener('shown.bs.modal', () => {
+        const panes = modalEl.querySelectorAll('.tab-pane');
+        // Temporarily show all panes to measure
+        panes.forEach(p => { p.style.display = 'block'; p.style.visibility = 'hidden'; });
+        const maxH = Math.max(...[...panes].map(p => p.scrollHeight));
+        panes.forEach(p => { p.style.display = ''; p.style.visibility = ''; p.style.minHeight = maxH + 'px'; });
+      }, { once: true });
     };
 
     document.getElementById('preferencesBtn')?.addEventListener('click', openPreferences);
