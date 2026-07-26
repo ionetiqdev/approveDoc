@@ -297,50 +297,44 @@ const SidebarHtml = (() => {
                   <!-- Current User tab -->
                   <div class="tab-pane" id="prefTabProfile" style="min-height:490px">
                     <div id="prefProfileError" class="alert alert-danger d-none py-2 small mb-3"></div>
-                    <div class="card mb-3">
-                      <div class="card-body py-3">
-                        <div class="row align-items-center">
-                          <div class="col-auto">
-                            <input type="file" id="prefAvatarFile" accept="image/*" style="display:none">
-                            <div id="prefAvatarPreview"
-                              class="avatar avatar-xl rounded-circle bg-primary-lt"
-                              style="cursor:pointer;width:72px;height:72px;overflow:hidden;display:flex;align-items:center;justify-content:center;font-size:1.5rem"
-                              title="Click to change avatar">?</div>
-                          </div>
-                          <div class="col">
-                            <div class="fw-semibold" id="prefAvatarName">—</div>
-                            <div class="text-secondary small" id="prefAvatarEmail">—</div>
-                            <div class="text-muted mt-1" style="font-size:.7rem">Click avatar to change</div>
-                          </div>
+                    <div class="mb-3 pb-3 border-bottom">
+                      <div class="row align-items-center">
+                        <div class="col-auto">
+                          <input type="file" id="prefAvatarFile" accept="image/*" style="display:none">
+                          <div id="prefAvatarPreview"
+                            class="avatar avatar-xl rounded-circle bg-primary-lt"
+                            style="cursor:pointer;width:72px;height:72px;overflow:hidden;display:flex;align-items:center;justify-content:center;font-size:1.5rem"
+                            title="Click to change avatar">?</div>
+                        </div>
+                        <div class="col">
+                          <div class="fw-semibold" id="prefAvatarName">—</div>
+                          <div class="text-secondary small" id="prefAvatarEmail">—</div>
+                          <div class="text-muted mt-1" style="font-size:.7rem">Click avatar to change</div>
                         </div>
                       </div>
                     </div>
-                    <div class="card mb-3">
-                      <div class="card-body py-3">
-                        <div class="row align-items-center mb-3">
-                          <label class="col-4 col-form-label text-end">Display name</label>
-                          <div class="col-8"><input type="text" class="form-control" id="prefDisplayName"></div>
-                        </div>
-                        <div class="row align-items-center mb-3">
-                          <label class="col-4 col-form-label text-end">Email</label>
-                          <div class="col-8"><input type="text" class="form-control" id="prefEmail" disabled></div>
-                        </div>
-                        <div class="row align-items-center">
-                          <label class="col-4 col-form-label text-end">Job title</label>
-                          <div class="col-8"><input type="text" class="form-control" id="prefJobTitle"></div>
-                        </div>
+                    <div class="mb-3 pb-3 border-bottom">
+                      <div class="row align-items-center mb-3">
+                        <label class="col-4 col-form-label text-end">Display name</label>
+                        <div class="col-8"><input type="text" class="form-control" id="prefDisplayName"></div>
+                      </div>
+                      <div class="row align-items-center mb-3">
+                        <label class="col-4 col-form-label text-end">Email</label>
+                        <div class="col-8"><input type="text" class="form-control" id="prefEmail" disabled></div>
+                      </div>
+                      <div class="row align-items-center">
+                        <label class="col-4 col-form-label text-end">Job title</label>
+                        <div class="col-8"><input type="text" class="form-control" id="prefJobTitle"></div>
                       </div>
                     </div>
-                    <div class="card">
-                      <div class="card-body py-3">
-                        <div class="row align-items-center mb-3">
-                          <label class="col-4 col-form-label text-end">New password</label>
-                          <div class="col-8"><input type="password" class="form-control" id="prefNewPassword" autocomplete="new-password" placeholder="Leave blank to keep current"></div>
-                        </div>
-                        <div class="row align-items-center">
-                          <label class="col-4 col-form-label text-end">Confirm</label>
-                          <div class="col-8"><input type="password" class="form-control" id="prefConfirmPassword" autocomplete="new-password"></div>
-                        </div>
+                    <div>
+                      <div class="row align-items-center mb-3">
+                        <label class="col-4 col-form-label text-end">New password</label>
+                        <div class="col-8"><input type="password" class="form-control" id="prefNewPassword" autocomplete="new-password" placeholder="Leave blank to keep current"></div>
+                      </div>
+                      <div class="row align-items-center">
+                        <label class="col-4 col-form-label text-end">Confirm</label>
+                        <div class="col-8"><input type="password" class="form-control" id="prefConfirmPassword" autocomplete="new-password"></div>
                       </div>
                     </div>
                   </div>

@@ -1,1 +1,1 @@
-Preferences: JS height equalisation on modal open; padding on tabs 1+2; left indent on document tab
+Preferences: remove card borders from Current User tab groups, use border-bottom dividers instead
