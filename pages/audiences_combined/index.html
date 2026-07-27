@@ -7,7 +7,7 @@
 
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/core@1.4.0/dist/css/tabler.min.css" />
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.44.0/dist/tabler-icons.min.css" />
-  <link rel="stylesheet" href="../../assets/css/theme.css?r=u17ocx8s" />
+  <link rel="stylesheet" href="../../assets/css/theme.css?r=2j6qhvcp" />
 
   <script>
     (function() {
@@ -310,15 +310,15 @@
   <script src="https://cdn.jsdelivr.net/npm/@tabler/core@1.4.0/dist/js/tabler.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="../../assets/js/version.js?r=u17ocx8s"></script>
-  <script src="../../assets/js/supabase-client.js?r=u17ocx8s"></script>
-  <script src="../../assets/js/auth.js?r=u17ocx8s"></script>
-  <script src="../../assets/js/app.js?r=u17ocx8s"></script>
-  <script src="../../assets/js/theme.js?r=u17ocx8s"></script>
-  <script src="../../assets/js/sidebar-html.js?r=u17ocx8s"></script>
-  <script src="../../assets/js/sidebar.js?r=u17ocx8s"></script>
-  <script src="../../assets/js/profile-modal.js?r=u17ocx8s"></script>
-  <script src="../../assets/js/status-widget.js?r=u17ocx8s"></script>
+  <script src="../../assets/js/version.js?r=2j6qhvcp"></script>
+  <script src="../../assets/js/supabase-client.js?r=2j6qhvcp"></script>
+  <script src="../../assets/js/auth.js?r=2j6qhvcp"></script>
+  <script src="../../assets/js/app.js?r=2j6qhvcp"></script>
+  <script src="../../assets/js/theme.js?r=2j6qhvcp"></script>
+  <script src="../../assets/js/sidebar-html.js?r=2j6qhvcp"></script>
+  <script src="../../assets/js/sidebar.js?r=2j6qhvcp"></script>
+  <script src="../../assets/js/profile-modal.js?r=2j6qhvcp"></script>
+  <script src="../../assets/js/status-widget.js?r=2j6qhvcp"></script>
   <script>
 // Audiences: top half is a master/detail pair (audience list + its
 // details/create form), bottom half is a two-list view of which
@@ -960,7 +960,22 @@ function renderPickerList(search) {
     return;
   }
 
-  list.innerHTML = filtered.map(opt => {
+  // Sort: selected first (alphabetical), then unselected (alphabetical)
+  // For countries: "United Kingdom" always at top of its group
+  const UK_VALUE = 'GB';
+  const sorted = [...filtered].sort((a, b) => {
+    const aSelected = pickerWorkingSet.has(String(a.value));
+    const bSelected = pickerWorkingSet.has(String(b.value));
+    if (aSelected !== bSelected) return aSelected ? -1 : 1;
+    // Within same group, UK first for country picker
+    if (pickerType === 'country') {
+      if (a.value === UK_VALUE) return -1;
+      if (b.value === UK_VALUE) return 1;
+    }
+    return a.label.localeCompare(b.label);
+  });
+
+  list.innerHTML = sorted.map(opt => {
     const value = String(opt.value);
     const checked = pickerWorkingSet.has(value) ? 'checked' : '';
     const flag = pickerType === 'country' && opt.alpha2
@@ -984,6 +999,8 @@ function renderPickerList(search) {
       else pickerWorkingSet.delete(value);
 
       document.getElementById('criteriaPickerCount').textContent = `${pickerWorkingSet.size} selected`;
+      // Re-render to move item to correct group
+      renderPickerList(document.getElementById('criteriaPickerSearch').value);
     });
   });
 }

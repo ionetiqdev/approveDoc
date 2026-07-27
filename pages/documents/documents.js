@@ -541,9 +541,13 @@ async function selectDoc(id) {
 
   const hash = buildPdfHash();
   docEmptyState.style.display = 'none';
+  docPdfFrame.style.visibility = 'hidden';
   docPdfFrame.style.display = 'block';
+  docPdfFrame.onload = () => {
+    injectPdfStyles();
+    setTimeout(() => { docPdfFrame.style.visibility = ''; }, 150);
+  };
   docPdfFrame.src = `${DOC_CONFIG.pdfViewerUrl}?file=${encodeURIComponent(pdfBlobUrl)}#${hash}`;
-  docPdfFrame.onload = injectPdfStyles;
 }
 
 function sanitizeFileName(name) {
