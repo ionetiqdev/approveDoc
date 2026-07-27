@@ -1,1 +1,1 @@
-Documents: 20px top padding above description in list row
+Documents: light grey background on drop zone
