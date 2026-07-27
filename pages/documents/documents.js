@@ -378,7 +378,7 @@ function renderDocList(docs) {
             <div class="doc-list-title" style="min-width:0">${App.escHtml(d[DOC_CONFIG.colDocDesc] || 'Untitled document')}</div>
             ${catName ? `<span class="badge bg-blue-lt text-nowrap flex-shrink-0">${App.escHtml(catName)}</span>` : ''}
           </div>
-          ${desc ? `<div class="text-secondary" style="font-size:.72rem;margin-top:2px">${App.escHtml(desc)}</div>` : ''}
+          ${desc ? `<div class="text-secondary" style="font-size:.72rem;margin-top:20px">${App.escHtml(desc)}</div>` : ''}
         </div>
         <button class="btn btn-icon btn-icon-lg edit-doc-trigger flex-shrink-0" data-id="${d[DOC_CONFIG.colDocId]}" title="Edit"><i class="ti ti-edit"></i></button>
         ${showDelete ? `<button class="btn btn-icon btn-icon-lg text-danger delete-doc-trigger flex-shrink-0" data-id="${d[DOC_CONFIG.colDocId]}" title="Delete"><i class="ti ti-trash"></i></button>` : ''}
@@ -700,12 +700,21 @@ function bindUpload() {
 
     if (success) {
       setTimeout(() => {
-        bootstrap.Modal.getInstance(document.getElementById('addDocModal')).hide();
-        document.getElementById('docModalDescription').value = '';
-        document.getElementById('docModalDescriptionText').value = '';
-        document.getElementById('docModalCategory').value = '';
-        document.getElementById('docModalFile').value = '';
-        progWrap.style.display = 'none';
+        const modalEl = document.getElementById('addDocModal');
+        const instance = bootstrap.Modal.getInstance(modalEl) || new bootstrap.Modal(modalEl);
+        instance.hide();
+        modalEl.addEventListener('hidden.bs.modal', () => {
+          document.getElementById('docModalDescription').value = '';
+          document.getElementById('docModalDescriptionText').value = '';
+          document.getElementById('docModalCategory').value = '';
+          document.getElementById('docModalFile').value = '';
+          progWrap.style.display = 'none';
+          // Force-remove any stuck backdrop
+          document.querySelectorAll('.modal-backdrop').forEach(el => el.remove());
+          document.body.classList.remove('modal-open');
+          document.body.style.removeProperty('overflow');
+          document.body.style.removeProperty('padding-right');
+        }, { once: true });
       }, 600);
     } else {
       // Upload failed - reset the progress bar and re-enable the form
@@ -781,7 +790,15 @@ function bindDropPromptModal() {
 
     if (success) {
       setTimeout(() => {
-        bootstrap.Modal.getInstance(document.getElementById('dropPromptModal')).hide();
+        const dpModalEl = document.getElementById('dropPromptModal');
+        const dpInstance = bootstrap.Modal.getInstance(dpModalEl) || new bootstrap.Modal(dpModalEl);
+        dpInstance.hide();
+        dpModalEl.addEventListener('hidden.bs.modal', () => {
+          document.querySelectorAll('.modal-backdrop').forEach(el => el.remove());
+          document.body.classList.remove('modal-open');
+          document.body.style.removeProperty('overflow');
+          document.body.style.removeProperty('padding-right');
+        }, { once: true });
         progWrap.style.display = 'none';
         _pendingDropFile = null;
         docFileInput.value = '';
