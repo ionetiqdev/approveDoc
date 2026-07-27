@@ -7,7 +7,7 @@
 
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/core@1.4.0/dist/css/tabler.min.css" />
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.44.0/dist/tabler-icons.min.css" />
-  <link rel="stylesheet" href="../../assets/css/theme.css?r=kle5g7zf" />
+  <link rel="stylesheet" href="../../assets/css/theme.css?r=71ku2orl" />
 
   <script>
     (function() {
@@ -310,15 +310,15 @@
   <script src="https://cdn.jsdelivr.net/npm/@tabler/core@1.4.0/dist/js/tabler.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="../../assets/js/version.js?r=kle5g7zf"></script>
-  <script src="../../assets/js/supabase-client.js?r=kle5g7zf"></script>
-  <script src="../../assets/js/auth.js?r=kle5g7zf"></script>
-  <script src="../../assets/js/app.js?r=kle5g7zf"></script>
-  <script src="../../assets/js/theme.js?r=kle5g7zf"></script>
-  <script src="../../assets/js/sidebar-html.js?r=kle5g7zf"></script>
-  <script src="../../assets/js/sidebar.js?r=kle5g7zf"></script>
-  <script src="../../assets/js/profile-modal.js?r=kle5g7zf"></script>
-  <script src="../../assets/js/status-widget.js?r=kle5g7zf"></script>
+  <script src="../../assets/js/version.js?r=71ku2orl"></script>
+  <script src="../../assets/js/supabase-client.js?r=71ku2orl"></script>
+  <script src="../../assets/js/auth.js?r=71ku2orl"></script>
+  <script src="../../assets/js/app.js?r=71ku2orl"></script>
+  <script src="../../assets/js/theme.js?r=71ku2orl"></script>
+  <script src="../../assets/js/sidebar-html.js?r=71ku2orl"></script>
+  <script src="../../assets/js/sidebar.js?r=71ku2orl"></script>
+  <script src="../../assets/js/profile-modal.js?r=71ku2orl"></script>
+  <script src="../../assets/js/status-widget.js?r=71ku2orl"></script>
   <script>
 // Audiences: top half is a master/detail pair (audience list + its
 // details/create form), bottom half is a two-list view of which
@@ -626,10 +626,44 @@ async function saveAudience(existing) {
     return;
   }
 
+  const newIsCriteria = currentMode === 'criteria';
+
+  // If editing and the type is changing, warn the user
+  if (existing) {
+    const oldIsCriteria = !!existing.is_criteria_built;
+    if (oldIsCriteria !== newIsCriteria) {
+      const typeLabel = newIsCriteria ? 'criteria-built' : 'manual (Select Users)';
+      const ok = await App.confirm({
+        title: 'Change audience type?',
+        message: `Switching to ${typeLabel} will permanently remove all current ${oldIsCriteria ? 'criteria' : 'members'}. This cannot be undone.`,
+        confirmText: 'Change type',
+        confirmClass: 'btn-danger',
+      });
+      if (!ok) {
+        // Revert radio to original type
+        document.querySelectorAll('input[name="audienceMode"]').forEach(r => {
+          r.checked = (r.value === (oldIsCriteria ? 'criteria' : 'manual'));
+        });
+        currentMode = oldIsCriteria ? 'criteria' : 'manual';
+        document.getElementById('manualBottomHalf').style.display = currentMode === 'manual' ? '' : 'none';
+        document.getElementById('criteriaBottomHalf').style.display = currentMode === 'criteria' ? '' : 'none';
+        return;
+      }
+
+      // User confirmed — clear old data
+      if (oldIsCriteria) {
+        await sb.from('ad_audience_criteria').delete().eq('audience_id', existing.audience_id);
+      } else {
+        await sb.from('ad_audience_member').delete().eq('audience_id', existing.audience_id);
+      }
+    }
+  }
+
   const payload = {
     name,
     description,
     organisation_id: Auth.getOrganisationId(),
+    is_criteria_built: newIsCriteria,
   };
 
   document.getElementById('saveAudienceSpinner').classList.remove('d-none');
