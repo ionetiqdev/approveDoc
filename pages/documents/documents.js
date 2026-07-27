@@ -439,10 +439,14 @@ function injectPdfStyles() {
         color: #000 !important;
         background-color: #fff !important;
       }
-      /* Always hidden: overflow menu, print, download */
+      /* Always hidden: overflow menu, print, download, separators */
       #secondaryToolbarToggle,
       #printButton, #secondaryPrintButton,
-      #downloadButton, #secondaryDownloadButton {
+      #downloadButton, #secondaryDownloadButton,
+      .verticalToolbarSeparator, .horizontalToolbarSeparator,
+      .splitToolbarButtonSeparator,
+      #editorModeSeparator,
+      .verticalToolbarSeparator.hiddenMediumView {
         display: none !important;
       }
       #secondaryToolbar, .secondaryToolbar {
