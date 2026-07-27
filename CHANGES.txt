@@ -1,1 +1,1 @@
-Audiences: criteria picker sorts selected first (alpha), then unselected (alpha); UK always top of its group
+Audiences: fix UK country code to GBR so it sorts correctly in criteria picker
