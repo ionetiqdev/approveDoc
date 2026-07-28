@@ -1,1 +1,1 @@
-Auth: patch sb.from to use authenticated client after setSession for cross-domain compatibility
+Organisations: fix button sizes to match other pages (btn-icon-lg)
