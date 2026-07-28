@@ -1,1 +1,1 @@
-Org chart: proper tree connector lines aligned to avatar centre, corner on last child, uniform row styling
+Org chart: fix connector lines - vertical stops at last child, horizontal tick on every child, corner; fix avatar for super_admin

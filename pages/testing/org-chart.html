@@ -42,104 +42,84 @@
     .app-content-wrapper { height: 100vh; display: flex; flex-direction: column; }
     .page-body { flex: 1; overflow-y: auto; }
 
-    /* ── Tree ── */
     .org-tree { font-size: .875rem; }
 
-    /* Avatar is 26px tall, row has .35rem (~5.6px) top padding.
-       Centre of avatar from top of row = 5.6 + 13 = ~18.6px ≈ 19px */
-    :root { --av-size: 26px; --av-half: 13px; --row-pad-top: 6px; --connector-top: calc(var(--row-pad-top) + var(--av-half)); }
-
+    /* Each node is position:relative so pseudo-elements can be placed absolutely */
     .org-node { position: relative; }
 
     .org-row {
       display: flex; align-items: center; gap: .6rem;
-      padding: var(--row-pad-top) .6rem;
+      padding: 5px .6rem;
       border-radius: var(--tblr-border-radius);
-      cursor: pointer;
+      cursor: pointer; user-select: none;
       transition: background .12s;
-      user-select: none;
-      position: relative;
     }
-    .org-row:hover { background: var(--tblr-bg-surface-secondary); }
+    .org-row:hover  { background: var(--tblr-bg-surface-secondary); }
+    .org-row.drag-over { outline: 2px dashed var(--tblr-primary); outline-offset: -2px; background: rgba(var(--tblr-primary-rgb),.1) !important; }
+    .org-row.dragging  { opacity: .35; }
 
-    /* Drop target */
-    .org-row.drag-over {
-      outline: 2px dashed var(--tblr-primary);
-      outline-offset: -2px;
-      background: rgba(var(--tblr-primary-rgb), .1) !important;
-    }
-    .org-row.dragging { opacity: .35; }
+    /* ── Connector lines ──────────────────────────────────────────────────────
+       Avatar: 26px.  Row top padding: 5px.
+       Centre of avatar = 5 + 13 = 18px from top of .org-node.
+       Horizontal tick: 20px wide, sits at 18px from top.
+       Children are indented 32px (13px = half parent avatar + gap).
+    ──────────────────────────────────────────────────────────────────────── */
 
-    /* Children block — provides the vertical line on the left */
     .org-children {
-      margin-left: calc(var(--av-half) + .6rem);  /* align with centre of parent avatar */
-      padding-left: 1.25rem;
-      position: relative;
-      margin-top: 0;
-      margin-bottom: .1rem;
+      margin-left: 32px;   /* lines up vertical line with centre of parent avatar */
+      padding-left: 20px;  /* room for horizontal tick */
     }
 
-    /* Vertical line running down the left of org-children */
-    .org-children::before {
+    /* Vertical line on each child — runs from top to the tick centre,
+       then continues down to bottom for non-last children */
+    .org-children > .org-node::before {
       content: '';
       position: absolute;
-      left: 0;
+      left: -20px;          /* sits on the vertical axis */
       top: 0;
-      bottom: calc(var(--connector-top));  /* stop at centre of last avatar */
+      height: 18px;         /* top of node down to avatar centre */
       width: 1px;
       background: var(--tblr-border-color);
     }
 
-    /* Each child node gets a horizontal tick from the vertical line to its avatar */
-    .org-children > .org-node {
-      position: relative;
-      margin-bottom: .1rem;
+    /* Non-last children: vertical line continues below the tick */
+    .org-children > .org-node:not(:last-child)::before {
+      height: 100%;         /* full height — connects to next sibling */
     }
-    .org-children > .org-node::before {
+
+    /* Horizontal tick from vertical line to avatar */
+    .org-children > .org-node::after {
       content: '';
       position: absolute;
-      left: -1.25rem;
-      top: var(--connector-top);
-      width: 1.25rem;
+      left: -20px;
+      top: 18px;            /* avatar centre */
+      width: 20px;
       height: 1px;
       background: var(--tblr-border-color);
     }
 
-    /* Last child: vertical line stops at this node's connector — use corner */
-    .org-children > .org-node:last-child::after {
-      content: '';
-      position: absolute;
-      left: -1.25rem;
-      top: 0;
-      bottom: calc(100% - var(--connector-top));
-      width: 1px;
-      background: var(--tblr-bg, #fff);  /* masks the vertical line below connector */
-    }
-
     /* No manager group */
     .org-unassigned { margin-top: 1.5rem; padding-top: 1rem; border-top: 1px dashed var(--tblr-border-color); }
-    .org-unassigned-label { font-size: .7rem; font-weight: 700; letter-spacing: .07em; text-transform: uppercase; color: var(--tblr-secondary-color); margin-bottom: .35rem; padding: 0 .25rem; }
+    .org-unassigned-label { font-size: .7rem; font-weight: 700; letter-spacing: .07em; text-transform: uppercase; color: var(--tblr-secondary-color); margin-bottom: .35rem; }
 
-    .org-name { font-weight: 500; flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .org-name  { font-weight: 500; flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     .org-email { font-size: .72rem; color: var(--tblr-secondary-color); white-space: nowrap; }
 
     .org-edit {
       opacity: 0; transition: opacity .15s;
       background: none; border: none; color: var(--tblr-secondary-color);
-      padding: 2px 5px; cursor: pointer; border-radius: 4px; flex-shrink: 0;
-      font-size: .8rem;
+      padding: 2px 5px; cursor: pointer; border-radius: 4px; flex-shrink: 0; font-size: .8rem;
     }
     .org-row:hover .org-edit { opacity: 1; }
 
     .org-av {
-      width: var(--av-size); height: var(--av-size); border-radius: 50%; flex-shrink: 0;
+      width: 26px; height: 26px; border-radius: 50%; flex-shrink: 0;
       display: flex; align-items: center; justify-content: center;
       font-size: .6rem; font-weight: 700; overflow: hidden;
       background: var(--tblr-bg-surface-secondary);
     }
     .org-av img { width: 100%; height: 100%; object-fit: cover; }
 
-    /* Modal */
     .picker-wrap { position: relative; }
   </style>
 </head>
@@ -292,7 +272,7 @@ async function loadAndRender() {
   const orgId = Auth.getOrganisationId();
   const [{ data: adUsers }, { data: profiles }] = await Promise.all([
     sb.from('ad_user').select('user_id,first_name,last_name,email,manager_id,is_top_level').eq('organisation_id', orgId),
-    sb.from('profiles').select('id,display_name,avatar_url,role,job_title').eq('organisation_id', orgId),
+    sb.from('profiles').select('id,display_name,avatar_url,role,job_title'),  // no org filter — super_admin has null org
   ]);
 
   const profMap = {};
