@@ -24,108 +24,114 @@
           document.documentElement.style.setProperty('--tblr-primary-rgb', parseInt(ah.slice(0,2),16) + ', ' + parseInt(ah.slice(2,4),16) + ', ' + parseInt(ah.slice(4,6),16));
         }
         var sidebarBg = localStorage.getItem('app_sidebar_bg' + suffix);
-        if (sidebarBg) document.documentElement.style.setProperty('--bg-sidebar', sidebarBg);
+        if (sidebarBg) {
+          document.documentElement.style.setProperty('--bg-sidebar', sidebarBg);
+          var hex = sidebarBg.replace('#', '');
+          if (hex.length === 3) hex = hex.split('').map(function(c){return c+c;}).join('');
+          var r = parseInt(hex.slice(0,2),16) / 255, g = parseInt(hex.slice(2,4),16) / 255, b = parseInt(hex.slice(4,6),16) / 255;
+          var toLinear = function(c){ return c <= 0.03928 ? c/12.92 : Math.pow((c+0.055)/1.055, 2.4); };
+          var isLight = (0.2126*toLinear(r) + 0.7152*toLinear(g) + 0.0722*toLinear(b)) > 0.5;
+          document.documentElement.style.setProperty('--sidebar-fg', isLight ? '#0f172a' : '#ffffff');
+          document.documentElement.style.setProperty('--sidebar-fg-rgb', isLight ? '15,23,42' : '255,255,255');
+        }
       } catch(e) {}
     })();
   </script>
   <style>
-    /* Tree structure */
-    .org-tree { font-size: .875rem; }
+    html, body { height: 100%; overflow: hidden; }
+    .app-content-wrapper { height: 100vh; display: flex; flex-direction: column; }
+    .page-body { flex: 1; overflow-y: auto; }
 
-    .org-level { margin-bottom: 1.25rem; }
-    .org-level-label {
-      font-size: .7rem;
-      font-weight: 700;
-      letter-spacing: .07em;
-      text-transform: uppercase;
-      color: var(--tblr-secondary-color);
-      padding: .35rem .75rem;
-      margin-bottom: .5rem;
-    }
+    /* ── Tree ── */
+    .org-tree { font-size: .875rem; padding: .5rem 0; }
 
-    /* Senior manager row */
-    .org-senior-manager {
-      background: var(--tblr-primary);
-      color: #fff;
-      border-radius: var(--tblr-border-radius);
+    /* Senior manager */
+    .org-sm-row {
+      display: flex; align-items: center; gap: .65rem;
       padding: .5rem .75rem;
-      display: flex;
-      align-items: center;
-      gap: .6rem;
-      margin-bottom: .35rem;
-      cursor: pointer;
-      transition: opacity .15s;
-    }
-    .org-senior-manager:hover { opacity: .85; }
-
-    /* Manager row */
-    .org-manager-block { margin-left: 1.5rem; margin-bottom: .75rem; }
-    .org-manager {
-      background: var(--tblr-card-bg, #fff);
-      border: 1px solid var(--tblr-border-color);
+      background: rgb(var(--tblr-primary-rgb), .12);
       border-left: 3px solid var(--tblr-primary);
       border-radius: var(--tblr-border-radius);
-      padding: .45rem .75rem;
-      display: flex;
-      align-items: center;
-      gap: .6rem;
       margin-bottom: .3rem;
       cursor: pointer;
       transition: background .15s;
+      user-select: none;
     }
-    .org-manager:hover { background: var(--tblr-bg-surface-secondary); }
+    .org-sm-row:hover { background: rgb(var(--tblr-primary-rgb), .2); }
 
-    /* User rows */
-    .org-users-block { margin-left: 3rem; }
-    .org-user {
-      padding: .35rem .6rem;
-      display: flex;
-      align-items: center;
-      gap: .5rem;
-      border-radius: var(--tblr-border-radius);
+    /* Manager */
+    .org-m-block { margin-left: 2rem; margin-top: .4rem; margin-bottom: .5rem; }
+    .org-m-row {
+      display: flex; align-items: center; gap: .65rem;
+      padding: .4rem .75rem;
+      border-left: 2px solid var(--tblr-border-color);
+      border-radius: 0 var(--tblr-border-radius) var(--tblr-border-radius) 0;
+      margin-bottom: .25rem;
       cursor: pointer;
       transition: background .15s;
-      margin-bottom: .2rem;
+      user-select: none;
     }
-    .org-user:hover { background: var(--tblr-bg-surface-secondary); }
+    .org-m-row:hover { background: var(--tblr-bg-surface-secondary); }
 
-    /* No manager group */
-    .org-no-manager-block { margin-top: 2rem; }
-    .org-no-manager-label {
-      font-size: .75rem;
-      font-weight: 600;
-      color: var(--tblr-secondary-color);
-      padding: .35rem .75rem;
-      border-top: 1px solid var(--tblr-border-color);
-      margin-bottom: .35rem;
+    /* Users */
+    .org-u-block { margin-left: 4rem; }
+    .org-u-row {
+      display: flex; align-items: center; gap: .55rem;
+      padding: .3rem .5rem;
+      border-radius: var(--tblr-border-radius);
+      margin-bottom: .15rem;
+      cursor: grab;
+      transition: background .15s;
+      user-select: none;
+    }
+    .org-u-row:hover { background: var(--tblr-bg-surface-secondary); }
+    .org-u-row:active { cursor: grabbing; }
+
+    /* No manager section */
+    .org-no-mgr { margin-top: 2rem; padding-top: 1rem; border-top: 1px solid var(--tblr-border-color); }
+    .org-no-mgr-label {
+      font-size: .7rem; font-weight: 700; letter-spacing: .07em; text-transform: uppercase;
+      color: var(--tblr-secondary-color); padding: 0 .25rem .5rem;
     }
 
-    /* Avatar inline */
-    .org-avatar {
-      width: 28px; height: 28px;
-      border-radius: 50%;
-      object-fit: cover;
-      flex-shrink: 0;
+    /* Shared row elements */
+    .org-name { font-weight: 500; flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .org-email { font-size: .72rem; color: var(--tblr-secondary-color); white-space: nowrap; }
+    .org-edit {
+      opacity: 0; transition: opacity .15s;
+      background: none; border: none; color: var(--tblr-secondary-color);
+      padding: 2px 4px; cursor: pointer; border-radius: 4px; flex-shrink: 0;
+    }
+    .org-sm-row:hover .org-edit,
+    .org-m-row:hover .org-edit,
+    .org-u-row:hover .org-edit { opacity: 1; }
+
+    /* Avatar */
+    .org-av {
+      width: 26px; height: 26px; border-radius: 50%; flex-shrink: 0;
       display: flex; align-items: center; justify-content: center;
-      font-size: .65rem; font-weight: 600;
+      font-size: .6rem; font-weight: 700; overflow: hidden;
     }
-    .org-avatar-img { width: 28px; height: 28px; border-radius: 50%; object-fit: cover; flex-shrink: 0; }
-    .org-name { font-weight: 500; flex-grow: 1; }
-    .org-email { font-size: .75rem; color: var(--tblr-secondary-color); }
-    .org-edit-btn {
-      opacity: 0;
-      transition: opacity .15s;
-      border: none; background: none;
-      color: var(--tblr-secondary-color);
-      padding: 2px 4px; border-radius: 4px; cursor: pointer;
-      flex-shrink: 0;
-    }
-    .org-senior-manager .org-edit-btn { color: rgba(255,255,255,.7); }
-    .org-senior-manager:hover .org-edit-btn,
-    .org-manager:hover .org-edit-btn,
-    .org-user:hover .org-edit-btn { opacity: 1; }
+    .org-av img { width: 100%; height: 100%; object-fit: cover; }
 
-    /* User modal */
+    /* Drag and drop */
+    .org-dragging {
+      opacity: .4;
+    }
+    .org-drop-target {
+      outline: 2px dashed var(--tblr-primary);
+      outline-offset: 2px;
+      background: rgb(var(--tblr-primary-rgb), .08) !important;
+    }
+    .drag-hint {
+      font-size: .72rem; color: var(--tblr-secondary-color);
+      text-align: center; padding: .35rem;
+      background: var(--tblr-bg-surface-secondary);
+      border-radius: var(--tblr-border-radius);
+      margin-bottom: .5rem;
+    }
+
+    /* Modal */
     .pw-toggle-btn {
       position: absolute; right: .65rem; top: 50%; transform: translateY(-50%);
       background: none; border: none; color: var(--tblr-secondary-color); cursor: pointer; padding: 0; font-size: 1rem; z-index: 5;
@@ -133,27 +139,40 @@
   </style>
 </head>
 <body>
-  <div class="wrapper">
-    <aside class="navbar navbar-vertical navbar-expand-lg" id="sidebar"></aside>
-    <div class="page-wrapper">
-      <div class="page-header d-print-none">
-        <div class="container-xl">
-          <div class="row align-items-center">
-            <div class="col">
-              <h2 class="page-title">Org Chart</h2>
-              <p class="text-secondary small mb-0">Organisation hierarchy — Senior Manager → Manager → User</p>
-            </div>
-          </div>
+  <aside id="sidebar"></aside>
+  <div id="sidebarOverlay" class="sidebar-overlay"></div>
+
+  <div class="app-content-wrapper">
+    <header class="navbar navbar-expand-md d-print-none border-bottom">
+      <div class="container-fluid">
+        <button id="sidebarToggle" class="btn btn-icon"><i class="ti ti-menu-2"></i></button>
+        <h1 class="navbar-brand d-none d-sm-inline-block ms-2 mb-0 page-title-lg">Org Chart</h1>
+        <div class="navbar-nav flex-row order-md-last align-items-center gap-2">
+          <div data-active-organisation></div>
+          <button class="btn btn-icon" data-theme-toggle><i class="ti ti-moon"></i></button>
+          <button class="btn btn-icon" id="headerPreferencesBtn"><i class="ti ti-adjustments"></i></button>
+          <span class="avatar avatar-sm rounded-circle bg-primary-lt" data-user-initials>?</span>
+          <span class="d-none d-xl-block">
+            <span class="d-block fw-semibold" style="font-size:.8125rem" data-user-name>—</span>
+            <span class="d-block text-secondary" style="font-size:.7rem" data-user-email>—</span>
+          </span>
         </div>
       </div>
-      <div class="page-body">
-        <div class="container-xl">
-          <div class="card">
-            <div class="card-body">
-              <div id="orgTree" class="org-tree">
-                <div class="text-center py-5 text-secondary">
-                  <div class="spinner-border spinner-border-sm me-2"></div>Loading…
-                </div>
+    </header>
+
+    <div class="page-body">
+      <div class="container-fluid py-3">
+        <div class="card">
+          <div class="card-header">
+            <h3 class="card-title">Organisation Hierarchy</h3>
+            <div class="card-options text-secondary small">
+              <i class="ti ti-drag-drop me-1"></i>Drag a user onto a manager or senior manager to reassign
+            </div>
+          </div>
+          <div class="card-body">
+            <div id="orgTree" class="org-tree">
+              <div class="text-center py-5 text-secondary">
+                <div class="spinner-border spinner-border-sm me-2"></div>Loading…
               </div>
             </div>
           </div>
@@ -162,7 +181,7 @@
     </div>
   </div>
 
-  <!-- User edit modal -->
+  <!-- Edit modal -->
   <div class="modal modal-blur fade" id="userModal" tabindex="-1">
     <div class="modal-dialog modal-dialog-centered modal-lg">
       <div class="modal-content">
@@ -195,7 +214,7 @@
                 <option value="super_admin">Super Admin</option>
               </select>
             </div>
-            <div class="col-md-6">
+            <div class="col-md-6" style="position:relative">
               <label class="form-label">Manager</label>
               <div class="input-group">
                 <input type="text" id="managerSearch" class="form-control" placeholder="Search users…" autocomplete="off" />
@@ -204,7 +223,7 @@
               <input type="hidden" id="managerId" />
               <div id="managerDropdown" class="dropdown-menu w-100" style="display:none;max-height:180px;overflow-y:auto;position:absolute;z-index:9999"></div>
             </div>
-            <div class="col-md-6">
+            <div class="col-md-6" style="position:relative">
               <label class="form-label">Senior Manager</label>
               <div class="input-group">
                 <input type="text" id="seniorManagerSearch" class="form-control" placeholder="Search users…" autocomplete="off" />
@@ -239,10 +258,11 @@
   <script src="../../assets/js/profile-modal.js"></script>
   <script src="../../assets/js/status-widget.js"></script>
   <script>
-let allUsers   = [];
-let userModal  = null;
+let allUsers  = [];
+let userModal = null;
+let dragUserId = null;
 
-// ── Init ────────────────────────────────────────────────────────────────────
+// ── Init ──────────────────────────────────────────────────────────────────────
 (async () => {
   const session = await Auth.requireAuth();
   if (!session) return;
@@ -250,250 +270,267 @@ let userModal  = null;
   Sidebar.init();
   Auth.refreshUI();
   await loadAndRender();
-  initModal();
+  userModal = new bootstrap.Modal(document.getElementById('userModal'));
+  wirePickerField('managerSearch',       'managerId',       'managerDropdown',       'managerClear');
+  wirePickerField('seniorManagerSearch', 'seniorManagerId', 'seniorManagerDropdown', 'seniorManagerClear');
+  document.getElementById('saveUserBtn').addEventListener('click', saveUser);
 })();
 
-// ── Data ─────────────────────────────────────────────────────────────────────
+// ── Data ──────────────────────────────────────────────────────────────────────
 async function loadAndRender() {
   const orgId = Auth.getOrganisationId();
-  const { data, error } = await sb.from('ad_user')
-    .select('user_id, first_name, last_name, email, manager_id, senior_manager_id')
-    .eq('organisation_id', orgId);
 
-  if (error) { document.getElementById('orgTree').textContent = 'Failed to load users.'; return; }
+  const [{ data: adUsers }, { data: profiles }] = await Promise.all([
+    sb.from('ad_user').select('user_id,first_name,last_name,email,manager_id,senior_manager_id').eq('organisation_id', orgId),
+    sb.from('profiles').select('id,display_name,avatar_url,role,job_title').eq('organisation_id', orgId),
+  ]);
 
-  // Also fetch profiles for display_name and avatar_url
-  const { data: profiles } = await sb.from('profiles')
-    .select('id, display_name, avatar_url')
-    .eq('organisation_id', orgId);
+  const profMap = {};
+  (profiles || []).forEach(p => { profMap[p.id] = p; });
 
-  const profileMap = {};
-  (profiles || []).forEach(p => { profileMap[p.id] = p; });
-
-  allUsers = (data || []).map(u => ({
+  allUsers = (adUsers || []).map(u => ({
     ...u,
-    display_name: profileMap[u.user_id]?.display_name || `${u.first_name} ${u.last_name}`.trim() || u.email,
-    avatar_url:   profileMap[u.user_id]?.avatar_url || null,
+    display_name: profMap[u.user_id]?.display_name || `${u.first_name||''} ${u.last_name||''}`.trim() || u.email,
+    avatar_url:   profMap[u.user_id]?.avatar_url || null,
+    role:         profMap[u.user_id]?.role || 'user',
+    job_title:    profMap[u.user_id]?.job_title || '',
   }));
 
   renderTree();
 }
 
-// ── Tree ─────────────────────────────────────────────────────────────────────
+// ── Tree render ───────────────────────────────────────────────────────────────
 function renderTree() {
-  const userMap = {};
-  allUsers.forEach(u => { userMap[u.user_id] = u; });
+  const byId  = {};
+  allUsers.forEach(u => { byId[u.user_id] = u; });
+  const sort  = (a, b) => (a.display_name||'').localeCompare(b.display_name||'');
 
-  const sortName = (a, b) => (a.display_name || '').localeCompare(b.display_name || '');
-
-  // Group users by senior_manager_id and manager_id
-  // Structure: seniorMgr → { mgr → [users] }
-  const tree = {}; // tree[senior_manager_id || '__none__'][manager_id || '__none__'] = [users]
-
+  // Build senior manager → manager → users structure
+  // Key: senior_manager_id (or '__none__') → manager_id (or '__none__') → [users]
+  const tree = {};
   allUsers.forEach(u => {
-    const smKey = u.senior_manager_id || '__none__';
-    const mKey  = u.manager_id        || '__none__';
-    if (!tree[smKey]) tree[smKey] = {};
-    if (!tree[smKey][mKey]) tree[smKey][mKey] = [];
-    tree[smKey][mKey].push(u);
+    const sk = u.senior_manager_id || '__none__';
+    const mk = u.manager_id        || '__none__';
+    if (!tree[sk]) tree[sk] = {};
+    if (!tree[sk][mk]) tree[sk][mk] = [];
+    tree[sk][mk].push(u);
   });
 
-  // Collect distinct senior managers (excluding __none__)
-  const seniorManagerIds = Object.keys(tree).filter(k => k !== '__none__').sort((a, b) => {
-    const ua = userMap[a], ub = userMap[b];
-    return sortName(ua || {display_name:''}, ub || {display_name:''});
-  });
+  // Track which users have been placed in the tree to find truly unassigned
+  const placed = new Set();
 
-  let html = '';
+  const smIds = Object.keys(tree).filter(k => k !== '__none__').sort((a,b) => sort(byId[a]||{display_name:''}, byId[b]||{display_name:''}));
+
+  const treeEl = document.getElementById('orgTree');
+  treeEl.innerHTML = '';
 
   // ── Senior manager groups ──
-  seniorManagerIds.forEach(smId => {
-    const sm = userMap[smId];
-    const smName = sm?.display_name || 'Unknown';
+  smIds.forEach(smId => {
+    const sm = byId[smId];
+    if (!sm) return;
+    placed.add(smId);
 
-    html += `<div class="org-level">`;
-    html += `<div class="org-senior-manager" data-id="${smId}">
-      ${avatarHtml(sm, '#fff')}
-      <div class="org-name">${App.escHtml(smName)}</div>
-      <div class="org-email">${App.escHtml(sm?.email || '')}</div>
-      <button class="org-edit-btn" data-id="${smId}" title="Edit"><i class="ti ti-edit" style="font-size:14px"></i></button>
-    </div>`;
+    const smDiv = document.createElement('div');
+    smDiv.className = 'mb-3';
 
-    // Managers under this senior manager
-    const managers = Object.keys(tree[smId]).sort((a, b) => {
+    // Senior manager row
+    const smRow = document.createElement('div');
+    smRow.className = 'org-sm-row org-drop-zone';
+    smRow.dataset.id   = smId;
+    smRow.dataset.type = 'senior_manager';
+    smRow.innerHTML = `${avHtml(sm, 'sm')}
+      <div class="org-name">${App.escHtml(sm.display_name)}</div>
+      <div class="org-email">${App.escHtml(sm.email)}</div>
+      <button class="org-edit" data-id="${smId}" title="Edit"><i class="ti ti-edit" style="font-size:13px"></i></button>`;
+    smDiv.appendChild(smRow);
+
+    // Managers under this SM
+    const mkIds = Object.keys(tree[smId]).sort((a,b) => {
       if (a === '__none__') return 1;
       if (b === '__none__') return -1;
-      return sortName(userMap[a] || {}, userMap[b] || {});
+      return sort(byId[a]||{display_name:''}, byId[b]||{display_name:''});
     });
 
-    managers.forEach(mId => {
-      const m = mId === '__none__' ? null : userMap[mId];
-      const mName = m?.display_name || 'No manager';
+    mkIds.forEach(mId => {
+      const mBlock = document.createElement('div');
+      mBlock.className = 'org-m-block';
 
-      html += `<div class="org-manager-block">`;
       if (mId !== '__none__') {
-        html += `<div class="org-manager" data-id="${mId}">
-          ${avatarHtml(m)}
-          <div class="org-name">${App.escHtml(mName)}</div>
-          <div class="org-email">${App.escHtml(m?.email || '')}</div>
-          <button class="org-edit-btn" data-id="${mId}" title="Edit"><i class="ti ti-edit" style="font-size:14px"></i></button>
-        </div>`;
+        const m = byId[mId];
+        if (m) {
+          placed.add(mId);
+          const mRow = document.createElement('div');
+          mRow.className = 'org-m-row org-drop-zone';
+          mRow.dataset.id   = mId;
+          mRow.dataset.type = 'manager';
+          mRow.innerHTML = `${avHtml(m, 'm')}
+            <div class="org-name">${App.escHtml(m.display_name)}</div>
+            <div class="org-email">${App.escHtml(m.email)}</div>
+            <button class="org-edit" data-id="${mId}" title="Edit"><i class="ti ti-edit" style="font-size:13px"></i></button>`;
+          mBlock.appendChild(mRow);
+        }
       }
 
       // Users under this manager
-      const users = [...tree[smId][mId]].sort(sortName);
+      const users = [...tree[smId][mId]].sort(sort);
       if (users.length) {
-        html += `<div class="org-users-block">`;
+        const uBlock = document.createElement('div');
+        uBlock.className = 'org-u-block';
         users.forEach(u => {
-          html += `<div class="org-user" data-id="${u.user_id}">
-            ${avatarHtml(u)}
-            <div class="org-name">${App.escHtml(u.display_name)}</div>
-            <div class="org-email">${App.escHtml(u.email)}</div>
-            <button class="org-edit-btn" data-id="${u.user_id}" title="Edit"><i class="ti ti-edit" style="font-size:14px"></i></button>
-          </div>`;
+          placed.add(u.user_id);
+          uBlock.appendChild(makeUserRow(u));
         });
-        html += `</div>`;
+        mBlock.appendChild(uBlock);
       }
 
-      html += `</div>`; // manager-block
+      smDiv.appendChild(mBlock);
     });
 
-    html += `</div>`; // org-level
+    treeEl.appendChild(smDiv);
   });
 
   // ── No manager set ──
-  // Users who have no senior_manager_id — collect them
-  const noMgrUsers = [];
-  if (tree['__none__']) {
-    Object.values(tree['__none__']).forEach(arr => arr.forEach(u => noMgrUsers.push(u)));
-  }
-  // Remove duplicates (user may appear under their own senior manager group above)
-  const treeSMUserIds = new Set();
-  seniorManagerIds.forEach(smId => {
-    Object.values(tree[smId]).forEach(arr => arr.forEach(u => treeSMUserIds.add(u.user_id)));
-    treeSMUserIds.add(smId); // the senior manager themselves
-  });
-  const unassigned = noMgrUsers.filter(u => !treeSMUserIds.has(u.user_id)).sort(sortName);
-
+  const unassigned = allUsers.filter(u => !placed.has(u.user_id)).sort(sort);
   if (unassigned.length) {
-    html += `<div class="org-no-manager-block">
-      <div class="org-no-manager-label"><i class="ti ti-user-off me-1"></i>No Manager Set</div>
-      <div style="margin-left:1.5rem">`;
-    unassigned.forEach(u => {
-      html += `<div class="org-user" data-id="${u.user_id}">
-        ${avatarHtml(u)}
-        <div class="org-name">${App.escHtml(u.display_name)}</div>
-        <div class="org-email">${App.escHtml(u.email)}</div>
-        <button class="org-edit-btn" data-id="${u.user_id}" title="Edit"><i class="ti ti-edit" style="font-size:14px"></i></button>
-      </div>`;
-    });
-    html += `</div></div>`;
+    const noMgr = document.createElement('div');
+    noMgr.className = 'org-no-mgr';
+    noMgr.innerHTML = `<div class="org-no-mgr-label"><i class="ti ti-user-off me-1"></i>No Manager Set</div>`;
+    const uBlock = document.createElement('div');
+    uBlock.style.marginLeft = '1rem';
+    unassigned.forEach(u => uBlock.appendChild(makeUserRow(u)));
+    noMgr.appendChild(uBlock);
+    treeEl.appendChild(noMgr);
   }
 
-  if (!html) html = '<div class="text-secondary text-center py-4">No users found.</div>';
+  wireDragDrop();
+  wireEditBtns();
+}
 
-  const tree_el = document.getElementById('orgTree');
-  tree_el.innerHTML = html;
+function makeUserRow(u) {
+  const row = document.createElement('div');
+  row.className = 'org-u-row';
+  row.draggable = true;
+  row.dataset.id = u.user_id;
+  row.dataset.type = 'user';
+  row.innerHTML = `${avHtml(u, 'u')}
+    <div class="org-name">${App.escHtml(u.display_name)}</div>
+    <div class="org-email">${App.escHtml(u.email)}</div>
+    <button class="org-edit" data-id="${u.user_id}" title="Edit"><i class="ti ti-edit" style="font-size:13px"></i></button>`;
+  return row;
+}
 
-  // Wire edit buttons
-  tree_el.querySelectorAll('.org-edit-btn').forEach(btn => {
-    btn.addEventListener('click', e => {
-      e.stopPropagation();
-      openEditModal(btn.dataset.id);
+function avHtml(u, level) {
+  if (!u) return '';
+  if (u.avatar_url) return `<div class="org-av"><img src="${u.avatar_url}" alt=""></div>`;
+  const initials = (u.display_name||u.email||'?').split(' ').map(w=>w[0]).filter(Boolean).join('').toUpperCase().slice(0,2);
+  const bg = level === 'sm' ? 'rgb(var(--tblr-primary-rgb),.25)' : level === 'm' ? 'var(--tblr-bg-surface-secondary)' : 'var(--tblr-bg-surface-tertiary,#f1f5f9)';
+  return `<div class="org-av" style="background:${bg}">${initials}</div>`;
+}
+
+// ── Drag and drop ─────────────────────────────────────────────────────────────
+function wireDragDrop() {
+  const treeEl = document.getElementById('orgTree');
+
+  treeEl.querySelectorAll('.org-u-row').forEach(row => {
+    row.addEventListener('dragstart', e => {
+      dragUserId = row.dataset.id;
+      setTimeout(() => row.classList.add('org-dragging'), 0);
+      e.dataTransfer.effectAllowed = 'move';
+    });
+    row.addEventListener('dragend', () => {
+      row.classList.remove('org-dragging');
+      dragUserId = null;
     });
   });
 
-  // Whole row also opens modal
-  tree_el.querySelectorAll('[data-id]').forEach(el => {
-    el.addEventListener('click', () => openEditModal(el.dataset.id));
+  treeEl.querySelectorAll('.org-drop-zone').forEach(zone => {
+    zone.addEventListener('dragover', e => {
+      e.preventDefault();
+      e.dataTransfer.dropEffect = 'move';
+      zone.classList.add('org-drop-target');
+    });
+    zone.addEventListener('dragleave', () => zone.classList.remove('org-drop-target'));
+    zone.addEventListener('drop', async e => {
+      e.preventDefault();
+      zone.classList.remove('org-drop-target');
+      if (!dragUserId || dragUserId === zone.dataset.id) return;
+
+      const targetId   = zone.dataset.id;
+      const targetType = zone.dataset.type; // 'senior_manager' or 'manager'
+
+      // Build the update
+      const update = {};
+      if (targetType === 'manager') {
+        update.manager_id = targetId;
+        // Also inherit the senior manager of the dropped-onto manager
+        const mgr = allUsers.find(u => u.user_id === targetId);
+        if (mgr?.senior_manager_id) update.senior_manager_id = mgr.senior_manager_id;
+      } else if (targetType === 'senior_manager') {
+        update.senior_manager_id = targetId;
+        update.manager_id = null; // clear manager when setting senior manager directly
+      }
+
+      const { error } = await sb.from('ad_user').update(update).eq('user_id', dragUserId);
+      if (error) { App.toast('Failed to update: ' + error.message, 'danger'); return; }
+
+      const u = allUsers.find(x => x.user_id === dragUserId);
+      const targetName = allUsers.find(x => x.user_id === targetId)?.display_name || '';
+      App.toast(`${u?.display_name || 'User'} assigned to ${targetName}`);
+      await loadAndRender();
+    });
   });
 }
 
-function avatarHtml(user, fallbackColor) {
-  if (!user) return '';
-  if (user.avatar_url) {
-    return `<img src="${user.avatar_url}" class="org-avatar-img" alt="">`;
-  }
-  const initials = (user.display_name || user.email || '?').split(' ').map(w => w[0]).filter(Boolean).join('').toUpperCase().slice(0,2);
-  const bg = fallbackColor || 'var(--tblr-primary)';
-  const fg = fallbackColor ? 'var(--tblr-primary)' : '#fff';
-  return `<div class="org-avatar" style="background:${bg === '#fff' ? 'rgba(255,255,255,.2)' : 'var(--tblr-primary-lt)'};color:${fg === '#fff' ? '#fff' : 'var(--tblr-primary)'}">${initials}</div>`;
+function wireEditBtns() {
+  document.getElementById('orgTree').querySelectorAll('.org-edit').forEach(btn => {
+    btn.addEventListener('click', e => { e.stopPropagation(); openEditModal(btn.dataset.id); });
+  });
+  // Also clicking the row itself (but not the edit button) opens edit
+  document.getElementById('orgTree').querySelectorAll('[data-id]').forEach(el => {
+    el.addEventListener('click', e => {
+      if (e.target.closest('.org-edit')) return;
+      openEditModal(el.dataset.id);
+    });
+  });
 }
 
 // ── Edit modal ────────────────────────────────────────────────────────────────
-function initModal() {
-  userModal = new bootstrap.Modal(document.getElementById('userModal'));
-
-  wirePickerField('managerSearch',       'managerId',       'managerDropdown',       'managerClear');
-  wirePickerField('seniorManagerSearch', 'seniorManagerId', 'seniorManagerDropdown', 'seniorManagerClear');
-
-  document.getElementById('saveUserBtn').addEventListener('click', saveUser);
-}
-
 function openEditModal(userId) {
-  const user = allUsers.find(u => u.user_id === userId);
-  if (!user) return;
-
+  const u = allUsers.find(x => x.user_id === userId);
+  if (!u) return;
   document.getElementById('userModalError').classList.add('d-none');
-  document.getElementById('userId').value          = user.user_id;
-  document.getElementById('userDisplayName').value = user.display_name || '';
-  document.getElementById('userEmail').value        = user.email || '';
-  document.getElementById('userJobTitle').value     = '';
-  document.getElementById('userRole').value         = 'user';
-
-  // Fetch full profile
-  sb.from('profiles').select('job_title, role').eq('id', userId).single().then(({ data }) => {
-    if (data?.job_title) document.getElementById('userJobTitle').value = data.job_title;
-    if (data?.role)      document.getElementById('userRole').value     = data.role;
-  });
-
-  // Set manager pickers
-  setPickerValue('managerSearch',       'managerId',       user.manager_id);
-  setPickerValue('seniorManagerSearch', 'seniorManagerId', user.senior_manager_id);
-
+  document.getElementById('userId').value          = u.user_id;
+  document.getElementById('userDisplayName').value = u.display_name || '';
+  document.getElementById('userEmail').value        = u.email || '';
+  document.getElementById('userJobTitle').value     = u.job_title || '';
+  document.getElementById('userRole').value         = u.role || 'user';
+  setPickerValue('managerSearch',       'managerId',       u.manager_id);
+  setPickerValue('seniorManagerSearch', 'seniorManagerId', u.senior_manager_id);
   userModal.show();
 }
 
 async function saveUser() {
   const errEl = document.getElementById('userModalError');
   errEl.classList.add('d-none');
-
   const id          = document.getElementById('userId').value;
   const displayName = document.getElementById('userDisplayName').value.trim();
   const jobTitle    = document.getElementById('userJobTitle').value.trim();
   const role        = document.getElementById('userRole').value;
-  const managerId   = document.getElementById('managerId').value || null;
+  const managerId   = document.getElementById('managerId').value   || null;
   const seniorMgrId = document.getElementById('seniorManagerId').value || null;
 
-  if (!displayName) {
-    errEl.textContent = 'Display name is required.';
-    errEl.classList.remove('d-none');
-    return;
-  }
+  if (!displayName) { errEl.textContent = 'Display name is required.'; errEl.classList.remove('d-none'); return; }
 
   document.getElementById('saveUserLabel').textContent = 'Saving…';
   document.getElementById('saveUserSpinner').classList.remove('d-none');
   document.getElementById('saveUserBtn').disabled = true;
 
   try {
-    const { error: pe } = await sb.from('profiles').update({
-      display_name: displayName,
-      job_title:    jobTitle || null,
-      role,
-      updated_at:   new Date().toISOString(),
-    }).eq('id', id);
-    if (pe) throw pe;
-
-    const { error: ue } = await sb.from('ad_user').update({
-      manager_id:        managerId,
-      senior_manager_id: seniorMgrId,
-    }).eq('user_id', id);
-    if (ue) throw ue;
-
+    await sb.from('profiles').update({ display_name: displayName, job_title: jobTitle||null, role, updated_at: new Date().toISOString() }).eq('id', id);
+    await sb.from('ad_user').update({ manager_id: managerId, senior_manager_id: seniorMgrId }).eq('user_id', id);
     userModal.hide();
     App.toast('User updated');
     await loadAndRender();
-
   } catch(err) {
     errEl.textContent = 'Save failed: ' + (err.message || err);
     errEl.classList.remove('d-none');
@@ -504,55 +541,37 @@ async function saveUser() {
   }
 }
 
-// ── Picker helper ─────────────────────────────────────────────────────────────
+// ── Picker ────────────────────────────────────────────────────────────────────
 function wirePickerField(inputId, hiddenId, dropdownId, clearId) {
-  const input    = document.getElementById(inputId);
-  const hidden   = document.getElementById(hiddenId);
+  const input = document.getElementById(inputId);
+  const hidden = document.getElementById(hiddenId);
   const dropdown = document.getElementById(dropdownId);
   const clearBtn = document.getElementById(clearId);
 
   function show(term) {
     const lower = term.toLowerCase();
-    const matches = allUsers
-      .filter(u => u.display_name?.toLowerCase().includes(lower) || u.email?.toLowerCase().includes(lower))
-      .slice(0, 12);
-    if (!matches.length) { dropdown.style.display = 'none'; return; }
+    const matches = allUsers.filter(u => u.display_name?.toLowerCase().includes(lower) || u.email?.toLowerCase().includes(lower)).slice(0,12);
+    if (!matches.length) { dropdown.style.display='none'; return; }
     dropdown.innerHTML = matches.map(u =>
       `<button type="button" class="dropdown-item" data-id="${u.user_id}" data-name="${App.escHtml(u.display_name)}">
-        ${App.escHtml(u.display_name)}
-        <small class="text-secondary d-block">${App.escHtml(u.email)}</small>
-       </button>`
-    ).join('');
+        ${App.escHtml(u.display_name)}<small class="text-secondary d-block">${App.escHtml(u.email)}</small>
+       </button>`).join('');
     dropdown.querySelectorAll('.dropdown-item').forEach(btn => {
-      btn.addEventListener('click', () => {
-        hidden.value = btn.dataset.id;
-        input.value  = btn.dataset.name;
-        dropdown.style.display = 'none';
-      });
+      btn.addEventListener('click', () => { hidden.value=btn.dataset.id; input.value=btn.dataset.name; dropdown.style.display='none'; });
     });
     dropdown.style.display = 'block';
   }
 
-  input.addEventListener('input', () => {
-    hidden.value = '';
-    const t = input.value.trim();
-    t.length ? show(t) : (dropdown.style.display = 'none');
-  });
-  input.addEventListener('focus', () => { if (input.value.trim()) show(input.value.trim()); });
-  clearBtn.addEventListener('click', () => { hidden.value = ''; input.value = ''; dropdown.style.display = 'none'; });
-  document.addEventListener('click', e => {
-    if (!input.contains(e.target) && !dropdown.contains(e.target)) dropdown.style.display = 'none';
-  });
+  input.addEventListener('input', () => { hidden.value=''; const t=input.value.trim(); t.length?show(t):(dropdown.style.display='none'); });
+  input.addEventListener('focus', () => { if(input.value.trim()) show(input.value.trim()); });
+  clearBtn.addEventListener('click', () => { hidden.value=''; input.value=''; dropdown.style.display='none'; });
+  document.addEventListener('click', e => { if(!input.contains(e.target)&&!dropdown.contains(e.target)) dropdown.style.display='none'; });
 }
 
 function setPickerValue(inputId, hiddenId, userId) {
   document.getElementById(hiddenId).value = userId || '';
-  if (userId) {
-    const u = allUsers.find(x => x.user_id === userId);
-    document.getElementById(inputId).value = u?.display_name || '';
-  } else {
-    document.getElementById(inputId).value = '';
-  }
+  const u = userId ? allUsers.find(x => x.user_id === userId) : null;
+  document.getElementById(inputId).value = u?.display_name || '';
 }
   </script>
 </body>

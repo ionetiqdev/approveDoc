@@ -1,1 +1,1 @@
-Testing: add Org Chart page with 3-level tree, inline edit modal, No Manager Set group
+Org Chart: fix page structure, clean tree design, drag-and-drop to assign manager/senior manager
