@@ -1,1 +1,1 @@
-Org chart: fix connector lines - vertical stops at last child, horizontal tick on every child, corner; fix avatar for super_admin
+Org chart: vertical lines aligned to avatar centre, indent reduced by 5px

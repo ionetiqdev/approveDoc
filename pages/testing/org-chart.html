@@ -66,8 +66,8 @@
     ──────────────────────────────────────────────────────────────────────── */
 
     .org-children {
-      margin-left: 32px;   /* lines up vertical line with centre of parent avatar */
-      padding-left: 20px;  /* room for horizontal tick */
+      margin-left: 23px;   /* lines up vertical line with centre of parent avatar */
+      padding-left: 15px;  /* room for horizontal tick */
     }
 
     /* Vertical line on each child — runs from top to the tick centre,
@@ -75,7 +75,7 @@
     .org-children > .org-node::before {
       content: '';
       position: absolute;
-      left: -20px;          /* sits on the vertical axis */
+      left: -15px;
       top: 0;
       height: 18px;         /* top of node down to avatar centre */
       width: 1px;
@@ -91,9 +91,9 @@
     .org-children > .org-node::after {
       content: '';
       position: absolute;
-      left: -20px;
+      left: -15px;
       top: 18px;            /* avatar centre */
-      width: 20px;
+      width: 15px;
       height: 1px;
       background: var(--tblr-border-color);
     }
