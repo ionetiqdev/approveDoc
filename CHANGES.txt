@@ -1,1 +1,1 @@
-Org chart: vertical lines aligned to avatar centre, indent reduced by 5px
+Org chart: split layout - tree left col-8, unassigned right col-4; drag from both panels

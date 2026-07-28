@@ -147,16 +147,33 @@
 
     <div class="page-body">
       <div class="container-fluid py-3">
-        <div class="card">
-          <div class="card-header">
-            <h3 class="card-title">Organisation Hierarchy</h3>
-            <div class="card-options text-secondary small">
-              <i class="ti ti-drag-drop me-1"></i>Drag a user onto another to set their manager &nbsp;·&nbsp; Click to edit
+        <div class="row g-3">
+          <div class="col-8">
+            <div class="card h-100">
+              <div class="card-header">
+                <h3 class="card-title">Organisation Hierarchy</h3>
+                <div class="card-options text-secondary small">
+                  <i class="ti ti-drag-drop me-1"></i>Drag a user onto another to set their manager &nbsp;·&nbsp; Click to edit
+                </div>
+              </div>
+              <div class="card-body">
+                <div id="orgTree" class="org-tree">
+                  <div class="text-center py-5 text-secondary"><div class="spinner-border spinner-border-sm me-2"></div>Loading…</div>
+                </div>
+              </div>
             </div>
           </div>
-          <div class="card-body">
-            <div id="orgTree" class="org-tree">
-              <div class="text-center py-5 text-secondary"><div class="spinner-border spinner-border-sm me-2"></div>Loading…</div>
+          <div class="col-4">
+            <div class="card h-100">
+              <div class="card-header">
+                <h3 class="card-title"><i class="ti ti-user-question me-1"></i>Not Yet Assigned</h3>
+                <div class="card-options text-secondary small">Drag onto a user in the tree</div>
+              </div>
+              <div class="card-body">
+                <div id="unassignedList" class="org-tree">
+                  <div class="text-center py-5 text-secondary"><div class="spinner-border spinner-border-sm me-2"></div>Loading…</div>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -349,11 +366,10 @@ function renderTree() {
 
   roots.forEach(r => treeEl.appendChild(renderNode(r, 0)));
 
-  // Unassigned section
+  // ── Not yet assigned (right panel) ──
+  const unassignedEl = document.getElementById('unassignedList');
+  unassignedEl.innerHTML = '';
   if (unassigned.length) {
-    const section = document.createElement('div');
-    section.className = 'org-unassigned';
-    section.innerHTML = `<div class="org-unassigned-label"><i class="ti ti-user-question me-1"></i>Not yet assigned</div>`;
     unassigned.forEach(u => {
       const row = document.createElement('div');
       row.className = 'org-row';
@@ -364,9 +380,10 @@ function renderTree() {
         <div class="org-name">${App.escHtml(u.display_name)}</div>
         <div class="org-email">${App.escHtml(u.email)}</div>
         <button class="org-edit" data-id="${u.user_id}" title="Edit"><i class="ti ti-edit"></i></button>`;
-      section.appendChild(row);
+      unassignedEl.appendChild(row);
     });
-    treeEl.appendChild(section);
+  } else {
+    unassignedEl.innerHTML = '<div class="text-secondary small text-center py-3">All users assigned</div>';
   }
 
   wireDragDrop();
@@ -381,7 +398,8 @@ function avHtml(u) {
 
 // ── Drag and drop ─────────────────────────────────────────────────────────────
 function wireDragDrop() {
-  const rows = document.getElementById('orgTree').querySelectorAll('.org-row');
+  const rows = [...document.getElementById('orgTree').querySelectorAll('.org-row'),
+                ...document.getElementById('unassignedList').querySelectorAll('.org-row')];
 
   rows.forEach(row => {
     row.addEventListener('dragstart', e => {
@@ -444,7 +462,9 @@ function isDescendant(ancestorId, potentialDescendantId) {
 }
 
 function wireEditBtns() {
-  document.getElementById('orgTree').querySelectorAll('.org-row').forEach(row => {
+  const allRows = [...document.getElementById('orgTree').querySelectorAll('.org-row'),
+                   ...document.getElementById('unassignedList').querySelectorAll('.org-row')];
+  allRows.forEach(row => {
     row.addEventListener('click', e => {
       if (e.target.closest('.org-edit')) return;
       openEditModal(row.dataset.id);
