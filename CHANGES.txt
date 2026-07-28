@@ -1,1 +1,1 @@
-Auth: handle invite/recovery hash tokens on login page; add set-password.html
+Users: default org to current user's org on invite; edge function now creates ad_user row
