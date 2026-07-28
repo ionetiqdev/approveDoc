@@ -12,7 +12,7 @@
       try {
         var root = document.documentElement.dataset.appRoot || './';
         var absoluteRoot = new URL(root, window.location.href).pathname;
-        var suffix = ':' + absoluteRoot;
+        var suffix = ':' + window.location.hostname + absoluteRoot;
         var savedTheme = localStorage.getItem('app_theme');
         var theme = savedTheme || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
         document.documentElement.setAttribute('data-bs-theme', theme);

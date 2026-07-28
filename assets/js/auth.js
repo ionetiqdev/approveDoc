@@ -81,7 +81,10 @@ const Auth = (() => {
     try {
       const root = document.documentElement.dataset.appRoot || './';
       const absoluteRoot = new URL(root, window.location.href).pathname;
-      return 'app_active_organisation:' + absoluteRoot;
+      // Use just the top-level app segment (e.g. 'approvedoc') so the key
+      // is the same regardless of domain (ionetiq.dev vs approvedoc.app)
+      // or environment (/dev/ vs /)
+      return 'app_active_organisation:' + window.location.hostname + absoluteRoot;
     } catch (e) {
       return 'app_active_organisation';
     }

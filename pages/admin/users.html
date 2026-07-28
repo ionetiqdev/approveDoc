@@ -7,14 +7,14 @@
 
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/core@1.4.0/dist/css/tabler.min.css" />
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.44.0/dist/tabler-icons.min.css" />
-  <link rel="stylesheet" href="../../assets/css/theme.css?r=ol0kd4uq" />
+  <link rel="stylesheet" href="../../assets/css/theme.css?r=g1s396vh" />
 
   <script>
     (function() {
       try {
         var root = document.documentElement.dataset.appRoot || './';
         var absoluteRoot = new URL(root, window.location.href).pathname;
-        var suffix = ':' + absoluteRoot;
+        var suffix = ':' + window.location.hostname + absoluteRoot;
         var savedTheme = localStorage.getItem('app_theme');
         var theme = savedTheme || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
         document.documentElement.setAttribute('data-bs-theme', theme);
@@ -257,15 +257,15 @@
   <script src="https://cdn.jsdelivr.net/npm/@tabler/core@1.4.0/dist/js/tabler.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="../../assets/js/version.js?r=ol0kd4uq"></script>
-  <script src="../../assets/js/supabase-client.js?r=ol0kd4uq"></script>
-  <script src="../../assets/js/auth.js?r=ol0kd4uq"></script>
-  <script src="../../assets/js/app.js?r=ol0kd4uq"></script>
-  <script src="../../assets/js/theme.js?r=ol0kd4uq"></script>
-  <script src="../../assets/js/sidebar-html.js?r=ol0kd4uq"></script>
-  <script src="../../assets/js/sidebar.js?r=ol0kd4uq"></script>
-  <script src="../../assets/js/profile-modal.js?r=ol0kd4uq"></script>
-  <script src="../../assets/js/status-widget.js?r=ol0kd4uq"></script>
+  <script src="../../assets/js/version.js?r=g1s396vh"></script>
+  <script src="../../assets/js/supabase-client.js?r=g1s396vh"></script>
+  <script src="../../assets/js/auth.js?r=g1s396vh"></script>
+  <script src="../../assets/js/app.js?r=g1s396vh"></script>
+  <script src="../../assets/js/theme.js?r=g1s396vh"></script>
+  <script src="../../assets/js/sidebar-html.js?r=g1s396vh"></script>
+  <script src="../../assets/js/sidebar.js?r=g1s396vh"></script>
+  <script src="../../assets/js/profile-modal.js?r=g1s396vh"></script>
+  <script src="../../assets/js/status-widget.js?r=g1s396vh"></script>
   <script>
 let userModal, deleteUserModal;
 let allUsers = [], allOrganisations = [];

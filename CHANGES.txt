@@ -1,1 +1,1 @@
-Org chart: 50/50 split
+Auth/prefs: localStorage keys scoped to hostname+path for full isolation across domains and environments

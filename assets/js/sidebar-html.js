@@ -28,10 +28,8 @@ function _scopedKey(baseKey) {
   try {
     const root = document.documentElement.dataset.appRoot || './';
     const absoluteRoot = new URL(root, window.location.href).pathname;
-    return baseKey + ':' + absoluteRoot;
-  } catch (e) {
-    return baseKey;
-  }
+    return baseKey + ':' + window.location.hostname + absoluteRoot;
+  } catch(e) { return baseKey; }
 }
 
 // Applies a sidebar background colour and automatically picks the most
