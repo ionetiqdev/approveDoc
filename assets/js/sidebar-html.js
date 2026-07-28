@@ -173,6 +173,7 @@ const SidebarHtml = (() => {
               <li class="nav-item"><a href="${root}pages/testing/audience.html" class="nav-link"><span class="nav-link-text">Audience</span></a></li>
               <li class="nav-item"><a href="${root}pages/testing/distribution.html" class="nav-link"><span class="nav-link-text">Distribution</span></a></li>
               <li class="nav-item"><a href="${root}pages/testing/user-view.html" class="nav-link"><span class="nav-link-text">User View</span></a></li>
+              <li class="nav-item"><a href="${root}pages/testing/org-chart.html" class="nav-link"><span class="nav-link-text">Org Chart</span></a></li>
             </ul>
           </li>
 
