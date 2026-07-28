@@ -1,1 +1,1 @@
-Auth: explicit token in profile fetch as fallback when Supabase client session not synced
+Auth: patch sb.from to use authenticated client after setSession for cross-domain compatibility

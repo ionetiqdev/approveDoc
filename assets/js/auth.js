@@ -29,6 +29,23 @@ const Auth = (() => {
     AppSession.save(data.session);
     _session = data.session;
 
+    // Ensure the sb client uses the correct token for all subsequent queries.
+    // On some domains/environments setSession doesn't propagate to the client's
+    // internal query headers — explicitly set the auth header as a fallback.
+    sb.realtime?.setAuth(data.session.access_token);
+    const { createClient } = supabase;
+    if (window._authenticatedSb) {
+      // reuse existing authenticated client
+    } else {
+      window._authenticatedSb = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+        global: { headers: { Authorization: 'Bearer ' + data.session.access_token } },
+        auth:   { persistSession: false, autoRefreshToken: false }
+      });
+      // Override sb queries to use authenticated client
+      const origFrom = sb.from.bind(sb);
+      sb.from = (table) => window._authenticatedSb.from(table);
+    }
+
     _profile = await _loadProfile(_session.user.id);
     if (!_profile) {
       // No profile row exists for this authenticated user. Default to the
