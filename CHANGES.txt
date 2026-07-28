@@ -1,1 +1,1 @@
-Org Chart: fix page structure, clean tree design, drag-and-drop to assign manager/senior manager
+Org chart: recursive unlimited hierarchy, is_top_level flag, drop senior_manager_id; users page updated

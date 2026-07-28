@@ -28,11 +28,11 @@
           document.documentElement.style.setProperty('--bg-sidebar', sidebarBg);
           var hex = sidebarBg.replace('#', '');
           if (hex.length === 3) hex = hex.split('').map(function(c){return c+c;}).join('');
-          var r = parseInt(hex.slice(0,2),16) / 255, g = parseInt(hex.slice(2,4),16) / 255, b = parseInt(hex.slice(4,6),16) / 255;
-          var toLinear = function(c){ return c <= 0.03928 ? c/12.92 : Math.pow((c+0.055)/1.055, 2.4); };
-          var isLight = (0.2126*toLinear(r) + 0.7152*toLinear(g) + 0.0722*toLinear(b)) > 0.5;
-          document.documentElement.style.setProperty('--sidebar-fg', isLight ? '#0f172a' : '#ffffff');
-          document.documentElement.style.setProperty('--sidebar-fg-rgb', isLight ? '15,23,42' : '255,255,255');
+          var r = parseInt(hex.slice(0,2),16)/255, g = parseInt(hex.slice(2,4),16)/255, b = parseInt(hex.slice(4,6),16)/255;
+          var toL = function(c){ return c<=0.03928?c/12.92:Math.pow((c+0.055)/1.055,2.4); };
+          var isLight = (0.2126*toL(r)+0.7152*toL(g)+0.0722*toL(b))>0.5;
+          document.documentElement.style.setProperty('--sidebar-fg', isLight?'#0f172a':'#ffffff');
+          document.documentElement.style.setProperty('--sidebar-fg-rgb', isLight?'15,23,42':'255,255,255');
         }
       } catch(e) {}
     })();
@@ -43,99 +43,70 @@
     .page-body { flex: 1; overflow-y: auto; }
 
     /* ── Tree ── */
-    .org-tree { font-size: .875rem; padding: .5rem 0; }
+    .org-tree { font-size: .875rem; }
 
-    /* Senior manager */
-    .org-sm-row {
-      display: flex; align-items: center; gap: .65rem;
-      padding: .5rem .75rem;
-      background: rgb(var(--tblr-primary-rgb), .12);
+    .org-node { margin-bottom: .15rem; }
+
+    .org-row {
+      display: flex; align-items: center; gap: .6rem;
+      padding: .35rem .6rem;
+      border-radius: var(--tblr-border-radius);
+      cursor: pointer;
+      transition: background .12s;
+      user-select: none;
+      position: relative;
+    }
+    .org-row:hover { background: var(--tblr-bg-surface-secondary); }
+
+    /* Top-level manager styling */
+    .org-row.is-top {
+      font-weight: 600;
       border-left: 3px solid var(--tblr-primary);
-      border-radius: var(--tblr-border-radius);
-      margin-bottom: .3rem;
-      cursor: pointer;
-      transition: background .15s;
-      user-select: none;
+      background: rgba(var(--tblr-primary-rgb), .06);
+      padding-left: .75rem;
     }
-    .org-sm-row:hover { background: rgb(var(--tblr-primary-rgb), .2); }
+    .org-row.is-top:hover { background: rgba(var(--tblr-primary-rgb), .12); }
 
-    /* Manager */
-    .org-m-block { margin-left: 2rem; margin-top: .4rem; margin-bottom: .5rem; }
-    .org-m-row {
-      display: flex; align-items: center; gap: .65rem;
-      padding: .4rem .75rem;
-      border-left: 2px solid var(--tblr-border-color);
-      border-radius: 0 var(--tblr-border-radius) var(--tblr-border-radius) 0;
-      margin-bottom: .25rem;
-      cursor: pointer;
-      transition: background .15s;
-      user-select: none;
-    }
-    .org-m-row:hover { background: var(--tblr-bg-surface-secondary); }
-
-    /* Users */
-    .org-u-block { margin-left: 4rem; }
-    .org-u-row {
-      display: flex; align-items: center; gap: .55rem;
-      padding: .3rem .5rem;
-      border-radius: var(--tblr-border-radius);
-      margin-bottom: .15rem;
-      cursor: grab;
-      transition: background .15s;
-      user-select: none;
-    }
-    .org-u-row:hover { background: var(--tblr-bg-surface-secondary); }
-    .org-u-row:active { cursor: grabbing; }
-
-    /* No manager section */
-    .org-no-mgr { margin-top: 2rem; padding-top: 1rem; border-top: 1px solid var(--tblr-border-color); }
-    .org-no-mgr-label {
-      font-size: .7rem; font-weight: 700; letter-spacing: .07em; text-transform: uppercase;
-      color: var(--tblr-secondary-color); padding: 0 .25rem .5rem;
+    /* Drop target highlight */
+    .org-row.drag-over {
+      outline: 2px dashed var(--tblr-primary);
+      outline-offset: -2px;
+      background: rgba(var(--tblr-primary-rgb), .1) !important;
     }
 
-    /* Shared row elements */
+    /* Dragging source */
+    .org-row.dragging { opacity: .35; }
+
+    /* Children indented */
+    .org-children { margin-left: 2rem; border-left: 1px solid var(--tblr-border-color-translucent); padding-left: .5rem; margin-top: .1rem; margin-bottom: .25rem; }
+
+    /* No manager group */
+    .org-unassigned { margin-top: 1.5rem; padding-top: 1rem; border-top: 1px dashed var(--tblr-border-color); }
+    .org-unassigned-label { font-size: .7rem; font-weight: 700; letter-spacing: .07em; text-transform: uppercase; color: var(--tblr-secondary-color); margin-bottom: .35rem; padding: 0 .25rem; }
+
     .org-name { font-weight: 500; flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     .org-email { font-size: .72rem; color: var(--tblr-secondary-color); white-space: nowrap; }
+    .org-top-badge { font-size: .6rem; font-weight: 700; letter-spacing: .05em; text-transform: uppercase; background: rgba(var(--tblr-primary-rgb),.15); color: var(--tblr-primary); border-radius: 3px; padding: 1px 5px; flex-shrink: 0; }
+
     .org-edit {
       opacity: 0; transition: opacity .15s;
       background: none; border: none; color: var(--tblr-secondary-color);
-      padding: 2px 4px; cursor: pointer; border-radius: 4px; flex-shrink: 0;
+      padding: 2px 5px; cursor: pointer; border-radius: 4px; flex-shrink: 0;
+      font-size: .8rem;
     }
-    .org-sm-row:hover .org-edit,
-    .org-m-row:hover .org-edit,
-    .org-u-row:hover .org-edit { opacity: 1; }
+    .org-row:hover .org-edit { opacity: 1; }
 
-    /* Avatar */
     .org-av {
       width: 26px; height: 26px; border-radius: 50%; flex-shrink: 0;
       display: flex; align-items: center; justify-content: center;
       font-size: .6rem; font-weight: 700; overflow: hidden;
+      background: var(--tblr-bg-surface-secondary);
     }
     .org-av img { width: 100%; height: 100%; object-fit: cover; }
-
-    /* Drag and drop */
-    .org-dragging {
-      opacity: .4;
-    }
-    .org-drop-target {
-      outline: 2px dashed var(--tblr-primary);
-      outline-offset: 2px;
-      background: rgb(var(--tblr-primary-rgb), .08) !important;
-    }
-    .drag-hint {
-      font-size: .72rem; color: var(--tblr-secondary-color);
-      text-align: center; padding: .35rem;
-      background: var(--tblr-bg-surface-secondary);
-      border-radius: var(--tblr-border-radius);
-      margin-bottom: .5rem;
-    }
+    .is-top .org-av { background: rgba(var(--tblr-primary-rgb),.2); color: var(--tblr-primary); }
 
     /* Modal */
-    .pw-toggle-btn {
-      position: absolute; right: .65rem; top: 50%; transform: translateY(-50%);
-      background: none; border: none; color: var(--tblr-secondary-color); cursor: pointer; padding: 0; font-size: 1rem; z-index: 5;
-    }
+    .picker-wrap { position: relative; }
   </style>
 </head>
 <body>
@@ -166,14 +137,12 @@
           <div class="card-header">
             <h3 class="card-title">Organisation Hierarchy</h3>
             <div class="card-options text-secondary small">
-              <i class="ti ti-drag-drop me-1"></i>Drag a user onto a manager or senior manager to reassign
+              <i class="ti ti-drag-drop me-1"></i>Drag a user onto another to set their manager &nbsp;·&nbsp; Click to edit
             </div>
           </div>
           <div class="card-body">
             <div id="orgTree" class="org-tree">
-              <div class="text-center py-5 text-secondary">
-                <div class="spinner-border spinner-border-sm me-2"></div>Loading…
-              </div>
+              <div class="text-center py-5 text-secondary"><div class="spinner-border spinner-border-sm me-2"></div>Loading…</div>
             </div>
           </div>
         </div>
@@ -214,7 +183,15 @@
                 <option value="super_admin">Super Admin</option>
               </select>
             </div>
-            <div class="col-md-6" style="position:relative">
+            <div class="col-12">
+              <div class="form-check form-switch">
+                <input class="form-check-input" type="checkbox" id="userIsTopLevel" role="switch">
+                <label class="form-check-label" for="userIsTopLevel">
+                  Top-level manager <span class="text-secondary small">(reports to no one — head of hierarchy)</span>
+                </label>
+              </div>
+            </div>
+            <div class="col-12 picker-wrap" id="managerFieldWrap">
               <label class="form-label">Manager</label>
               <div class="input-group">
                 <input type="text" id="managerSearch" class="form-control" placeholder="Search users…" autocomplete="off" />
@@ -222,15 +199,7 @@
               </div>
               <input type="hidden" id="managerId" />
               <div id="managerDropdown" class="dropdown-menu w-100" style="display:none;max-height:180px;overflow-y:auto;position:absolute;z-index:9999"></div>
-            </div>
-            <div class="col-md-6" style="position:relative">
-              <label class="form-label">Senior Manager</label>
-              <div class="input-group">
-                <input type="text" id="seniorManagerSearch" class="form-control" placeholder="Search users…" autocomplete="off" />
-                <button class="btn btn-outline-secondary" type="button" id="seniorManagerClear"><i class="ti ti-x"></i></button>
-              </div>
-              <input type="hidden" id="seniorManagerId" />
-              <div id="seniorManagerDropdown" class="dropdown-menu w-100" style="display:none;max-height:180px;overflow-y:auto;position:absolute;z-index:9999"></div>
+              <div class="form-text">Leave blank if this user has no manager assigned yet.</div>
             </div>
           </div>
         </div>
@@ -260,7 +229,7 @@
   <script>
 let allUsers  = [];
 let userModal = null;
-let dragUserId = null;
+let dragId    = null;
 
 // ── Init ──────────────────────────────────────────────────────────────────────
 (async () => {
@@ -271,17 +240,24 @@ let dragUserId = null;
   Auth.refreshUI();
   await loadAndRender();
   userModal = new bootstrap.Modal(document.getElementById('userModal'));
-  wirePickerField('managerSearch',       'managerId',       'managerDropdown',       'managerClear');
-  wirePickerField('seniorManagerSearch', 'seniorManagerId', 'seniorManagerDropdown', 'seniorManagerClear');
+  wirePickerField('managerSearch', 'managerId', 'managerDropdown', 'managerClear');
   document.getElementById('saveUserBtn').addEventListener('click', saveUser);
+
+  // Top-level toggle hides manager field
+  document.getElementById('userIsTopLevel').addEventListener('change', function() {
+    document.getElementById('managerFieldWrap').style.display = this.checked ? 'none' : '';
+    if (this.checked) {
+      document.getElementById('managerId').value = '';
+      document.getElementById('managerSearch').value = '';
+    }
+  });
 })();
 
 // ── Data ──────────────────────────────────────────────────────────────────────
 async function loadAndRender() {
   const orgId = Auth.getOrganisationId();
-
   const [{ data: adUsers }, { data: profiles }] = await Promise.all([
-    sb.from('ad_user').select('user_id,first_name,last_name,email,manager_id,senior_manager_id').eq('organisation_id', orgId),
+    sb.from('ad_user').select('user_id,first_name,last_name,email,manager_id,is_top_level').eq('organisation_id', orgId),
     sb.from('profiles').select('id,display_name,avatar_url,role,job_title').eq('organisation_id', orgId),
   ]);
 
@@ -291,205 +267,178 @@ async function loadAndRender() {
   allUsers = (adUsers || []).map(u => ({
     ...u,
     display_name: profMap[u.user_id]?.display_name || `${u.first_name||''} ${u.last_name||''}`.trim() || u.email,
-    avatar_url:   profMap[u.user_id]?.avatar_url || null,
-    role:         profMap[u.user_id]?.role || 'user',
-    job_title:    profMap[u.user_id]?.job_title || '',
+    avatar_url:   profMap[u.user_id]?.avatar_url  || null,
+    role:         profMap[u.user_id]?.role         || 'user',
+    job_title:    profMap[u.user_id]?.job_title    || '',
   }));
 
   renderTree();
 }
 
-// ── Tree render ───────────────────────────────────────────────────────────────
+// ── Recursive tree render ─────────────────────────────────────────────────────
 function renderTree() {
-  const byId  = {};
-  allUsers.forEach(u => { byId[u.user_id] = u; });
-  const sort  = (a, b) => (a.display_name||'').localeCompare(b.display_name||'');
-
-  // Build senior manager → manager → users structure
-  // Key: senior_manager_id (or '__none__') → manager_id (or '__none__') → [users]
-  const tree = {};
+  const byId       = Object.fromEntries(allUsers.map(u => [u.user_id, u]));
+  const childrenOf = {};
   allUsers.forEach(u => {
-    const sk = u.senior_manager_id || '__none__';
-    const mk = u.manager_id        || '__none__';
-    if (!tree[sk]) tree[sk] = {};
-    if (!tree[sk][mk]) tree[sk][mk] = [];
-    tree[sk][mk].push(u);
+    if (u.manager_id) {
+      if (!childrenOf[u.manager_id]) childrenOf[u.manager_id] = [];
+      childrenOf[u.manager_id].push(u);
+    }
   });
 
-  // Track which users have been placed in the tree to find truly unassigned
-  const placed = new Set();
+  const sort = (a, b) => (a.display_name||'').localeCompare(b.display_name||'');
+  Object.values(childrenOf).forEach(arr => arr.sort(sort));
 
-  const smIds = Object.keys(tree).filter(k => k !== '__none__').sort((a,b) => sort(byId[a]||{display_name:''}, byId[b]||{display_name:''}));
+  // Roots = is_top_level users
+  const roots = allUsers.filter(u => u.is_top_level).sort(sort);
+
+  // Unassigned = no manager_id and not is_top_level
+  const placed = new Set();
+  function markPlaced(u) {
+    placed.add(u.user_id);
+    (childrenOf[u.user_id] || []).forEach(markPlaced);
+  }
+  roots.forEach(markPlaced);
+  const unassigned = allUsers.filter(u => !placed.has(u.user_id) && !u.is_top_level).sort(sort);
 
   const treeEl = document.getElementById('orgTree');
   treeEl.innerHTML = '';
 
-  // ── Senior manager groups ──
-  smIds.forEach(smId => {
-    const sm = byId[smId];
-    if (!sm) return;
-    placed.add(smId);
+  // Render recursive node
+  function renderNode(u, depth) {
+    const node = document.createElement('div');
+    node.className = 'org-node';
 
-    const smDiv = document.createElement('div');
-    smDiv.className = 'mb-3';
+    const row = document.createElement('div');
+    row.className = 'org-row' + (u.is_top_level ? ' is-top' : '');
+    row.dataset.id = u.user_id;
+    row.draggable  = true;
 
-    // Senior manager row
-    const smRow = document.createElement('div');
-    smRow.className = 'org-sm-row org-drop-zone';
-    smRow.dataset.id   = smId;
-    smRow.dataset.type = 'senior_manager';
-    smRow.innerHTML = `${avHtml(sm, 'sm')}
-      <div class="org-name">${App.escHtml(sm.display_name)}</div>
-      <div class="org-email">${App.escHtml(sm.email)}</div>
-      <button class="org-edit" data-id="${smId}" title="Edit"><i class="ti ti-edit" style="font-size:13px"></i></button>`;
-    smDiv.appendChild(smRow);
+    row.innerHTML = `
+      ${avHtml(u)}
+      <div class="org-name">${App.escHtml(u.display_name)}</div>
+      ${u.is_top_level ? '<span class="org-top-badge">Top Level</span>' : ''}
+      <div class="org-email">${App.escHtml(u.email)}</div>
+      <button class="org-edit" data-id="${u.user_id}" title="Edit"><i class="ti ti-edit"></i></button>`;
 
-    // Managers under this SM
-    const mkIds = Object.keys(tree[smId]).sort((a,b) => {
-      if (a === '__none__') return 1;
-      if (b === '__none__') return -1;
-      return sort(byId[a]||{display_name:''}, byId[b]||{display_name:''});
-    });
+    node.appendChild(row);
 
-    mkIds.forEach(mId => {
-      const mBlock = document.createElement('div');
-      mBlock.className = 'org-m-block';
+    const kids = childrenOf[u.user_id];
+    if (kids?.length) {
+      const childBlock = document.createElement('div');
+      childBlock.className = 'org-children';
+      kids.forEach(k => childBlock.appendChild(renderNode(k, depth + 1)));
+      node.appendChild(childBlock);
+    }
 
-      if (mId !== '__none__') {
-        const m = byId[mId];
-        if (m) {
-          placed.add(mId);
-          const mRow = document.createElement('div');
-          mRow.className = 'org-m-row org-drop-zone';
-          mRow.dataset.id   = mId;
-          mRow.dataset.type = 'manager';
-          mRow.innerHTML = `${avHtml(m, 'm')}
-            <div class="org-name">${App.escHtml(m.display_name)}</div>
-            <div class="org-email">${App.escHtml(m.email)}</div>
-            <button class="org-edit" data-id="${mId}" title="Edit"><i class="ti ti-edit" style="font-size:13px"></i></button>`;
-          mBlock.appendChild(mRow);
-        }
-      }
+    return node;
+  }
 
-      // Users under this manager
-      const users = [...tree[smId][mId]].sort(sort);
-      if (users.length) {
-        const uBlock = document.createElement('div');
-        uBlock.className = 'org-u-block';
-        users.forEach(u => {
-          placed.add(u.user_id);
-          uBlock.appendChild(makeUserRow(u));
-        });
-        mBlock.appendChild(uBlock);
-      }
+  roots.forEach(r => treeEl.appendChild(renderNode(r, 0)));
 
-      smDiv.appendChild(mBlock);
-    });
-
-    treeEl.appendChild(smDiv);
-  });
-
-  // ── No manager set ──
-  const unassigned = allUsers.filter(u => !placed.has(u.user_id)).sort(sort);
+  // Unassigned section
   if (unassigned.length) {
-    const noMgr = document.createElement('div');
-    noMgr.className = 'org-no-mgr';
-    noMgr.innerHTML = `<div class="org-no-mgr-label"><i class="ti ti-user-off me-1"></i>No Manager Set</div>`;
-    const uBlock = document.createElement('div');
-    uBlock.style.marginLeft = '1rem';
-    unassigned.forEach(u => uBlock.appendChild(makeUserRow(u)));
-    noMgr.appendChild(uBlock);
-    treeEl.appendChild(noMgr);
+    const section = document.createElement('div');
+    section.className = 'org-unassigned';
+    section.innerHTML = `<div class="org-unassigned-label"><i class="ti ti-user-question me-1"></i>Not yet assigned</div>`;
+    unassigned.forEach(u => {
+      const row = document.createElement('div');
+      row.className = 'org-row';
+      row.dataset.id = u.user_id;
+      row.draggable  = true;
+      row.innerHTML = `
+        ${avHtml(u)}
+        <div class="org-name">${App.escHtml(u.display_name)}</div>
+        <div class="org-email">${App.escHtml(u.email)}</div>
+        <button class="org-edit" data-id="${u.user_id}" title="Edit"><i class="ti ti-edit"></i></button>`;
+      section.appendChild(row);
+    });
+    treeEl.appendChild(section);
   }
 
   wireDragDrop();
   wireEditBtns();
 }
 
-function makeUserRow(u) {
-  const row = document.createElement('div');
-  row.className = 'org-u-row';
-  row.draggable = true;
-  row.dataset.id = u.user_id;
-  row.dataset.type = 'user';
-  row.innerHTML = `${avHtml(u, 'u')}
-    <div class="org-name">${App.escHtml(u.display_name)}</div>
-    <div class="org-email">${App.escHtml(u.email)}</div>
-    <button class="org-edit" data-id="${u.user_id}" title="Edit"><i class="ti ti-edit" style="font-size:13px"></i></button>`;
-  return row;
-}
-
-function avHtml(u, level) {
-  if (!u) return '';
+function avHtml(u) {
   if (u.avatar_url) return `<div class="org-av"><img src="${u.avatar_url}" alt=""></div>`;
-  const initials = (u.display_name||u.email||'?').split(' ').map(w=>w[0]).filter(Boolean).join('').toUpperCase().slice(0,2);
-  const bg = level === 'sm' ? 'rgb(var(--tblr-primary-rgb),.25)' : level === 'm' ? 'var(--tblr-bg-surface-secondary)' : 'var(--tblr-bg-surface-tertiary,#f1f5f9)';
-  return `<div class="org-av" style="background:${bg}">${initials}</div>`;
+  const i = (u.display_name||u.email||'?').split(' ').map(w=>w[0]).filter(Boolean).join('').toUpperCase().slice(0,2);
+  return `<div class="org-av">${i}</div>`;
 }
 
 // ── Drag and drop ─────────────────────────────────────────────────────────────
 function wireDragDrop() {
-  const treeEl = document.getElementById('orgTree');
+  const rows = document.getElementById('orgTree').querySelectorAll('.org-row');
 
-  treeEl.querySelectorAll('.org-u-row').forEach(row => {
+  rows.forEach(row => {
     row.addEventListener('dragstart', e => {
-      dragUserId = row.dataset.id;
-      setTimeout(() => row.classList.add('org-dragging'), 0);
+      dragId = row.dataset.id;
       e.dataTransfer.effectAllowed = 'move';
+      setTimeout(() => row.classList.add('dragging'), 0);
     });
     row.addEventListener('dragend', () => {
-      row.classList.remove('org-dragging');
-      dragUserId = null;
+      row.classList.remove('dragging');
+      dragId = null;
     });
-  });
-
-  treeEl.querySelectorAll('.org-drop-zone').forEach(zone => {
-    zone.addEventListener('dragover', e => {
+    row.addEventListener('dragover', e => {
+      if (!dragId || dragId === row.dataset.id) return;
       e.preventDefault();
       e.dataTransfer.dropEffect = 'move';
-      zone.classList.add('org-drop-target');
+      row.classList.add('drag-over');
     });
-    zone.addEventListener('dragleave', () => zone.classList.remove('org-drop-target'));
-    zone.addEventListener('drop', async e => {
+    row.addEventListener('dragleave', () => row.classList.remove('drag-over'));
+    row.addEventListener('drop', async e => {
       e.preventDefault();
-      zone.classList.remove('org-drop-target');
-      if (!dragUserId || dragUserId === zone.dataset.id) return;
+      row.classList.remove('drag-over');
+      const targetId = row.dataset.id;
+      if (!dragId || dragId === targetId) return;
 
-      const targetId   = zone.dataset.id;
-      const targetType = zone.dataset.type; // 'senior_manager' or 'manager'
-
-      // Build the update
-      const update = {};
-      if (targetType === 'manager') {
-        update.manager_id = targetId;
-        // Also inherit the senior manager of the dropped-onto manager
-        const mgr = allUsers.find(u => u.user_id === targetId);
-        if (mgr?.senior_manager_id) update.senior_manager_id = mgr.senior_manager_id;
-      } else if (targetType === 'senior_manager') {
-        update.senior_manager_id = targetId;
-        update.manager_id = null; // clear manager when setting senior manager directly
+      // Prevent circular: don't allow dropping onto a descendant of the dragged user
+      if (isDescendant(dragId, targetId)) {
+        App.toast('Cannot assign a manager who reports to this user', 'warning');
+        return;
       }
 
-      const { error } = await sb.from('ad_user').update(update).eq('user_id', dragUserId);
-      if (error) { App.toast('Failed to update: ' + error.message, 'danger'); return; }
+      const { error } = await sb.from('ad_user')
+        .update({ manager_id: targetId, is_top_level: false })
+        .eq('user_id', dragId);
 
-      const u = allUsers.find(x => x.user_id === dragUserId);
-      const targetName = allUsers.find(x => x.user_id === targetId)?.display_name || '';
-      App.toast(`${u?.display_name || 'User'} assigned to ${targetName}`);
+      if (error) { App.toast('Failed: ' + error.message, 'danger'); return; }
+
+      const u = allUsers.find(x => x.user_id === dragId);
+      const t = allUsers.find(x => x.user_id === targetId);
+      App.toast(`${u?.display_name || 'User'} now reports to ${t?.display_name || 'manager'}`);
       await loadAndRender();
     });
   });
 }
 
-function wireEditBtns() {
-  document.getElementById('orgTree').querySelectorAll('.org-edit').forEach(btn => {
-    btn.addEventListener('click', e => { e.stopPropagation(); openEditModal(btn.dataset.id); });
+function isDescendant(ancestorId, potentialDescendantId) {
+  // Returns true if potentialDescendantId is a descendant of ancestorId
+  const childrenOf = {};
+  allUsers.forEach(u => {
+    if (u.manager_id) {
+      if (!childrenOf[u.manager_id]) childrenOf[u.manager_id] = [];
+      childrenOf[u.manager_id].push(u.user_id);
+    }
   });
-  // Also clicking the row itself (but not the edit button) opens edit
-  document.getElementById('orgTree').querySelectorAll('[data-id]').forEach(el => {
-    el.addEventListener('click', e => {
+  function check(id) {
+    const kids = childrenOf[id] || [];
+    if (kids.includes(potentialDescendantId)) return true;
+    return kids.some(check);
+  }
+  return check(ancestorId);
+}
+
+function wireEditBtns() {
+  document.getElementById('orgTree').querySelectorAll('.org-row').forEach(row => {
+    row.addEventListener('click', e => {
       if (e.target.closest('.org-edit')) return;
-      openEditModal(el.dataset.id);
+      openEditModal(row.dataset.id);
+    });
+    row.querySelector('.org-edit')?.addEventListener('click', e => {
+      e.stopPropagation();
+      openEditModal(row.dataset.id);
     });
   });
 }
@@ -504,20 +453,21 @@ function openEditModal(userId) {
   document.getElementById('userEmail').value        = u.email || '';
   document.getElementById('userJobTitle').value     = u.job_title || '';
   document.getElementById('userRole').value         = u.role || 'user';
-  setPickerValue('managerSearch',       'managerId',       u.manager_id);
-  setPickerValue('seniorManagerSearch', 'seniorManagerId', u.senior_manager_id);
+  document.getElementById('userIsTopLevel').checked = !!u.is_top_level;
+  document.getElementById('managerFieldWrap').style.display = u.is_top_level ? 'none' : '';
+  setPickerValue('managerSearch', 'managerId', u.manager_id);
   userModal.show();
 }
 
 async function saveUser() {
-  const errEl = document.getElementById('userModalError');
+  const errEl       = document.getElementById('userModalError');
   errEl.classList.add('d-none');
   const id          = document.getElementById('userId').value;
   const displayName = document.getElementById('userDisplayName').value.trim();
   const jobTitle    = document.getElementById('userJobTitle').value.trim();
   const role        = document.getElementById('userRole').value;
-  const managerId   = document.getElementById('managerId').value   || null;
-  const seniorMgrId = document.getElementById('seniorManagerId').value || null;
+  const isTopLevel  = document.getElementById('userIsTopLevel').checked;
+  const managerId   = isTopLevel ? null : (document.getElementById('managerId').value || null);
 
   if (!displayName) { errEl.textContent = 'Display name is required.'; errEl.classList.remove('d-none'); return; }
 
@@ -527,7 +477,7 @@ async function saveUser() {
 
   try {
     await sb.from('profiles').update({ display_name: displayName, job_title: jobTitle||null, role, updated_at: new Date().toISOString() }).eq('id', id);
-    await sb.from('ad_user').update({ manager_id: managerId, senior_manager_id: seniorMgrId }).eq('user_id', id);
+    await sb.from('ad_user').update({ manager_id: managerId, is_top_level: isTopLevel }).eq('user_id', id);
     userModal.hide();
     App.toast('User updated');
     await loadAndRender();
@@ -543,29 +493,29 @@ async function saveUser() {
 
 // ── Picker ────────────────────────────────────────────────────────────────────
 function wirePickerField(inputId, hiddenId, dropdownId, clearId) {
-  const input = document.getElementById(inputId);
-  const hidden = document.getElementById(hiddenId);
+  const input    = document.getElementById(inputId);
+  const hidden   = document.getElementById(hiddenId);
   const dropdown = document.getElementById(dropdownId);
   const clearBtn = document.getElementById(clearId);
 
   function show(term) {
-    const lower = term.toLowerCase();
-    const matches = allUsers.filter(u => u.display_name?.toLowerCase().includes(lower) || u.email?.toLowerCase().includes(lower)).slice(0,12);
-    if (!matches.length) { dropdown.style.display='none'; return; }
+    const lower   = term.toLowerCase();
+    const matches = allUsers.filter(u => u.display_name?.toLowerCase().includes(lower) || u.email?.toLowerCase().includes(lower)).slice(0, 12);
+    if (!matches.length) { dropdown.style.display = 'none'; return; }
     dropdown.innerHTML = matches.map(u =>
       `<button type="button" class="dropdown-item" data-id="${u.user_id}" data-name="${App.escHtml(u.display_name)}">
         ${App.escHtml(u.display_name)}<small class="text-secondary d-block">${App.escHtml(u.email)}</small>
        </button>`).join('');
     dropdown.querySelectorAll('.dropdown-item').forEach(btn => {
-      btn.addEventListener('click', () => { hidden.value=btn.dataset.id; input.value=btn.dataset.name; dropdown.style.display='none'; });
+      btn.addEventListener('click', () => { hidden.value = btn.dataset.id; input.value = btn.dataset.name; dropdown.style.display = 'none'; });
     });
     dropdown.style.display = 'block';
   }
 
-  input.addEventListener('input', () => { hidden.value=''; const t=input.value.trim(); t.length?show(t):(dropdown.style.display='none'); });
-  input.addEventListener('focus', () => { if(input.value.trim()) show(input.value.trim()); });
-  clearBtn.addEventListener('click', () => { hidden.value=''; input.value=''; dropdown.style.display='none'; });
-  document.addEventListener('click', e => { if(!input.contains(e.target)&&!dropdown.contains(e.target)) dropdown.style.display='none'; });
+  input.addEventListener('input', () => { hidden.value = ''; const t = input.value.trim(); t.length ? show(t) : (dropdown.style.display = 'none'); });
+  input.addEventListener('focus', () => { if (input.value.trim()) show(input.value.trim()); });
+  clearBtn.addEventListener('click', () => { hidden.value = ''; input.value = ''; dropdown.style.display = 'none'; });
+  document.addEventListener('click', e => { if (!input.contains(e.target) && !dropdown.contains(e.target)) dropdown.style.display = 'none'; });
 }
 
 function setPickerValue(inputId, hiddenId, userId) {
