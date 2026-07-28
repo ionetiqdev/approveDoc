@@ -129,9 +129,22 @@ const Auth = (() => {
   }
 
   async function _loadProfile(userId) {
-    const { data, error } = await sb.from('profiles').select('*').eq('id', userId).maybeSingle();
-    if (error) console.warn('[Auth] Profile load error:', error.message);
-    return data || null;
+    const { data, error } = await sb.from('profiles')
+      .select('*')
+      .eq('id', userId)
+      .maybeSingle();
+    if (error) console.warn('[Auth] Profile load error:', error.message, error);
+    if (data) return data;
+
+    // Retry once — on first load from a new origin the session may not be
+    // fully applied to the client before the first query fires
+    await new Promise(r => setTimeout(r, 200));
+    const { data: data2, error: error2 } = await sb.from('profiles')
+      .select('*')
+      .eq('id', userId)
+      .maybeSingle();
+    if (error2) console.warn('[Auth] Profile retry error:', error2.message, error2);
+    return data2 || null;
   }
 
   function _applyUserUI() {
@@ -288,12 +301,12 @@ const Auth = (() => {
   }
 
   function _redirectToLogin() {
-    const root = window._appRoot || './';
+    const root = window._appRootUrl || window._appRoot || './';
     window.location.replace(root + 'pages/auth/login.html');
   }
 
   function _rootPath() {
-    return window._appRoot || './';
+    return window._appRootUrl || window._appRoot || './';
   }
 
   async function signOut() {

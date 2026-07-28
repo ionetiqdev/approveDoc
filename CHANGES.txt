@@ -1,1 +1,1 @@
-Auth/prefs: localStorage keys scoped to hostname+path for full isolation across domains and environments
+All pages: compute absolute _appRootUrl from data-app-root; use for JS navigation and sidebar inject; works on any domain/path

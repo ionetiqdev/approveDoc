@@ -1,6 +1,14 @@
 <!DOCTYPE html>
 <html lang="en" data-bs-theme="light" data-app-root="../../">
 <head>
+  <script>
+    // Compute absolute app root URL for JS navigation
+    (function() {
+      var rel = document.documentElement.getAttribute('data-app-root') || './';
+      window._appRootUrl = new URL(rel, window.location.href).href;
+      if (!window._appRootUrl.endsWith('/')) window._appRootUrl += '/';
+    })();
+  </script>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Org Chart - approveDoc</title>
@@ -266,7 +274,7 @@ let dragId    = null;
 (async () => {
   const session = await Auth.requireAuth();
   if (!session) return;
-  SidebarHtml.inject('../../');
+  SidebarHtml.inject(window._appRootUrl || '../../');
   Sidebar.init();
   Auth.refreshUI();
   await loadAndRender();
