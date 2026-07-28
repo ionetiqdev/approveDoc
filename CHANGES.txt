@@ -1,1 +1,1 @@
-All pages: compute absolute _appRootUrl from data-app-root; use for JS navigation and sidebar inject; works on any domain/path
+Auth: add diagnostic logging to _loadProfile
