@@ -129,18 +129,47 @@ const Auth = (() => {
   }
 
   async function _loadProfile(userId) {
-    // Diagnostic: log the current session state before querying
-    const { data: { session: currentSession } } = await sb.auth.getSession();
-    console.log('[Auth] _loadProfile - session user:', currentSession?.user?.id, 'querying for:', userId);
+    // Get the access token directly from our session store
+    const saved = AppSession.load();
+    const token = saved?.access_token;
 
+    if (!token) {
+      console.warn('[Auth] _loadProfile - no access token available');
+      return null;
+    }
+
+    // Pass the token explicitly in case sb client state isn't synced yet
     const { data, error } = await sb.from('profiles')
       .select('*')
       .eq('id', userId)
       .maybeSingle();
-    if (error) console.warn('[Auth] Profile load error:', error.message, error);
-    if (data) { console.log('[Auth] Profile found:', data.role); return data; }
 
-    console.warn('[Auth] Profile not found - session token present:', !!currentSession?.access_token);
+    if (error) console.warn('[Auth] Profile load error:', error.message);
+    if (data) return data;
+
+    // If the client-level query returned nothing, try with explicit Authorization header
+    console.warn('[Auth] Client query returned no profile - trying with explicit token');
+    try {
+      const res = await fetch(
+        `${SUPABASE_URL}/rest/v1/profiles?id=eq.${userId}&select=*`,
+        {
+          headers: {
+            'apikey':        SUPABASE_ANON_KEY,
+            'Authorization': 'Bearer ' + token,
+            'Accept':        'application/vnd.pgrst.object+json',
+          }
+        }
+      );
+      if (res.ok) {
+        const data2 = await res.json();
+        console.log('[Auth] Explicit fetch profile result:', data2?.role);
+        return data2 || null;
+      } else {
+        console.warn('[Auth] Explicit fetch failed:', res.status, await res.text());
+      }
+    } catch(e) {
+      console.warn('[Auth] Explicit fetch error:', e.message);
+    }
     return null;
   }
 
