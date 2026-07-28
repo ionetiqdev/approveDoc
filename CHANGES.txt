@@ -1,1 +1,1 @@
-Org chart: recursive unlimited hierarchy, is_top_level flag, drop senior_manager_id; users page updated
+Org chart: proper tree connector lines aligned to avatar centre, corner on last child, uniform row styling
