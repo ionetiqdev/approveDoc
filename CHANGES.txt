@@ -1,1 +1,1 @@
-Users: default org to current user's org on invite; edge function now creates ad_user row
+Users: better error message from edge function; show actual error not {}
