@@ -1,1 +1,1 @@
-Users: better error message from edge function; show actual error not {}
+Users: manager/senior manager searchable picker fields; set-password eye icon fix
