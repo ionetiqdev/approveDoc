@@ -1,1 +1,1 @@
-Testing: add Query page (admin SQL console) - super_admin only, read-only transaction enforced, admin_execute_sql RPC
+Query page: fix admin_execute_sql - split into admin_execute_sql (read-only guarded query) + admin_log_sql_call (audit log), works around Postgres restrictions on toggling transaction_read_only and SET ROLE inside SECURITY DEFINER functions
