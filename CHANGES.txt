@@ -1,1 +1,1 @@
-Organisations: fix button sizes to match other pages (btn-icon-lg)
+Testing: add Query page (admin SQL console) - super_admin only, read-only transaction enforced, admin_execute_sql RPC
