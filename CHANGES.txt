@@ -1,1 +1,1 @@
-Query page: fix admin_execute_sql - split into admin_execute_sql (read-only guarded query) + admin_log_sql_call (audit log), works around Postgres restrictions on toggling transaction_read_only and SET ROLE inside SECURITY DEFINER functions
+Remove Query admin SQL console (Testing menu, page, and supporting DB functions/role/table) - abandoned
