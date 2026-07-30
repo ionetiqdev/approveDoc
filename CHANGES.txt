@@ -1,1 +1,1 @@
-Fix: acknowledge link doubled path; users.html invite redirect uses _appRootUrl
+acknowledge.html: fix PDF viewer URL path from assets/ to ../../assets/
