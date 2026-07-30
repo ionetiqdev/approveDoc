@@ -1,1 +1,1 @@
-Acknowledge: show full toolbar with thumbnails/zoom/nav - only hide print/download/separators same as documents page
+Acknowledge: hide annotation editor, rotate, openFile, viewBookmark, presentationMode buttons to match documents page
