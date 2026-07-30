@@ -1,1 +1,1 @@
-User View: set column widths; remove edit button; double-click and checklist button both open acknowledge page
+User View: Audience 15%, Instructions 29%; blank instead of dash when no instructions
