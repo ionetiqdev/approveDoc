@@ -1,1 +1,1 @@
-User View: Audience 15%, Instructions 29%; blank instead of dash when no instructions
+User View: new column widths; fix header padding alignment with body cells
