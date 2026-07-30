@@ -1,1 +1,1 @@
-User View: move colgroup to table element so widths actually apply; remove from per-section template
+User View: header padding-left 20px to match data cells; Audience 20%, Instructions 32%
