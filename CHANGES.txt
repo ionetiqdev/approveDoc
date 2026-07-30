@@ -1,1 +1,1 @@
-User View: section band #D3D3D3 in light mode, CSS var in dark mode
+Acknowledge: wire Add to Reference - insert ad_document_reference, set REFERENCE status; User View: fix section grouping for REFERENCE

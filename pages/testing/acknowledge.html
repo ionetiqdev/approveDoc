@@ -15,7 +15,7 @@
 
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/core@1.4.0/dist/css/tabler.min.css" />
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.44.0/dist/tabler-icons.min.css" />
-  <link rel="stylesheet" href="../../assets/css/theme.css?r=bywr1zex" />
+  <link rel="stylesheet" href="../../assets/css/theme.css?r=r91cfoyb" />
 
   <script>
     (function() {
@@ -134,10 +134,13 @@
                 <span style="vertical-align:middle;padding-left:10px"> Reject</span>
               </button>
 
-              <button class="btn w-100" id="referenceBtn" style="font-size:18px;padding:.6rem 1rem;background:#e0e0e0;color:#1a237e">
-                <i class="ti ti-book" style="font-size:28px;vertical-align:middle"></i>
-                <span style="vertical-align:middle;padding-left:10px"> Add to reference</span>
-              </button>
+              <span id="referenceBtnWrap" data-bs-toggle="tooltip" data-bs-placement="top"
+                title="Only acknowledged documents can be saved for reference">
+                <button class="btn w-100" id="referenceBtn" style="font-size:18px;padding:.6rem 1rem;background:#e0e0e0;color:#1a237e;pointer-events:none" disabled>
+                  <i class="ti ti-book" style="font-size:28px;vertical-align:middle"></i>
+                  <span style="vertical-align:middle;padding-left:10px"> Add to reference</span>
+                </button>
+              </span>
 
             </div>
           </div>
@@ -173,15 +176,15 @@
   <script src="https://cdn.jsdelivr.net/npm/@tabler/core@1.4.0/dist/js/tabler.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="../../assets/js/version.js?r=bywr1zex"></script>
-  <script src="../../assets/js/supabase-client.js?r=bywr1zex"></script>
-  <script src="../../assets/js/auth.js?r=bywr1zex"></script>
-  <script src="../../assets/js/app.js?r=bywr1zex"></script>
-  <script src="../../assets/js/theme.js?r=bywr1zex"></script>
-  <script src="../../assets/js/sidebar-html.js?r=bywr1zex"></script>
-  <script src="../../assets/js/sidebar.js?r=bywr1zex"></script>
-  <script src="../../assets/js/profile-modal.js?r=bywr1zex"></script>
-  <script src="../../assets/js/status-widget.js?r=bywr1zex"></script>
+  <script src="../../assets/js/version.js?r=r91cfoyb"></script>
+  <script src="../../assets/js/supabase-client.js?r=r91cfoyb"></script>
+  <script src="../../assets/js/auth.js?r=r91cfoyb"></script>
+  <script src="../../assets/js/app.js?r=r91cfoyb"></script>
+  <script src="../../assets/js/theme.js?r=r91cfoyb"></script>
+  <script src="../../assets/js/sidebar-html.js?r=r91cfoyb"></script>
+  <script src="../../assets/js/sidebar.js?r=r91cfoyb"></script>
+  <script src="../../assets/js/profile-modal.js?r=r91cfoyb"></script>
+  <script src="../../assets/js/status-widget.js?r=r91cfoyb"></script>
   <script>
 const PDF_BUCKET          = 'documents';
 const PDF_VIEWER_URL      = '../../assets/pdfjs/web/viewer.html';
@@ -248,8 +251,60 @@ let rejectModal  = null;
     }
   });
 
-  document.getElementById('referenceBtn').addEventListener('click', () => { /* TODO: add to reference */ });
+  document.getElementById('referenceBtn').addEventListener('click', async () => {
+    if (!currentItem) return;
+    const session = Auth.getSession();
+    const userId  = session?.user?.id;
+    if (!userId) return;
+
+    // Get doc_id from the distribution
+    const { data: dist } = await sb.from('ad_distribution')
+      .select('doc_id').eq('distribution_id', currentItem.distribution_id).single();
+    if (!dist?.doc_id) return;
+
+    // Insert reference (ignore if already exists)
+    await sb.from('ad_document_reference').upsert({
+      organisation_id: Auth.getOrganisationId(),
+      user_id:         userId,
+      doc_id:          dist.doc_id,
+      date_added:      new Date().toISOString().slice(0, 10),
+    }, { onConflict: 'user_id,doc_id', ignoreDuplicates: true });
+
+    // Update distribution item status to REFERENCE
+    await sb.from('ad_distribution_item').update({
+      status:     'REFERENCE',
+      updated_at: new Date().toISOString(),
+    }).eq('distrib_item_id', currentItem.distrib_item_id);
+
+    currentItem.status = 'REFERENCE';
+    renderStatusBadge(currentItem);
+    updateReferenceBtn();
+    App.toast('Document saved to reference library');
+    await StatusWidget.refresh();
+    returnToList();
+  });
 })();
+
+function updateReferenceBtn() {
+  const btn     = document.getElementById('referenceBtn');
+  const wrap    = document.getElementById('referenceBtnWrap');
+  const isApproved = currentItem?.status === 'APPROVED' || currentItem?.acknowledged === true;
+  const isRef      = currentItem?.status === 'REFERENCE';
+  const canAdd     = isApproved && !isRef;
+
+  btn.disabled = !canAdd;
+  btn.style.pointerEvents = canAdd ? '' : 'none';
+  btn.style.opacity = canAdd ? '1' : '0.6';
+
+  // Tooltip on the wrapper
+  if (wrap._tt) { wrap._tt.dispose(); wrap._tt = null; }
+  if (!canAdd) {
+    wrap.setAttribute('title', isRef ? 'Already saved to reference' : 'Only acknowledged documents can be saved for reference');
+    wrap._tt = new bootstrap.Tooltip(wrap);
+  } else {
+    wrap.removeAttribute('title');
+  }
+}
 
 async function loadItem(itemId) {
   // Load the distribution item
@@ -265,8 +320,9 @@ async function loadItem(itemId) {
   }
   currentItem = item;
 
-  // Update status badge
+  // Update status badge and reference button state
   renderStatusBadge(item);
+  updateReferenceBtn();
 
   // Load the distribution (to get doc_id)
   const { data: dist } = await sb
@@ -398,12 +454,14 @@ function injectPdfStyles(frame) {
 
 function renderStatusBadge(item) {
   const colours = {
-    'APPROVED': '#8BC34A', 'REJECTED': '#B33771',
-    'OVERDUE': '#EA2027', 'PENDING': '#009432',
+    'APPROVED':  '#8BC34A', 'REJECTED': '#B33771',
+    'OVERDUE':   '#EA2027', 'PENDING':  '#009432',
+    'REFERENCE': '#0070C0',
   };
   const labels  = {
-    'APPROVED': 'Acknowledged', 'REJECTED': 'Rejected',
-    'OVERDUE': 'Overdue', 'PENDING': 'Pending',
+    'APPROVED':  'Acknowledged', 'REJECTED':  'Rejected',
+    'OVERDUE':   'Overdue',      'PENDING':   'Pending',
+    'REFERENCE': 'Reference',
   };
   const s   = (item.status || 'PENDING').toUpperCase();
   const col = colours[s] || '#0070C0';
@@ -449,6 +507,7 @@ async function saveAction(newStatus, reason) {
   currentItem.rejected_date     = isRejected ? today : null;
   currentItem.rejected_reason   = isRejected ? reason : null;
   renderStatusBadge(currentItem);
+  updateReferenceBtn();
 
   App.toast(isApproved ? 'Document acknowledged' : 'Document rejected');
   await StatusWidget.refresh();
