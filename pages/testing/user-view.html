@@ -15,7 +15,7 @@
 
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/core@1.4.0/dist/css/tabler.min.css" />
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.44.0/dist/tabler-icons.min.css" />
-  <link rel="stylesheet" href="../../assets/css/theme.css?r=5ecns6x8" />
+  <link rel="stylesheet" href="../../assets/css/theme.css?r=q92a31p8" />
 
   <script>
     (function() {
@@ -63,7 +63,7 @@
     .table-scroll { flex: 1; min-height: 0; overflow-y: auto; }
 
     /* Section header rows within the single table */
-    tr.section-header { background: lightgray; }
+    tr.section-header { background: var(--tblr-bg-surface-secondary); color: var(--tblr-body-color); }
     tr.section-header td { font-weight: 600; font-size: .8125rem; padding: 8px 12px; cursor: pointer; user-select: none; border-top: 2px solid var(--tblr-border-color); }
     tr.section-header:first-child td:first-child { border-top-left-radius: var(--tblr-border-radius); }
     tr.section-header:first-child td:last-child { border-top-right-radius: var(--tblr-border-radius); }
@@ -71,7 +71,7 @@
     tr.section-header td i.section-chevron { transition: transform .2s; }
     tr.section-header.collapsed td i.section-chevron { transform: rotate(-90deg); }
     tr.section-body-row.hidden { display: none; }
-    tr.section-col-titles th { background: #F0F0F0; font-size: .75rem; color: var(--tblr-secondary-color); font-weight: 600; padding-top: 6px; padding-bottom: 6px; padding-left: 20px; padding-right: 20px; border-bottom: 1px solid var(--tblr-border-color); }
+    tr.section-col-titles th { background: var(--tblr-active-bg, rgba(var(--tblr-secondary-rgb),.06)); font-size: .75rem; color: var(--tblr-secondary-color); font-weight: 600; padding-top: 6px; padding-bottom: 6px; padding-left: 20px; padding-right: 20px; border-bottom: 1px solid var(--tblr-border-color); }
     tr.section-body-row td { padding-left: 20px; }
     tr.section-body-row.no-items td { padding-left: 20px !important; }
   </style>
@@ -203,15 +203,15 @@
   <script src="https://cdn.jsdelivr.net/npm/@tabler/core@1.4.0/dist/js/tabler.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="../../assets/js/version.js?r=5ecns6x8"></script>
-  <script src="../../assets/js/supabase-client.js?r=5ecns6x8"></script>
-  <script src="../../assets/js/auth.js?r=5ecns6x8"></script>
-  <script src="../../assets/js/app.js?r=5ecns6x8"></script>
-  <script src="../../assets/js/theme.js?r=5ecns6x8"></script>
-  <script src="../../assets/js/sidebar-html.js?r=5ecns6x8"></script>
-  <script src="../../assets/js/sidebar.js?r=5ecns6x8"></script>
-  <script src="../../assets/js/profile-modal.js?r=5ecns6x8"></script>
-  <script src="../../assets/js/status-widget.js?r=5ecns6x8"></script>
+  <script src="../../assets/js/version.js?r=q92a31p8"></script>
+  <script src="../../assets/js/supabase-client.js?r=q92a31p8"></script>
+  <script src="../../assets/js/auth.js?r=q92a31p8"></script>
+  <script src="../../assets/js/app.js?r=q92a31p8"></script>
+  <script src="../../assets/js/theme.js?r=q92a31p8"></script>
+  <script src="../../assets/js/sidebar-html.js?r=q92a31p8"></script>
+  <script src="../../assets/js/sidebar.js?r=q92a31p8"></script>
+  <script src="../../assets/js/profile-modal.js?r=q92a31p8"></script>
+  <script src="../../assets/js/status-widget.js?r=q92a31p8"></script>
   <script>
 // Lookup caches
 let allDocuments = [];       // ad_document rows
