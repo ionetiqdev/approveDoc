@@ -1,1 +1,1 @@
-User View: fix section header and column title colours for dark mode using CSS variables
+User View: section band #D3D3D3 in light mode, CSS var in dark mode
