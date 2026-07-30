@@ -1,1 +1,1 @@
-Acknowledge: hide annotation editor, rotate, openFile, viewBookmark, presentationMode buttons to match documents page
+User View: set column widths; remove edit button; double-click and checklist button both open acknowledge page

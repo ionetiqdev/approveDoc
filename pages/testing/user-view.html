@@ -15,7 +15,7 @@
 
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/core@1.4.0/dist/css/tabler.min.css" />
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.44.0/dist/tabler-icons.min.css" />
-  <link rel="stylesheet" href="../../assets/css/theme.css?r=tl5894fy" />
+  <link rel="stylesheet" href="../../assets/css/theme.css?r=d8140s93" />
 
   <script>
     (function() {
@@ -194,15 +194,15 @@
   <script src="https://cdn.jsdelivr.net/npm/@tabler/core@1.4.0/dist/js/tabler.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="../../assets/js/version.js?r=tl5894fy"></script>
-  <script src="../../assets/js/supabase-client.js?r=tl5894fy"></script>
-  <script src="../../assets/js/auth.js?r=tl5894fy"></script>
-  <script src="../../assets/js/app.js?r=tl5894fy"></script>
-  <script src="../../assets/js/theme.js?r=tl5894fy"></script>
-  <script src="../../assets/js/sidebar-html.js?r=tl5894fy"></script>
-  <script src="../../assets/js/sidebar.js?r=tl5894fy"></script>
-  <script src="../../assets/js/profile-modal.js?r=tl5894fy"></script>
-  <script src="../../assets/js/status-widget.js?r=tl5894fy"></script>
+  <script src="../../assets/js/version.js?r=d8140s93"></script>
+  <script src="../../assets/js/supabase-client.js?r=d8140s93"></script>
+  <script src="../../assets/js/auth.js?r=d8140s93"></script>
+  <script src="../../assets/js/app.js?r=d8140s93"></script>
+  <script src="../../assets/js/theme.js?r=d8140s93"></script>
+  <script src="../../assets/js/sidebar-html.js?r=d8140s93"></script>
+  <script src="../../assets/js/sidebar.js?r=d8140s93"></script>
+  <script src="../../assets/js/profile-modal.js?r=d8140s93"></script>
+  <script src="../../assets/js/status-widget.js?r=d8140s93"></script>
   <script>
 // Lookup caches
 let allDocuments = [];       // ad_document rows
@@ -390,7 +390,6 @@ function rowHtml(item, hidden) {
     <td class="text-secondary">${App.escHtml(distInstructions(item.distribution_id))}</td>
     <td>
       <div class="btn-list flex-nowrap">
-        <button class="btn btn-icon btn-icon-lg edit-row-btn" data-item-id="${item.distrib_item_id}" title="Edit"><i class="ti ti-edit"></i></button>
         <button class="btn btn-icon btn-icon-lg ack-row-btn" data-item-id="${item.distrib_item_id}" data-dist-id="${item.distribution_id}" title="Acknowledge"><i class="ti ti-checklist"></i></button>
       </div>
     </td>
@@ -506,6 +505,15 @@ function renderSections(items, expandOnly = null) {
   tbody.innerHTML = SECTIONS.map(sec => {
     const headerRow = sectionHeaderRow(sec.id, sec.title, sec.items.length, sec.collapsed);
     const colTitles = `<tr class="section-body-row section-col-titles${sec.collapsed ? ' hidden' : ''}">
+      <colgroup>
+        <col style="width:20%">
+        <col style="width:12%">
+        <col style="width:12%">
+        <col style="width:20%">
+        <col style="width:10%">
+        <col style="width:24%">
+        <col style="width:2%">
+      </colgroup>
       <th>Document</th><th>Due date</th><th>Status</th>
       <th>Audience(s)</th><th>Date added</th><th>Instructions</th><th class="w-1"></th>
     </tr>`;
@@ -529,27 +537,17 @@ function renderSections(items, expandOnly = null) {
     });
   });
 
-  // Wire double-click and icon buttons
+  // Wire double-click and icon buttons — both open the acknowledge page
   tbody.querySelectorAll('tr.section-body-row[data-item-id]').forEach(row => {
     row.addEventListener('dblclick', () => {
-      const item = allItems.find(i => i.distrib_item_id === row.dataset.itemId);
-      if (item) openEditModal(item);
-    });
-  });
-
-  tbody.querySelectorAll('.edit-row-btn').forEach(btn => {
-    btn.addEventListener('click', e => {
-      e.stopPropagation();
-      const item = allItems.find(i => i.distrib_item_id === btn.dataset.itemId);
-      if (item) openEditModal(item);
+      window.location.href = `acknowledge.html?item=${row.dataset.itemId}`;
     });
   });
 
   tbody.querySelectorAll('.ack-row-btn').forEach(btn => {
     btn.addEventListener('click', e => {
       e.stopPropagation();
-      const url = `acknowledge.html?item=${btn.dataset.itemId}`;
-      window.location.href = url;
+      window.location.href = `acknowledge.html?item=${btn.dataset.itemId}`;
     });
   });
 }
