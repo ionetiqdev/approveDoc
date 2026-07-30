@@ -1,1 +1,1 @@
-Remove Query admin SQL console (Testing menu, page, and supporting DB functions/role/table) - abandoned
+Fix: acknowledge link doubled path; users.html invite redirect uses _appRootUrl
