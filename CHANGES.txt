@@ -1,1 +1,1 @@
-User View: new column widths; fix header padding alignment with body cells
+User View: move colgroup to table element so widths actually apply; remove from per-section template
