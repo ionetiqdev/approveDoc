@@ -50,12 +50,11 @@ function loadDocFeatures() {
   const override = Auth.getPreference('docViewerPrefs', null);
   DOC_FEATURES = JSON.parse(JSON.stringify(DOC_DEFAULT_FEATURES));
 
+  // Only allow user prefs to override upload and delete — never pdfViewer or pdfButtons
+  // (viewer appearance is an app-level config decision, not a user preference)
   if (override) {
-    Object.keys(override).forEach(section => {
-      if (DOC_FEATURES[section]) {
-        Object.assign(DOC_FEATURES[section], override[section]);
-      }
-    });
+    if (override.upload) Object.assign(DOC_FEATURES.upload, override.upload);
+    if (override.delete) Object.assign(DOC_FEATURES.delete, override.delete);
   }
   applyDocFeatures();
 }

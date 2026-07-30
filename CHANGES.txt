@@ -1,1 +1,1 @@
-acknowledge.html: fix PDF viewer URL path from assets/ to ../../assets/
+Documents: pdfViewer/pdfButtons are app-level config only, never overridden by user prefs; remove Download from prefs tab

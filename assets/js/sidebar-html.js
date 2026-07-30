@@ -291,10 +291,6 @@ const SidebarHtml = (() => {
                       <input class="form-check-input" type="checkbox" id="docPrefDeleteEnabled">
                       <label class="form-check-label" for="docPrefDeleteEnabled">Delete button on documents</label>
                     </div>
-                    <div class="form-check form-switch" style="padding-bottom:12px">
-                      <input class="form-check-input" type="checkbox" id="docPrefDownload">
-                      <label class="form-check-label" for="docPrefDownload">Download button in viewer</label>
-                    </div>
                   </div>
 
                   <!-- Current User tab -->
@@ -455,15 +451,13 @@ const SidebarHtml = (() => {
 
       // Read from saved prefs, falling back to DOC_DEFAULT_FEATURES
       const saved   = Auth.getPreference('docViewerPrefs', null) || {};
-      const upload  = Object.assign({}, DOC_DEFAULT_FEATURES.upload,   saved.upload   || {});
-      const del     = Object.assign({}, DOC_DEFAULT_FEATURES.delete,   saved.delete   || {});
-      const buttons = Object.assign({}, DOC_DEFAULT_FEATURES.pdfButtons, saved.pdfButtons || {});
+      const upload  = Object.assign({}, DOC_DEFAULT_FEATURES.upload,  saved.upload  || {});
+      const del     = Object.assign({}, DOC_DEFAULT_FEATURES.delete,  saved.delete  || {});
 
       document.getElementById('docPrefUploadButton').checked  = upload.modalButton   !== false;
       document.getElementById('docPrefDropZone').checked      = upload.dropZone      !== false;
       document.getElementById('docPrefPromptOnDrop').checked  = upload.promptOnDrop  !== false;
       document.getElementById('docPrefDeleteEnabled').checked = del.enabled          !== false;
-      document.getElementById('docPrefDownload').checked      = buttons.download     !== false;
     }
 
     const openPreferences = e => {
@@ -538,16 +532,9 @@ const SidebarHtml = (() => {
           delete: Object.assign({}, saved.delete, {
             enabled: document.getElementById('docPrefDeleteEnabled').checked,
           }),
-          pdfButtons: Object.assign({}, saved.pdfButtons, {
-            download: document.getElementById('docPrefDownload').checked,
-          }),
         };
         await Auth.setPreference('docViewerPrefs', override);
-        console.log('[Prefs] saved docViewerPrefs:', JSON.stringify(override));
-        if (typeof loadDocFeatures === 'function') {
-          loadDocFeatures();
-          console.log('[Prefs] DOC_FEATURES after reload:', JSON.stringify(DOC_FEATURES));
-        }
+        if (typeof loadDocFeatures === 'function') loadDocFeatures();
       }
 
       // Profile updates
