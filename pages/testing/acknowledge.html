@@ -15,7 +15,7 @@
 
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/core@1.4.0/dist/css/tabler.min.css" />
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.44.0/dist/tabler-icons.min.css" />
-  <link rel="stylesheet" href="../../assets/css/theme.css?r=r91cfoyb" />
+  <link rel="stylesheet" href="../../assets/css/theme.css?r=6w3ylejm" />
 
   <script>
     (function() {
@@ -176,15 +176,15 @@
   <script src="https://cdn.jsdelivr.net/npm/@tabler/core@1.4.0/dist/js/tabler.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="../../assets/js/version.js?r=r91cfoyb"></script>
-  <script src="../../assets/js/supabase-client.js?r=r91cfoyb"></script>
-  <script src="../../assets/js/auth.js?r=r91cfoyb"></script>
-  <script src="../../assets/js/app.js?r=r91cfoyb"></script>
-  <script src="../../assets/js/theme.js?r=r91cfoyb"></script>
-  <script src="../../assets/js/sidebar-html.js?r=r91cfoyb"></script>
-  <script src="../../assets/js/sidebar.js?r=r91cfoyb"></script>
-  <script src="../../assets/js/profile-modal.js?r=r91cfoyb"></script>
-  <script src="../../assets/js/status-widget.js?r=r91cfoyb"></script>
+  <script src="../../assets/js/version.js?r=6w3ylejm"></script>
+  <script src="../../assets/js/supabase-client.js?r=6w3ylejm"></script>
+  <script src="../../assets/js/auth.js?r=6w3ylejm"></script>
+  <script src="../../assets/js/app.js?r=6w3ylejm"></script>
+  <script src="../../assets/js/theme.js?r=6w3ylejm"></script>
+  <script src="../../assets/js/sidebar-html.js?r=6w3ylejm"></script>
+  <script src="../../assets/js/sidebar.js?r=6w3ylejm"></script>
+  <script src="../../assets/js/profile-modal.js?r=6w3ylejm"></script>
+  <script src="../../assets/js/status-widget.js?r=6w3ylejm"></script>
   <script>
 const PDF_BUCKET          = 'documents';
 const PDF_VIEWER_URL      = '../../assets/pdfjs/web/viewer.html';
@@ -278,14 +278,31 @@ let rejectModal  = null;
 
     currentItem.status = 'REFERENCE';
     renderStatusBadge(currentItem);
-    updateReferenceBtn();
+    updateReferenceBtn(); updateActionButtons();
     App.toast('Document saved to reference library');
     await StatusWidget.refresh();
     returnToList();
   });
 })();
 
-function updateReferenceBtn() {
+function updateActionButtons() {
+  const status     = currentItem?.status;
+  const isApproved = status === 'APPROVED';
+  const isRejected = status === 'REJECTED';
+  const isRef      = status === 'REFERENCE';
+  const isDone     = isApproved || isRejected || isRef;
+
+  const ackBtn = document.getElementById('acknowledgeBtn');
+  const rejBtn = document.getElementById('rejectBtn');
+
+  ackBtn.disabled = isDone;
+  ackBtn.style.opacity = isDone ? '0.5' : '1';
+  ackBtn.title = isApproved ? 'Already acknowledged' : isRejected ? 'Document has been rejected' : '';
+
+  rejBtn.disabled = isDone;
+  rejBtn.style.opacity = isDone ? '0.5' : '1';
+  rejBtn.title = isRejected ? 'Already rejected' : isApproved ? 'Document has been acknowledged' : '';
+}
   const btn     = document.getElementById('referenceBtn');
   const wrap    = document.getElementById('referenceBtnWrap');
   const isApproved = currentItem?.status === 'APPROVED' || currentItem?.acknowledged === true;
@@ -322,7 +339,7 @@ async function loadItem(itemId) {
 
   // Update status badge and reference button state
   renderStatusBadge(item);
-  updateReferenceBtn();
+  updateReferenceBtn(); updateActionButtons();
 
   // Load the distribution (to get doc_id)
   const { data: dist } = await sb
@@ -507,7 +524,7 @@ async function saveAction(newStatus, reason) {
   currentItem.rejected_date     = isRejected ? today : null;
   currentItem.rejected_reason   = isRejected ? reason : null;
   renderStatusBadge(currentItem);
-  updateReferenceBtn();
+  updateReferenceBtn(); updateActionButtons();
 
   App.toast(isApproved ? 'Document acknowledged' : 'Document rejected');
   await StatusWidget.refresh();

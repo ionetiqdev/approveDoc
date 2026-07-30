@@ -1,1 +1,1 @@
-Acknowledge: wire Add to Reference - insert ad_document_reference, set REFERENCE status; User View: fix section grouping for REFERENCE
+Acknowledge: grey out acknowledge/reject buttons when document already actioned
