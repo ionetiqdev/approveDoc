@@ -1,1 +1,1 @@
-Distribution: warning direction buttons 60% width, 10px font, vertically centred
+Distribution: replace radio btn-group with single toggle button Before/After; instant click
