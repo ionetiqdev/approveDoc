@@ -1,1 +1,1 @@
-Distribution: radio as labels, col-3 date fields, both warnings on same row
+Distribution: clean 4-col layout for dates/radio; warnings with headers and labels
