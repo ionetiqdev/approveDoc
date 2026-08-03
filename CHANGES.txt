@@ -1,1 +1,1 @@
-Distribution: fix direction button group IDs - HTML was not updated in previous deploy
+Distribution: remove Direction labels; smaller btn-sm warning direction toggles
