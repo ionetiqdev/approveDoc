@@ -1,1 +1,1 @@
-Distribution: direction toggle button groups Before/After; fix error text
+Distribution: fix direction button group IDs - HTML was not updated in previous deploy
