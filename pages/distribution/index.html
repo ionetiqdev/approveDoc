@@ -15,7 +15,7 @@
 
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/core@1.4.0/dist/css/tabler.min.css" />
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.44.0/dist/tabler-icons.min.css" />
-  <link rel="stylesheet" href="../../assets/css/theme.css?r=jsxv2de7" />
+  <link rel="stylesheet" href="../../assets/css/theme.css?r=d6lg9zxt" />
 
   <script>
     (function() {
@@ -305,15 +305,15 @@
   <script src="https://cdn.jsdelivr.net/npm/@tabler/core@1.4.0/dist/js/tabler.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="../../assets/js/version.js?r=jsxv2de7"></script>
-  <script src="../../assets/js/supabase-client.js?r=jsxv2de7"></script>
-  <script src="../../assets/js/auth.js?r=jsxv2de7"></script>
-  <script src="../../assets/js/app.js?r=jsxv2de7"></script>
-  <script src="../../assets/js/theme.js?r=jsxv2de7"></script>
-  <script src="../../assets/js/sidebar-html.js?r=jsxv2de7"></script>
-  <script src="../../assets/js/sidebar.js?r=jsxv2de7"></script>
-  <script src="../../assets/js/profile-modal.js?r=jsxv2de7"></script>
-  <script src="../../assets/js/status-widget.js?r=jsxv2de7"></script>
+  <script src="../../assets/js/version.js?r=d6lg9zxt"></script>
+  <script src="../../assets/js/supabase-client.js?r=d6lg9zxt"></script>
+  <script src="../../assets/js/auth.js?r=d6lg9zxt"></script>
+  <script src="../../assets/js/app.js?r=d6lg9zxt"></script>
+  <script src="../../assets/js/theme.js?r=d6lg9zxt"></script>
+  <script src="../../assets/js/sidebar-html.js?r=d6lg9zxt"></script>
+  <script src="../../assets/js/sidebar.js?r=d6lg9zxt"></script>
+  <script src="../../assets/js/profile-modal.js?r=d6lg9zxt"></script>
+  <script src="../../assets/js/status-widget.js?r=d6lg9zxt"></script>
   <script>
 let distributionModal, deleteModal;
 let allDistributions = [];
@@ -661,21 +661,21 @@ async function saveDistribution() {
 
   // Comprehensive validation
   const errors = [];
-  if (!name)             errors.push('Name is required.');
-  if (!docId)            errors.push('Document is required.');
-  if (!distributionType) errors.push('Distribution type is required.');
-  if (!startDate)        errors.push('Start date is required.');
-  if (!dueDate)          errors.push(dueDateMode === 'days' ? 'Days to acknowledge is required.' : 'Due date is required.');
+  if (!name)             errors.push('Name');
+  if (!docId)            errors.push('Document');
+  if (!distributionType) errors.push('Distribution type');
+  if (!startDate)        errors.push('Start date');
+  if (!dueDate)          errors.push(dueDateMode === 'days' ? 'Days to acknowledge' : 'Due date');
 
   const selectedAudiences = getSelectedAudiences();
-  if (!selectedAudiences.length) errors.push('At least one audience is required.');
+  if (!selectedAudiences.length) errors.push('At least one audience');
 
   const warn1Days = document.getElementById('distributionWarn1Days').value ? parseInt(document.getElementById('distributionWarn1Days').value) : null;
   const warn1Dir  = document.getElementById('distributionWarn1Dir').value || null;
-  if (!warn1Days || !warn1Dir) errors.push('First warning (days and direction) is required.');
+  if (!warn1Days || !warn1Dir) errors.push('First warning — days and direction');
 
   if (errors.length) {
-    errorEl.innerHTML = errors.map(e => `<div>${e}</div>`).join('');
+    errorEl.innerHTML = `Please complete the following required fields:<ul class="mb-0 mt-1">${errors.map(e => `<li>${e}</li>`).join('')}</ul>`;
     errorEl.classList.remove('d-none');
     return;
   }

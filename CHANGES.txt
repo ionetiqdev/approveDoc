@@ -1,1 +1,1 @@
-Distribution: fix duplicate warn2Days/warn2Dir variable declarations causing SyntaxError
+Distribution: combine validation errors into single message with bullet list
