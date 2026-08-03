@@ -15,7 +15,7 @@
 
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/core@1.4.0/dist/css/tabler.min.css" />
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.44.0/dist/tabler-icons.min.css" />
-  <link rel="stylesheet" href="../../assets/css/theme.css?r=d6lg9zxt" />
+  <link rel="stylesheet" href="../../assets/css/theme.css?r=naie4wm2" />
 
   <script>
     (function() {
@@ -305,15 +305,15 @@
   <script src="https://cdn.jsdelivr.net/npm/@tabler/core@1.4.0/dist/js/tabler.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="../../assets/js/version.js?r=d6lg9zxt"></script>
-  <script src="../../assets/js/supabase-client.js?r=d6lg9zxt"></script>
-  <script src="../../assets/js/auth.js?r=d6lg9zxt"></script>
-  <script src="../../assets/js/app.js?r=d6lg9zxt"></script>
-  <script src="../../assets/js/theme.js?r=d6lg9zxt"></script>
-  <script src="../../assets/js/sidebar-html.js?r=d6lg9zxt"></script>
-  <script src="../../assets/js/sidebar.js?r=d6lg9zxt"></script>
-  <script src="../../assets/js/profile-modal.js?r=d6lg9zxt"></script>
-  <script src="../../assets/js/status-widget.js?r=d6lg9zxt"></script>
+  <script src="../../assets/js/version.js?r=naie4wm2"></script>
+  <script src="../../assets/js/supabase-client.js?r=naie4wm2"></script>
+  <script src="../../assets/js/auth.js?r=naie4wm2"></script>
+  <script src="../../assets/js/app.js?r=naie4wm2"></script>
+  <script src="../../assets/js/theme.js?r=naie4wm2"></script>
+  <script src="../../assets/js/sidebar-html.js?r=naie4wm2"></script>
+  <script src="../../assets/js/sidebar.js?r=naie4wm2"></script>
+  <script src="../../assets/js/profile-modal.js?r=naie4wm2"></script>
+  <script src="../../assets/js/status-widget.js?r=naie4wm2"></script>
   <script>
 let distributionModal, deleteModal;
 let allDistributions = [];
@@ -584,9 +584,13 @@ async function openModal(item = null) {
     document.getElementById('distributionDueDate').value        = item.due_date || '';
     document.getElementById('distributionDaysToAck').value      = item.days_to_acknowledge ?? '';
     document.getElementById('distributionWarn1Days').value      = item.first_warning_days ?? '';
-    document.getElementById('distributionWarn1Dir').value       = item.first_warning_direction || '';
+    const w1dir = item.first_warning_direction || 'B';
+    document.getElementById('warn1DirB').checked = w1dir === 'B';
+    document.getElementById('warn1DirA').checked = w1dir === 'A';
     document.getElementById('distributionWarn2Days').value      = item.second_warning_days ?? '';
-    document.getElementById('distributionWarn2Dir').value       = item.second_warning_direction || '';
+    const w2dir = item.second_warning_direction || 'B';
+    document.getElementById('warn2DirB').checked = w2dir === 'B';
+    document.getElementById('warn2DirA').checked = w2dir === 'A';
     document.getElementById('distributionReqPassword').checked  = item.req_password ?? false;
 
     // Set radio based on whether days_to_acknowledge was used
@@ -623,9 +627,9 @@ function resetModal() {
   document.getElementById('distributionDueDate').value        = '';
   document.getElementById('distributionDaysToAck').value      = '';
   document.getElementById('distributionWarn1Days').value      = '';
-  document.getElementById('distributionWarn1Dir').value       = '';
+  document.getElementById('warn1DirB').checked = true;
   document.getElementById('distributionWarn2Days').value      = '';
-  document.getElementById('distributionWarn2Dir').value       = '';
+  document.getElementById('warn2DirB').checked = true;
   document.getElementById('distributionReqPassword').checked  = false;
   // Reset radio to Due date mode
   document.getElementById('dueDateModeDate').checked = true;
@@ -671,8 +675,8 @@ async function saveDistribution() {
   if (!selectedAudiences.length) errors.push('At least one audience');
 
   const warn1Days = document.getElementById('distributionWarn1Days').value ? parseInt(document.getElementById('distributionWarn1Days').value) : null;
-  const warn1Dir  = document.getElementById('distributionWarn1Dir').value || null;
-  if (!warn1Days || !warn1Dir) errors.push('First warning — days and direction');
+  const warn1Dir  = document.querySelector('input[name="warn1Dir"]:checked')?.value || null;
+  if (!warn1Days || !warn1Dir) errors.push('At least first warning — days and direction');
 
   if (errors.length) {
     errorEl.innerHTML = `Please complete the following required fields:<ul class="mb-0 mt-1">${errors.map(e => `<li>${e}</li>`).join('')}</ul>`;
@@ -680,7 +684,7 @@ async function saveDistribution() {
     return;
   }
   const warn2Days = document.getElementById('distributionWarn2Days').value ? parseInt(document.getElementById('distributionWarn2Days').value) : null;
-  const warn2Dir  = document.getElementById('distributionWarn2Dir').value || null;
+  const warn2Dir  = document.querySelector('input[name="warn2Dir"]:checked')?.value || null;
 
   document.getElementById('saveDistributionSpinner').classList.remove('d-none');
   document.getElementById('saveDistributionBtn').disabled = true;

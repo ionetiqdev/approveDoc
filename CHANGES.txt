@@ -1,1 +1,1 @@
-Distribution: combine validation errors into single message with bullet list
+Distribution: direction toggle button groups Before/After; fix error text
