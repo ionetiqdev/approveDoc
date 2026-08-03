@@ -1,1 +1,1 @@
-Distribution: remove Direction labels; smaller btn-sm warning direction toggles
+Distribution: warning direction buttons 60% width, 10px font, vertically centred
