@@ -1,1 +1,1 @@
-Distribution: full validation on save; dirty guard warns on close/cancel with unsaved changes
+Distribution: fix duplicate warn2Days/warn2Dir variable declarations causing SyntaxError
