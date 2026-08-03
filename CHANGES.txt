@@ -1,1 +1,1 @@
-Distribution: replace radio btn-group with single toggle button Before/After; instant click
+Distribution: revert to radio btn-group with transition:none for instant response
