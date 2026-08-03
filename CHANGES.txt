@@ -1,1 +1,1 @@
-Distribution: audience picker shows full list on focus, filters as you type
+Distribution: full validation on save; dirty guard warns on close/cancel with unsaved changes

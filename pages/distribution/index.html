@@ -15,7 +15,7 @@
 
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/core@1.4.0/dist/css/tabler.min.css" />
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.44.0/dist/tabler-icons.min.css" />
-  <link rel="stylesheet" href="../../assets/css/theme.css?r=8vqckh42" />
+  <link rel="stylesheet" href="../../assets/css/theme.css?r=fuom1k87" />
 
   <script>
     (function() {
@@ -305,15 +305,15 @@
   <script src="https://cdn.jsdelivr.net/npm/@tabler/core@1.4.0/dist/js/tabler.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="../../assets/js/version.js?r=8vqckh42"></script>
-  <script src="../../assets/js/supabase-client.js?r=8vqckh42"></script>
-  <script src="../../assets/js/auth.js?r=8vqckh42"></script>
-  <script src="../../assets/js/app.js?r=8vqckh42"></script>
-  <script src="../../assets/js/theme.js?r=8vqckh42"></script>
-  <script src="../../assets/js/sidebar-html.js?r=8vqckh42"></script>
-  <script src="../../assets/js/sidebar.js?r=8vqckh42"></script>
-  <script src="../../assets/js/profile-modal.js?r=8vqckh42"></script>
-  <script src="../../assets/js/status-widget.js?r=8vqckh42"></script>
+  <script src="../../assets/js/version.js?r=fuom1k87"></script>
+  <script src="../../assets/js/supabase-client.js?r=fuom1k87"></script>
+  <script src="../../assets/js/auth.js?r=fuom1k87"></script>
+  <script src="../../assets/js/app.js?r=fuom1k87"></script>
+  <script src="../../assets/js/theme.js?r=fuom1k87"></script>
+  <script src="../../assets/js/sidebar-html.js?r=fuom1k87"></script>
+  <script src="../../assets/js/sidebar.js?r=fuom1k87"></script>
+  <script src="../../assets/js/profile-modal.js?r=fuom1k87"></script>
+  <script src="../../assets/js/status-widget.js?r=fuom1k87"></script>
   <script>
 let distributionModal, deleteModal;
 let allDistributions = [];
@@ -338,7 +338,35 @@ let pendingDeleteId = null;
 
   distributionModal = new bootstrap.Modal(document.getElementById('distributionModal'));
 
-  document.getElementById('addAudienceBtn').addEventListener('click', () => addAudienceRow());
+  // Dirty guard — warn if user closes with unsaved changes
+  let _distSnapshot = null;
+  let _distGuardWired = false;
+
+  function _distSnapshot_take() {
+    return [
+      document.getElementById('distributionName').value,
+      document.getElementById('distributionDoc').value,
+      document.getElementById('distributionType').value,
+      document.getElementById('distributionStartDate').value,
+      document.getElementById('distributionDueDate').value,
+      document.getElementById('distributionDaysToAck').value,
+      document.querySelector('input[name="dueDateMode"]:checked')?.value,
+      getSelectedAudiences().join(','),
+    ].join('|');
+  }
+
+  const distModalEl = document.getElementById('distributionModal');
+  distModalEl.addEventListener('shown.bs.modal', () => {
+    _distSnapshot = _distSnapshot_take();
+    if (!_distGuardWired) {
+      _distGuardWired = true;
+      App.guardModalClose(distModalEl, distributionModal, () => _distSnapshot_take() !== _distSnapshot);
+    }
+  });
+  distModalEl.addEventListener('hidden.bs.modal', () => {
+    _distSnapshot = null;
+    resetModal();
+  });
 
   // Radio toggle: Due date vs Days to acknowledge
   document.querySelectorAll('input[name="dueDateMode"]').forEach(radio => {
@@ -356,8 +384,7 @@ let pendingDeleteId = null;
   document.getElementById('createDistributionBtn').addEventListener('click', () => openModal());
   document.getElementById('saveDistributionBtn').addEventListener('click', saveDistribution);
   document.getElementById('confirmDeleteBtn').addEventListener('click', confirmDelete);
-  document.getElementById('distributionModal').addEventListener('hidden.bs.modal', resetModal);
-})();
+  document.getElementById('addAudienceBtn').addEventListener('click', () => addAudienceRow());})();
 
 async function loadDocuments() {
   const { data, error } = await sb.from('ad_document').select('doc_id, name').eq('organisation_id', Auth.getOrganisationId()).order('name');
@@ -402,9 +429,13 @@ function wireAudienceRow(row, selectedId = '') {
 
   function showDropdown(term) {
     const lower = term.toLowerCase();
+    // Exclude audiences already selected in other rows
+    const allHiddens = [...document.querySelectorAll('#audienceList .audience-id-input')];
+    const otherIds = new Set(allHiddens.filter(h2 => h2 !== hidden).map(h2 => h2.value).filter(v => v));
+    const available = allAudiences.filter(a => !otherIds.has(a.audience_id));
     const matches = term
-      ? allAudiences.filter(a => a.name.toLowerCase().includes(lower))
-      : allAudiences;
+      ? available.filter(a => a.name.toLowerCase().includes(lower))
+      : available;
     if (!matches.length) { dropdown.style.display = 'none'; return; }
     dropdown.innerHTML = matches.map(a =>
       `<button type="button" class="dropdown-item" data-id="${a.audience_id}">${App.escHtml(a.name)}</button>`
@@ -628,32 +659,31 @@ async function saveDistribution() {
     dueDate = d.toISOString().slice(0, 10);
   }
 
-  if (!startDate) {
-    errorEl.textContent = 'Start date is required.';
-    errorEl.classList.remove('d-none');
-    return;
-  }
-  if (!dueDate) {
-    errorEl.textContent = dueDateMode === 'days' ? 'Days to acknowledge is required.' : 'Due date is required.';
-    errorEl.classList.remove('d-none');
-    return;
-  }
+  // Comprehensive validation
+  const errors = [];
+  if (!name)             errors.push('Name is required.');
+  if (!docId)            errors.push('Document is required.');
+  if (!distributionType) errors.push('Distribution type is required.');
+  if (!startDate)        errors.push('Start date is required.');
+  if (!dueDate)          errors.push(dueDateMode === 'days' ? 'Days to acknowledge is required.' : 'Due date is required.');
 
-  if (!name) {
-    errorEl.textContent = 'Name is required.';
-    errorEl.classList.remove('d-none');
-    return;
-  }
-  if (!distributionType) {
-    errorEl.textContent = 'Distribution type is required.';
-    errorEl.classList.remove('d-none');
-    return;
-  }
+  const selectedAudiences = getSelectedAudiences();
+  if (!selectedAudiences.length) errors.push('At least one audience is required.');
 
-  const warn1Days        = document.getElementById('distributionWarn1Days').value ? parseInt(document.getElementById('distributionWarn1Days').value) : null;
-  const warn1Dir         = document.getElementById('distributionWarn1Dir').value || null;
+  const warn1Days = document.getElementById('distributionWarn1Days').value ? parseInt(document.getElementById('distributionWarn1Days').value) : null;
+  const warn1Dir  = document.getElementById('distributionWarn1Dir').value || null;
+  if (!warn1Days || !warn1Dir) errors.push('First warning (days and direction) is required.');
+
+  if (errors.length) {
+    errorEl.innerHTML = errors.map(e => `<div>${e}</div>`).join('');
+    errorEl.classList.remove('d-none');
+    return;
+  }
   const warn2Days        = document.getElementById('distributionWarn2Days').value ? parseInt(document.getElementById('distributionWarn2Days').value) : null;
   const warn2Dir         = document.getElementById('distributionWarn2Dir').value || null;
+
+  const warn2Days = document.getElementById('distributionWarn2Days').value ? parseInt(document.getElementById('distributionWarn2Days').value) : null;
+  const warn2Dir  = document.getElementById('distributionWarn2Dir').value || null;
 
   document.getElementById('saveDistributionSpinner').classList.remove('d-none');
   document.getElementById('saveDistributionBtn').disabled = true;
@@ -701,7 +731,7 @@ async function saveDistribution() {
   if (newDistribId) {
     await sb.from('ad_distribution_audience').delete().eq('distribution_id', newDistribId);
 
-    const audienceRows = getSelectedAudiences()
+    const audienceRows = selectedAudiences
       .map((audienceId, i) => ({
         distribution_id: newDistribId,
         audience_id: audienceId,
@@ -716,6 +746,7 @@ async function saveDistribution() {
   }
 
   distributionModal.hide();
+  _distSnapshot = null;
   App.toast(id ? 'Updated' : 'Created');
   await loadDistributions();
 
