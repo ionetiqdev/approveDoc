@@ -1,1 +1,1 @@
-Acknowledge: grey out acknowledge/reject buttons when document already actioned
+User View: new column widths; fix header padding alignment with body cells
