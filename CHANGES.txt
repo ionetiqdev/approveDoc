@@ -1,1 +1,1 @@
-Distribution: radio for Due date vs Days to acknowledge; compute due_date from start+days; remove Require acknowledgement (always true); validate start date and due/days
+Distribution modal: 70vw width, radio buttons stacked left with date/days field right, audiences on right half
