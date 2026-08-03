@@ -1,1 +1,1 @@
-Distribution: clean 4-col layout for dates/radio; warnings with headers and labels
+Distribution: 10px top padding above date/radio row and warnings section
