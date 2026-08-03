@@ -15,7 +15,7 @@
 
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/core@1.4.0/dist/css/tabler.min.css" />
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.44.0/dist/tabler-icons.min.css" />
-  <link rel="stylesheet" href="../../assets/css/theme.css?r=umza2yjr" />
+  <link rel="stylesheet" href="../../assets/css/theme.css?r=d3ze8yfn" />
 
   <script>
     (function() {
@@ -221,24 +221,10 @@
 
                     <!-- Audiences tab -->
                     <div class="tab-pane active" id="distTabAudiences">
-                      <div class="mb-2">
-                        <label class="form-label">Audience 1</label>
-                        <select id="distributionAudience1" class="form-select">
-                          <option value="">— None —</option>
-                        </select>
-                      </div>
-                      <div class="mb-2">
-                        <label class="form-label">Audience 2</label>
-                        <select id="distributionAudience2" class="form-select">
-                          <option value="">— None —</option>
-                        </select>
-                      </div>
-                      <div class="mb-2">
-                        <label class="form-label">Audience 3</label>
-                        <select id="distributionAudience3" class="form-select">
-                          <option value="">— None —</option>
-                        </select>
-                      </div>
+                      <div id="audienceList" class="mb-2"></div>
+                      <button type="button" class="btn btn-sm btn-outline-secondary" id="addAudienceBtn">
+                        <i class="ti ti-plus me-1"></i>Add audience
+                      </button>
                     </div>
 
                     <!-- Warnings tab -->
@@ -319,15 +305,15 @@
   <script src="https://cdn.jsdelivr.net/npm/@tabler/core@1.4.0/dist/js/tabler.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="../../assets/js/version.js?r=umza2yjr"></script>
-  <script src="../../assets/js/supabase-client.js?r=umza2yjr"></script>
-  <script src="../../assets/js/auth.js?r=umza2yjr"></script>
-  <script src="../../assets/js/app.js?r=umza2yjr"></script>
-  <script src="../../assets/js/theme.js?r=umza2yjr"></script>
-  <script src="../../assets/js/sidebar-html.js?r=umza2yjr"></script>
-  <script src="../../assets/js/sidebar.js?r=umza2yjr"></script>
-  <script src="../../assets/js/profile-modal.js?r=umza2yjr"></script>
-  <script src="../../assets/js/status-widget.js?r=umza2yjr"></script>
+  <script src="../../assets/js/version.js?r=d3ze8yfn"></script>
+  <script src="../../assets/js/supabase-client.js?r=d3ze8yfn"></script>
+  <script src="../../assets/js/auth.js?r=d3ze8yfn"></script>
+  <script src="../../assets/js/app.js?r=d3ze8yfn"></script>
+  <script src="../../assets/js/theme.js?r=d3ze8yfn"></script>
+  <script src="../../assets/js/sidebar-html.js?r=d3ze8yfn"></script>
+  <script src="../../assets/js/sidebar.js?r=d3ze8yfn"></script>
+  <script src="../../assets/js/profile-modal.js?r=d3ze8yfn"></script>
+  <script src="../../assets/js/status-widget.js?r=d3ze8yfn"></script>
   <script>
 let distributionModal, deleteModal;
 let allDistributions = [];
@@ -351,6 +337,8 @@ let pendingDeleteId = null;
   }
 
   distributionModal = new bootstrap.Modal(document.getElementById('distributionModal'));
+
+  document.getElementById('addAudienceBtn').addEventListener('click', () => addAudienceRow());
 
   // Radio toggle: Due date vs Days to acknowledge
   document.querySelectorAll('input[name="dueDateMode"]').forEach(radio => {
@@ -389,16 +377,33 @@ async function loadAudiences() {
   const { data, error } = await sb.from('ad_audience').select('audience_id, name').eq('organisation_id', Auth.getOrganisationId()).order('name');
   if (error) { console.error('[Distribution] audiences load error:', error); return; }
   allAudiences = data || [];
+}
 
-  [1, 2, 3].forEach(n => {
-    const select = document.getElementById(`distributionAudience${n}`);
-    allAudiences.forEach(a => {
-      const opt = document.createElement('option');
-      opt.value = a.audience_id;
-      opt.textContent = a.name;
-      select.appendChild(opt);
-    });
-  });
+function audienceRowHtml(selectedId = '') {
+  const opts = allAudiences.map(a =>
+    `<option value="${a.audience_id}"${a.audience_id === selectedId ? ' selected' : ''}>${App.escHtml(a.name)}</option>`
+  ).join('');
+  return `<div class="input-group mb-2 audience-row">
+    <select class="form-select audience-select">
+      <option value="">— Select audience —</option>
+      ${opts}
+    </select>
+    <button type="button" class="btn btn-outline-danger remove-audience-btn" title="Remove"><i class="ti ti-x"></i></button>
+  </div>`;
+}
+
+function addAudienceRow(selectedId = '') {
+  const list = document.getElementById('audienceList');
+  const div = document.createElement('div');
+  div.innerHTML = audienceRowHtml(selectedId);
+  const row = div.firstElementChild;
+  row.querySelector('.remove-audience-btn').addEventListener('click', () => row.remove());
+  list.appendChild(row);
+}
+
+function getSelectedAudiences() {
+  return [...document.querySelectorAll('#audienceList .audience-select')]
+    .map(s => s.value).filter(v => !!v);
 }
 
 async function loadDistributions() {
@@ -527,10 +532,11 @@ async function openModal(item = null) {
       .select('audience_id')
       .eq('distribution_id', item.distribution_id)
       .order('sort_order');
-    (links || []).forEach((link, i) => {
-      const sel = document.getElementById(`distributionAudience${i + 1}`);
-      if (sel) sel.value = link.audience_id;
-    });
+    document.getElementById('audienceList').innerHTML = '';
+    (links || []).forEach(link => addAudienceRow(link.audience_id));
+    if (!links?.length) addAudienceRow();
+  } else {
+    addAudienceRow();
   }
   distributionModal.show();
   setTimeout(() => document.getElementById('distributionName').focus(), 300);
@@ -557,7 +563,7 @@ function resetModal() {
   document.getElementById('dueDateModeDate').checked = true;
   document.getElementById('dueDateField').classList.remove('d-none');
   document.getElementById('daysToAckField').classList.add('d-none');
-  [1, 2, 3].forEach(n => { document.getElementById(`distributionAudience${n}`).value = ''; });
+  document.getElementById('audienceList').innerHTML = '';
 }
 
 async function saveDistribution() {
@@ -658,9 +664,7 @@ async function saveDistribution() {
   if (newDistribId) {
     await sb.from('ad_distribution_audience').delete().eq('distribution_id', newDistribId);
 
-    const audienceRows = [1, 2, 3]
-      .map(n => document.getElementById(`distributionAudience${n}`).value)
-      .filter(v => !!v)
+    const audienceRows = getSelectedAudiences()
       .map((audienceId, i) => ({
         distribution_id: newDistribId,
         audience_id: audienceId,

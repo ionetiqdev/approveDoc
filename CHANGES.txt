@@ -1,1 +1,1 @@
-Distribution: right column tabbed card - Audiences tab and Warnings tab
+Distribution: unlimited audiences with dynamic add/remove rows
