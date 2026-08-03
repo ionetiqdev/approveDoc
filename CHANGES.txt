@@ -1,1 +1,1 @@
-User View: new column widths; fix header padding alignment with body cells
+Distribution: radio for Due date vs Days to acknowledge; compute due_date from start+days; remove Require acknowledgement (always true); validate start date and due/days

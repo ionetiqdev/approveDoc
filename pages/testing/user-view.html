@@ -15,7 +15,7 @@
 
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/core@1.4.0/dist/css/tabler.min.css" />
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.44.0/dist/tabler-icons.min.css" />
-  <link rel="stylesheet" href="../../assets/css/theme.css?r=figt3e0r" />
+  <link rel="stylesheet" href="../../assets/css/theme.css?r=9tzs7xrg" />
 
   <script>
     (function() {
@@ -63,7 +63,8 @@
     .table-scroll { flex: 1; min-height: 0; overflow-y: auto; }
 
     /* Section header rows within the single table */
-    tr.section-header { background: lightgray; }
+    tr.section-header { background: #D3D3D3; color: #000; }
+    [data-bs-theme="dark"] tr.section-header { background: var(--tblr-bg-surface-secondary); color: var(--tblr-body-color); }
     tr.section-header td { font-weight: 600; font-size: .8125rem; padding: 8px 12px; cursor: pointer; user-select: none; border-top: 2px solid var(--tblr-border-color); }
     tr.section-header:first-child td:first-child { border-top-left-radius: var(--tblr-border-radius); }
     tr.section-header:first-child td:last-child { border-top-right-radius: var(--tblr-border-radius); }
@@ -71,7 +72,7 @@
     tr.section-header td i.section-chevron { transition: transform .2s; }
     tr.section-header.collapsed td i.section-chevron { transform: rotate(-90deg); }
     tr.section-body-row.hidden { display: none; }
-    tr.section-col-titles th { background: #F0F0F0; font-size: .75rem; color: var(--tblr-secondary-color); font-weight: 600; padding-top: 6px; padding-bottom: 6px; border-bottom: 1px solid var(--tblr-border-color); }
+    tr.section-col-titles th { background: var(--tblr-active-bg, rgba(var(--tblr-secondary-rgb),.06)); font-size: .75rem; color: var(--tblr-secondary-color); font-weight: 600; padding-top: 6px; padding-bottom: 6px; padding-left: 20px; padding-right: 20px; border-bottom: 1px solid var(--tblr-border-color); }
     tr.section-body-row td { padding-left: 20px; }
     tr.section-body-row.no-items td { padding-left: 20px !important; }
   </style>
@@ -121,6 +122,15 @@
         <div class="card table-card" id="tableCard" style="display:none">
           <div class="table-scroll">
             <table class="table table-vcenter card-table mb-0" id="mainTable">
+              <colgroup>
+                <col style="width:20%">
+                <col style="width:8%">
+                <col style="width:10%">
+                <col style="width:20%">
+                <col style="width:8%">
+                <col style="width:32%">
+                <col style="width:2%">
+              </colgroup>
               <tbody id="mainTableBody"></tbody>
             </table>
           </div>
@@ -194,15 +204,15 @@
   <script src="https://cdn.jsdelivr.net/npm/@tabler/core@1.4.0/dist/js/tabler.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="../../assets/js/version.js?r=figt3e0r"></script>
-  <script src="../../assets/js/supabase-client.js?r=figt3e0r"></script>
-  <script src="../../assets/js/auth.js?r=figt3e0r"></script>
-  <script src="../../assets/js/app.js?r=figt3e0r"></script>
-  <script src="../../assets/js/theme.js?r=figt3e0r"></script>
-  <script src="../../assets/js/sidebar-html.js?r=figt3e0r"></script>
-  <script src="../../assets/js/sidebar.js?r=figt3e0r"></script>
-  <script src="../../assets/js/profile-modal.js?r=figt3e0r"></script>
-  <script src="../../assets/js/status-widget.js?r=figt3e0r"></script>
+  <script src="../../assets/js/version.js?r=9tzs7xrg"></script>
+  <script src="../../assets/js/supabase-client.js?r=9tzs7xrg"></script>
+  <script src="../../assets/js/auth.js?r=9tzs7xrg"></script>
+  <script src="../../assets/js/app.js?r=9tzs7xrg"></script>
+  <script src="../../assets/js/theme.js?r=9tzs7xrg"></script>
+  <script src="../../assets/js/sidebar-html.js?r=9tzs7xrg"></script>
+  <script src="../../assets/js/sidebar.js?r=9tzs7xrg"></script>
+  <script src="../../assets/js/profile-modal.js?r=9tzs7xrg"></script>
+  <script src="../../assets/js/status-widget.js?r=9tzs7xrg"></script>
   <script>
 // Lookup caches
 let allDocuments = [];       // ad_document rows
@@ -482,10 +492,10 @@ function renderSections(items, expandOnly = null) {
   document.getElementById('emptyMsg').style.display = 'none';
   document.getElementById('tableCard').style.display = '';
 
-  const awaiting     = items.filter(i => !i.acknowledged && !i.rejected);
-  const acknowledged = items.filter(i => i.acknowledged);
-  const rejected     = items.filter(i => i.rejected);
-  const reference    = [];
+  const awaiting     = items.filter(i => i.status === 'PENDING' || i.status === 'OVERDUE' || (!i.acknowledged && !i.rejected && i.status !== 'REFERENCE'));
+  const acknowledged = items.filter(i => i.status === 'APPROVED' || (i.acknowledged && i.status !== 'REFERENCE'));
+  const rejected     = items.filter(i => i.status === 'REJECTED' || i.rejected);
+  const reference    = items.filter(i => i.status === 'REFERENCE');
 
   // If expandOnly is set, only that section is open; otherwise empty sections
   // collapse and non-empty ones open.
@@ -505,15 +515,6 @@ function renderSections(items, expandOnly = null) {
   tbody.innerHTML = SECTIONS.map(sec => {
     const headerRow = sectionHeaderRow(sec.id, sec.title, sec.items.length, sec.collapsed);
     const colTitles = `<tr class="section-body-row section-col-titles${sec.collapsed ? ' hidden' : ''}">
-      <colgroup>
-        <col style="width:20%">
-        <col style="width:8%">
-        <col style="width:10%">
-        <col style="width:14%">
-        <col style="width:8%">
-        <col style="width:38%">
-        <col style="width:2%">
-      </colgroup>
       <th>Document</th><th>Due date</th><th>Status</th>
       <th>Audience(s)</th><th>Date added</th><th>Instructions</th><th class="w-1"></th>
     </tr>`;
