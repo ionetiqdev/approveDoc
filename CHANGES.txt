@@ -1,1 +1,1 @@
-Distribution modal: 70vw width, radio buttons stacked left with date/days field right, audiences on right half
+Distribution: radio as labels, col-3 date fields, both warnings on same row
