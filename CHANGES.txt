@@ -1,1 +1,1 @@
-Distribution: 10px top padding above date/radio row and warnings section
+Distribution: right column tabbed card - Audiences tab and Warnings tab

@@ -15,7 +15,7 @@
 
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/core@1.4.0/dist/css/tabler.min.css" />
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.44.0/dist/tabler-icons.min.css" />
-  <link rel="stylesheet" href="../../assets/css/theme.css?r=lfscbxih" />
+  <link rel="stylesheet" href="../../assets/css/theme.css?r=umza2yjr" />
 
   <script>
     (function() {
@@ -193,46 +193,6 @@
                 </div>
               </div>
 
-              <!-- Warnings -->
-              <div class="row g-2 mb-1" style="padding-top:10px">
-                <div class="col-3">
-                  <span class="fw-semibold text-secondary" style="font-size:.8125rem">First Warning</span>
-                </div>
-                <div class="col-3"></div>
-                <div class="col-3">
-                  <span class="fw-semibold text-secondary" style="font-size:.8125rem">Second Warning</span>
-                </div>
-                <div class="col-3"></div>
-              </div>
-              <div class="row g-2 mb-1">
-                <div class="col-3"><label class="form-label mb-0">Days</label></div>
-                <div class="col-3"><label class="form-label mb-0">Direction</label></div>
-                <div class="col-3"><label class="form-label mb-0">Days</label></div>
-                <div class="col-3"><label class="form-label mb-0">Direction</label></div>
-              </div>
-              <div class="row g-2 mb-3">
-                <div class="col-3">
-                  <input type="number" id="distributionWarn1Days" class="form-control" min="1" placeholder="e.g. 7" />
-                </div>
-                <div class="col-3">
-                  <select id="distributionWarn1Dir" class="form-select">
-                    <option value="">— None —</option>
-                    <option value="B">Before due date</option>
-                    <option value="A">After due date</option>
-                  </select>
-                </div>
-                <div class="col-3">
-                  <input type="number" id="distributionWarn2Days" class="form-control" min="1" placeholder="e.g. 3" />
-                </div>
-                <div class="col-3">
-                  <select id="distributionWarn2Dir" class="form-select">
-                    <option value="">— None —</option>
-                    <option value="B">Before due date</option>
-                    <option value="A">After due date</option>
-                  </select>
-                </div>
-              </div>
-
               <div class="row g-3">
                 <div class="col-6">
                   <label class="form-check form-switch">
@@ -243,26 +203,84 @@
               </div>
             </div>
 
-            <!-- Right column: audiences -->
+            <!-- Right column: tabbed card -->
             <div class="col-6">
-              <div class="mb-1 fw-semibold text-secondary" style="font-size:.8125rem">Audiences</div>
-              <div class="mb-2">
-                <label class="form-label">Audience 1</label>
-                <select id="distributionAudience1" class="form-select">
-                  <option value="">— None —</option>
-                </select>
-              </div>
-              <div class="mb-2">
-                <label class="form-label">Audience 2</label>
-                <select id="distributionAudience2" class="form-select">
-                  <option value="">— None —</option>
-                </select>
-              </div>
-              <div class="mb-3">
-                <label class="form-label">Audience 3</label>
-                <select id="distributionAudience3" class="form-select">
-                  <option value="">— None —</option>
-                </select>
+              <div class="card mb-0 h-100">
+                <div class="card-header">
+                  <ul class="nav nav-tabs card-header-tabs" data-bs-toggle="tabs">
+                    <li class="nav-item">
+                      <a class="nav-link active" href="#distTabAudiences" data-bs-toggle="tab">Audiences</a>
+                    </li>
+                    <li class="nav-item">
+                      <a class="nav-link" href="#distTabWarnings" data-bs-toggle="tab">Warnings</a>
+                    </li>
+                  </ul>
+                </div>
+                <div class="card-body">
+                  <div class="tab-content">
+
+                    <!-- Audiences tab -->
+                    <div class="tab-pane active" id="distTabAudiences">
+                      <div class="mb-2">
+                        <label class="form-label">Audience 1</label>
+                        <select id="distributionAudience1" class="form-select">
+                          <option value="">— None —</option>
+                        </select>
+                      </div>
+                      <div class="mb-2">
+                        <label class="form-label">Audience 2</label>
+                        <select id="distributionAudience2" class="form-select">
+                          <option value="">— None —</option>
+                        </select>
+                      </div>
+                      <div class="mb-2">
+                        <label class="form-label">Audience 3</label>
+                        <select id="distributionAudience3" class="form-select">
+                          <option value="">— None —</option>
+                        </select>
+                      </div>
+                    </div>
+
+                    <!-- Warnings tab -->
+                    <div class="tab-pane" id="distTabWarnings">
+                      <div class="row g-2 mb-1">
+                        <div class="col-3"><span class="fw-semibold text-secondary" style="font-size:.8125rem">First Warning</span></div>
+                        <div class="col-3"></div>
+                        <div class="col-3"><span class="fw-semibold text-secondary" style="font-size:.8125rem">Second Warning</span></div>
+                        <div class="col-3"></div>
+                      </div>
+                      <div class="row g-2 mb-1">
+                        <div class="col-3"><label class="form-label mb-0">Days</label></div>
+                        <div class="col-3"><label class="form-label mb-0">Direction</label></div>
+                        <div class="col-3"><label class="form-label mb-0">Days</label></div>
+                        <div class="col-3"><label class="form-label mb-0">Direction</label></div>
+                      </div>
+                      <div class="row g-2">
+                        <div class="col-3">
+                          <input type="number" id="distributionWarn1Days" class="form-control" min="1" placeholder="e.g. 7" />
+                        </div>
+                        <div class="col-3">
+                          <select id="distributionWarn1Dir" class="form-select">
+                            <option value="">— None —</option>
+                            <option value="B">Before due date</option>
+                            <option value="A">After due date</option>
+                          </select>
+                        </div>
+                        <div class="col-3">
+                          <input type="number" id="distributionWarn2Days" class="form-control" min="1" placeholder="e.g. 3" />
+                        </div>
+                        <div class="col-3">
+                          <select id="distributionWarn2Dir" class="form-select">
+                            <option value="">— None —</option>
+                            <option value="B">Before due date</option>
+                            <option value="A">After due date</option>
+                          </select>
+                        </div>
+                      </div>
+                    </div>
+
+                  </div>
+                </div>
               </div>
             </div>
 
@@ -301,15 +319,15 @@
   <script src="https://cdn.jsdelivr.net/npm/@tabler/core@1.4.0/dist/js/tabler.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="../../assets/js/version.js?r=lfscbxih"></script>
-  <script src="../../assets/js/supabase-client.js?r=lfscbxih"></script>
-  <script src="../../assets/js/auth.js?r=lfscbxih"></script>
-  <script src="../../assets/js/app.js?r=lfscbxih"></script>
-  <script src="../../assets/js/theme.js?r=lfscbxih"></script>
-  <script src="../../assets/js/sidebar-html.js?r=lfscbxih"></script>
-  <script src="../../assets/js/sidebar.js?r=lfscbxih"></script>
-  <script src="../../assets/js/profile-modal.js?r=lfscbxih"></script>
-  <script src="../../assets/js/status-widget.js?r=lfscbxih"></script>
+  <script src="../../assets/js/version.js?r=umza2yjr"></script>
+  <script src="../../assets/js/supabase-client.js?r=umza2yjr"></script>
+  <script src="../../assets/js/auth.js?r=umza2yjr"></script>
+  <script src="../../assets/js/app.js?r=umza2yjr"></script>
+  <script src="../../assets/js/theme.js?r=umza2yjr"></script>
+  <script src="../../assets/js/sidebar-html.js?r=umza2yjr"></script>
+  <script src="../../assets/js/sidebar.js?r=umza2yjr"></script>
+  <script src="../../assets/js/profile-modal.js?r=umza2yjr"></script>
+  <script src="../../assets/js/status-widget.js?r=umza2yjr"></script>
   <script>
 let distributionModal, deleteModal;
 let allDistributions = [];
