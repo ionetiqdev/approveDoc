@@ -1,1 +1,1 @@
-Distribution: revert to radio btn-group with transition:none for instant response
+Distribution: btn-check hover shows text colour change only, not background fill
