@@ -1,1 +1,1 @@
-Distribution: unlimited audiences with dynamic add/remove rows
+Distribution: audience picker with type-ahead search instead of static select

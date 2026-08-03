@@ -15,7 +15,7 @@
 
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/core@1.4.0/dist/css/tabler.min.css" />
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.44.0/dist/tabler-icons.min.css" />
-  <link rel="stylesheet" href="../../assets/css/theme.css?r=d3ze8yfn" />
+  <link rel="stylesheet" href="../../assets/css/theme.css?r=apu3081r" />
 
   <script>
     (function() {
@@ -305,15 +305,15 @@
   <script src="https://cdn.jsdelivr.net/npm/@tabler/core@1.4.0/dist/js/tabler.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="../../assets/js/version.js?r=d3ze8yfn"></script>
-  <script src="../../assets/js/supabase-client.js?r=d3ze8yfn"></script>
-  <script src="../../assets/js/auth.js?r=d3ze8yfn"></script>
-  <script src="../../assets/js/app.js?r=d3ze8yfn"></script>
-  <script src="../../assets/js/theme.js?r=d3ze8yfn"></script>
-  <script src="../../assets/js/sidebar-html.js?r=d3ze8yfn"></script>
-  <script src="../../assets/js/sidebar.js?r=d3ze8yfn"></script>
-  <script src="../../assets/js/profile-modal.js?r=d3ze8yfn"></script>
-  <script src="../../assets/js/status-widget.js?r=d3ze8yfn"></script>
+  <script src="../../assets/js/version.js?r=apu3081r"></script>
+  <script src="../../assets/js/supabase-client.js?r=apu3081r"></script>
+  <script src="../../assets/js/auth.js?r=apu3081r"></script>
+  <script src="../../assets/js/app.js?r=apu3081r"></script>
+  <script src="../../assets/js/theme.js?r=apu3081r"></script>
+  <script src="../../assets/js/sidebar-html.js?r=apu3081r"></script>
+  <script src="../../assets/js/sidebar.js?r=apu3081r"></script>
+  <script src="../../assets/js/profile-modal.js?r=apu3081r"></script>
+  <script src="../../assets/js/status-widget.js?r=apu3081r"></script>
   <script>
 let distributionModal, deleteModal;
 let allDistributions = [];
@@ -379,31 +379,67 @@ async function loadAudiences() {
   allAudiences = data || [];
 }
 
-function audienceRowHtml(selectedId = '') {
-  const opts = allAudiences.map(a =>
-    `<option value="${a.audience_id}"${a.audience_id === selectedId ? ' selected' : ''}>${App.escHtml(a.name)}</option>`
-  ).join('');
-  return `<div class="input-group mb-2 audience-row">
-    <select class="form-select audience-select">
-      <option value="">— Select audience —</option>
-      ${opts}
-    </select>
-    <button type="button" class="btn btn-outline-danger remove-audience-btn" title="Remove"><i class="ti ti-x"></i></button>
+function audienceRowHtml() {
+  return `<div class="input-group mb-2 audience-row" style="position:relative">
+    <input type="text" class="form-control audience-search" placeholder="Search audiences…" autocomplete="off" />
+    <input type="hidden" class="audience-id-input" />
+    <button type="button" class="btn btn-outline-secondary remove-audience-btn" title="Remove"><i class="ti ti-x"></i></button>
+    <div class="audience-dropdown dropdown-menu w-100" style="display:none;max-height:200px;overflow-y:auto;position:absolute;top:100%;left:0;z-index:9999"></div>
   </div>`;
+}
+
+function wireAudienceRow(row, selectedId = '') {
+  const input    = row.querySelector('.audience-search');
+  const hidden   = row.querySelector('.audience-id-input');
+  const dropdown = row.querySelector('.audience-dropdown');
+  const removeBtn = row.querySelector('.remove-audience-btn');
+
+  // Pre-fill if editing
+  if (selectedId) {
+    const a = allAudiences.find(a => a.audience_id === selectedId);
+    if (a) { input.value = a.name; hidden.value = selectedId; }
+  }
+
+  function showDropdown(term) {
+    const lower = term.toLowerCase();
+    const matches = allAudiences.filter(a => a.name.toLowerCase().includes(lower)).slice(0, 15);
+    if (!matches.length) { dropdown.style.display = 'none'; return; }
+    dropdown.innerHTML = matches.map(a =>
+      `<button type="button" class="dropdown-item" data-id="${a.audience_id}">${App.escHtml(a.name)}</button>`
+    ).join('');
+    dropdown.querySelectorAll('.dropdown-item').forEach(btn => {
+      btn.addEventListener('mousedown', e => {
+        e.preventDefault();
+        input.value  = btn.textContent;
+        hidden.value = btn.dataset.id;
+        dropdown.style.display = 'none';
+      });
+    });
+    dropdown.style.display = 'block';
+  }
+
+  input.addEventListener('input', () => {
+    hidden.value = '';
+    const t = input.value.trim();
+    t.length ? showDropdown(t) : (dropdown.style.display = 'none');
+  });
+  input.addEventListener('focus', () => { if (input.value.trim()) showDropdown(input.value.trim()); });
+  input.addEventListener('blur', () => setTimeout(() => { dropdown.style.display = 'none'; }, 150));
+  removeBtn.addEventListener('click', () => row.remove());
 }
 
 function addAudienceRow(selectedId = '') {
   const list = document.getElementById('audienceList');
-  const div = document.createElement('div');
-  div.innerHTML = audienceRowHtml(selectedId);
+  const div  = document.createElement('div');
+  div.innerHTML = audienceRowHtml();
   const row = div.firstElementChild;
-  row.querySelector('.remove-audience-btn').addEventListener('click', () => row.remove());
   list.appendChild(row);
+  wireAudienceRow(row, selectedId);
 }
 
 function getSelectedAudiences() {
-  return [...document.querySelectorAll('#audienceList .audience-select')]
-    .map(s => s.value).filter(v => !!v);
+  return [...document.querySelectorAll('#audienceList .audience-id-input')]
+    .map(h => h.value).filter(v => !!v);
 }
 
 async function loadDistributions() {
