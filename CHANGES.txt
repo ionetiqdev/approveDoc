@@ -1,1 +1,1 @@
-Distribution: fix discard prompt after save; prevent double-save; red asterisk on Audiences/Warnings tabs when required fields missing
+Distribution: fix discard prompt after save using _distSaved flag; guard only fires when not saved
