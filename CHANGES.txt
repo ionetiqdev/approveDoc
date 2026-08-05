@@ -1,1 +1,1 @@
-External document sources: migration applied, fetch-document edge function deployed, documents.js routes by source_type
+Documents: new document modal supports Upload file, External URL, and REST API source types

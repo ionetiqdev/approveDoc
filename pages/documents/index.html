@@ -15,7 +15,7 @@
 
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/core@1.4.0/dist/css/tabler.min.css" />
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.44.0/dist/tabler-icons.min.css" />
-  <link rel="stylesheet" href="../../assets/css/theme.css?r=pu5x7r93" />
+  <link rel="stylesheet" href="../../assets/css/theme.css?r=sp2uwb50" />
 
   <script>
     (function() {
@@ -210,8 +210,63 @@
             </select>
           </div>
           <div class="mb-3">
+            <label class="form-label">Source</label>
+            <div class="btn-group w-100" role="group" id="docSourceGroup">
+              <input type="radio" class="btn-check" name="docSource" id="docSourceFile" value="file" checked autocomplete="off">
+              <label class="btn btn-sm btn-outline-secondary" for="docSourceFile"><i class="ti ti-upload me-1"></i>Upload file</label>
+              <input type="radio" class="btn-check" name="docSource" id="docSourceUrl" value="url" autocomplete="off">
+              <label class="btn btn-sm btn-outline-secondary" for="docSourceUrl"><i class="ti ti-link me-1"></i>External URL</label>
+              <input type="radio" class="btn-check" name="docSource" id="docSourceRest" value="rest" autocomplete="off">
+              <label class="btn btn-sm btn-outline-secondary" for="docSourceRest"><i class="ti ti-api me-1"></i>REST API</label>
+            </div>
+          </div>
+
+          <!-- Upload file -->
+          <div class="mb-3" id="docSourceFileField">
             <label class="form-label">PDF file</label>
             <input type="file" id="docModalFile" class="form-control" accept="application/pdf" />
+          </div>
+
+          <!-- External URL -->
+          <div class="mb-3 d-none" id="docSourceUrlField">
+            <label class="form-label">URL <span class="text-danger">*</span></label>
+            <input type="url" id="docModalUrl" class="form-control" placeholder="https://example.com/document.pdf" />
+            <div class="form-text">Publicly accessible PDF URL. No authentication required.</div>
+          </div>
+
+          <!-- REST API -->
+          <div class="d-none" id="docSourceRestField">
+            <div class="mb-3">
+              <label class="form-label">API endpoint <span class="text-danger">*</span></label>
+              <input type="url" id="docModalRestUrl" class="form-control" placeholder="https://api.example.com/documents/123/content" />
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Auth type</label>
+              <select id="docModalRestAuth" class="form-select">
+                <option value="NONE">None</option>
+                <option value="BEARER">Bearer token</option>
+                <option value="API_KEY">API key</option>
+                <option value="BASIC">Basic (username / password)</option>
+              </select>
+            </div>
+            <div class="mb-3 d-none" id="docModalRestTokenField">
+              <label class="form-label">Token / API key</label>
+              <input type="password" id="docModalRestToken" class="form-control" placeholder="Stored securely in vault" />
+            </div>
+            <div class="d-none" id="docModalRestBasicFields">
+              <div class="mb-3">
+                <label class="form-label">Username</label>
+                <input type="text" id="docModalRestUsername" class="form-control" />
+              </div>
+              <div class="mb-3">
+                <label class="form-label">Password</label>
+                <input type="password" id="docModalRestPassword" class="form-control" />
+              </div>
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Reference / Document ID</label>
+              <input type="text" id="docModalRestRef" class="form-control" placeholder="System-specific document identifier (optional)" />
+            </div>
           </div>
           <div id="docModalProgress" style="display:none">
             <div class="progress mb-1" style="height:6px">
@@ -326,16 +381,16 @@
   <script src="https://cdn.jsdelivr.net/npm/@tabler/core@1.4.0/dist/js/tabler.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="../../assets/js/version.js?r=pu5x7r93"></script>
-  <script src="../../assets/js/supabase-client.js?r=pu5x7r93"></script>
-  <script src="../../assets/js/auth.js?r=pu5x7r93"></script>
-  <script src="../../assets/js/app.js?r=pu5x7r93"></script>
-  <script src="../../assets/js/theme.js?r=pu5x7r93"></script>
-  <script src="../../assets/js/sidebar-html.js?r=pu5x7r93"></script>
-  <script src="../../assets/js/sidebar.js?r=pu5x7r93"></script>
-  <script src="../../assets/js/profile-modal.js?r=pu5x7r93"></script>
-  <script src="../../assets/js/status-widget.js?r=pu5x7r93"></script>
-  <script src="config.js?r=pu5x7r93"></script>
-  <script src="documents.js?r=pu5x7r93"></script>
+  <script src="../../assets/js/version.js?r=sp2uwb50"></script>
+  <script src="../../assets/js/supabase-client.js?r=sp2uwb50"></script>
+  <script src="../../assets/js/auth.js?r=sp2uwb50"></script>
+  <script src="../../assets/js/app.js?r=sp2uwb50"></script>
+  <script src="../../assets/js/theme.js?r=sp2uwb50"></script>
+  <script src="../../assets/js/sidebar-html.js?r=sp2uwb50"></script>
+  <script src="../../assets/js/sidebar.js?r=sp2uwb50"></script>
+  <script src="../../assets/js/profile-modal.js?r=sp2uwb50"></script>
+  <script src="../../assets/js/status-widget.js?r=sp2uwb50"></script>
+  <script src="config.js?r=sp2uwb50"></script>
+  <script src="documents.js?r=sp2uwb50"></script>
 </body>
 </html>

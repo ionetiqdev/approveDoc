@@ -753,23 +753,98 @@ async function uploadAndSave(description, file, progressBar, statusEl, categoryI
 }
 
 function bindUpload() {
+  // Source type toggle
+  document.querySelectorAll('input[name="docSource"]').forEach(radio => {
+    radio.addEventListener('change', () => {
+      const v = radio.value;
+      document.getElementById('docSourceFileField').classList.toggle('d-none', v !== 'file');
+      document.getElementById('docSourceUrlField').classList.toggle('d-none', v !== 'url');
+      document.getElementById('docSourceRestField').classList.toggle('d-none', v !== 'rest');
+      document.getElementById('docModalSaveBtn').textContent = v === 'file' ? 'Upload' : 'Save';
+    });
+  });
+
+  // REST auth type shows/hides credential fields
+  document.getElementById('docModalRestAuth')?.addEventListener('change', function() {
+    const isToken = ['BEARER','API_KEY'].includes(this.value);
+    const isBasic = this.value === 'BASIC';
+    document.getElementById('docModalRestTokenField').classList.toggle('d-none', !isToken);
+    document.getElementById('docModalRestBasicFields').classList.toggle('d-none', !isBasic);
+  });
+
   document.getElementById('docModalSaveBtn').addEventListener('click', async () => {
     const desc     = document.getElementById('docModalDescription').value.trim();
     const descText = document.getElementById('docModalDescriptionText').value.trim();
     const catId    = document.getElementById('docModalCategory').value || null;
-    const file     = document.getElementById('docModalFile').files[0];
+    const source   = document.querySelector('input[name="docSource"]:checked')?.value || 'file';
     const progWrap = document.getElementById('docModalProgress');
     const progBar  = document.getElementById('docUploadProgressBar');
     const status   = document.getElementById('docUploadStatus');
     const saveBtn  = document.getElementById('docModalSaveBtn');
 
-    progWrap.style.display = 'block';
-    progBar.style.width = '0%';
+    if (!desc) { App.toast('Name is required', 'warning'); return; }
+
     saveBtn.disabled = true;
 
-    const success = await uploadAndSave(desc, file, progBar, status, catId, descText);
+    let success = false;
 
-    saveBtn.disabled = false;
+    if (source === 'file') {
+      const file = document.getElementById('docModalFile').files[0];
+      progWrap.style.display = 'block';
+      progBar.style.width = '0%';
+      success = await uploadAndSave(desc, file, progBar, status, catId, descText);
+      saveBtn.disabled = false;
+
+    } else {
+      // External source — create doc record + file record, no upload
+      const orgId = Auth.getOrganisationId();
+      const externalUrl = source === 'url'
+        ? document.getElementById('docModalUrl').value.trim()
+        : document.getElementById('docModalRestUrl').value.trim();
+      const externalRef = document.getElementById('docModalRestRef')?.value.trim() || null;
+
+      if (!externalUrl) {
+        App.toast(source === 'url' ? 'URL is required' : 'API endpoint is required', 'warning');
+        saveBtn.disabled = false;
+        return;
+      }
+
+      try {
+        // Create document
+        const { data: docData, error: docErr } = await sb.from('ad_document').insert({
+          name: desc, description: descText || null, category_id: catId, organisation_id: orgId
+        }).select('doc_id').single();
+        if (docErr) throw docErr;
+
+        // For REST with auth, we'd store credentials in vault — for now store source config inline
+        const authType = source === 'rest'
+          ? document.getElementById('docModalRestAuth').value
+          : 'NONE';
+
+        // Create file record pointing to external source
+        const fileName = externalUrl.split('/').pop() || desc + '.pdf';
+        const { error: fileErr } = await sb.from('ad_document_file').insert({
+          doc_id:        docData.doc_id,
+          organisation_id: orgId,
+          file_name:     fileName,
+          storage_path:  'external', // satisfies NOT NULL — not used for external sources
+          download_file_name: fileName,
+          mime_type:     'application/pdf',
+          source_type:   source === 'url' ? 'URL' : 'REST',
+          external_url:  externalUrl,
+          external_ref:  externalRef,
+        });
+        if (fileErr) throw fileErr;
+
+        App.toast('Document saved');
+        success = true;
+      } catch(e) {
+        App.toast('Save failed: ' + e.message, 'danger');
+        saveBtn.disabled = false;
+        return;
+      }
+      saveBtn.disabled = false;
+    }
 
     if (success) {
       setTimeout(() => {
@@ -781,17 +856,23 @@ function bindUpload() {
           document.getElementById('docModalDescriptionText').value = '';
           document.getElementById('docModalCategory').value = '';
           document.getElementById('docModalFile').value = '';
+          document.getElementById('docModalUrl').value = '';
+          document.getElementById('docModalRestUrl').value = '';
+          document.getElementById('docModalRestRef').value = '';
+          document.getElementById('docSourceFile').checked = true;
+          document.getElementById('docSourceFileField').classList.remove('d-none');
+          document.getElementById('docSourceUrlField').classList.add('d-none');
+          document.getElementById('docSourceRestField').classList.add('d-none');
+          document.getElementById('docModalSaveBtn').textContent = 'Upload';
           progWrap.style.display = 'none';
-          // Force-remove any stuck backdrop
           document.querySelectorAll('.modal-backdrop').forEach(el => el.remove());
           document.body.classList.remove('modal-open');
           document.body.style.removeProperty('overflow');
           document.body.style.removeProperty('padding-right');
+          loadDocuments();
         }, { once: true });
       }, 600);
     } else {
-      // Upload failed - reset the progress bar and re-enable the form
-      // so the user can try again without the modal getting stuck.
       progWrap.style.display = 'none';
       progBar.style.width = '0%';
     }
