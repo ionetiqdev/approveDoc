@@ -517,6 +517,14 @@ async function selectDoc(id) {
     fetchUrl = `${SUPABASE_URL}/functions/v1/fetch-document`;
     currentFileUrl = fetchUrl;
 
+    // Show loading spinner while the edge function fetches the external doc
+    const emptyStateOriginal = docEmptyState.innerHTML;
+    docEmptyState.innerHTML = `
+      <div class="spinner-border text-secondary mb-3" style="width:2rem;height:2rem"></div>
+      <div class="text-secondary small">Fetching document…</div>`;
+    docEmptyState.style.display = 'flex';
+    docPdfFrame.style.display = 'none';
+
     // We'll use a special fetch below for the edge function
     let pdfBlobUrl;
     try {
@@ -550,6 +558,7 @@ async function selectDoc(id) {
         };
       }
     } catch(e) {
+      docEmptyState.innerHTML = emptyStateOriginal;
       App.toast('Could not fetch external document: ' + e.message, 'danger');
       return;
     }
