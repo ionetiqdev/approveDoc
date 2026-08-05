@@ -15,7 +15,7 @@
 
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/core@1.4.0/dist/css/tabler.min.css" />
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.44.0/dist/tabler-icons.min.css" />
-  <link rel="stylesheet" href="../../assets/css/theme.css?r=51kzf8c9" />
+  <link rel="stylesheet" href="../../assets/css/theme.css?r=yx2wgdks" />
 
   <script>
     (function() {
@@ -176,15 +176,15 @@
   <script src="https://cdn.jsdelivr.net/npm/@tabler/core@1.4.0/dist/js/tabler.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="../../assets/js/version.js?r=51kzf8c9"></script>
-  <script src="../../assets/js/supabase-client.js?r=51kzf8c9"></script>
-  <script src="../../assets/js/auth.js?r=51kzf8c9"></script>
-  <script src="../../assets/js/app.js?r=51kzf8c9"></script>
-  <script src="../../assets/js/theme.js?r=51kzf8c9"></script>
-  <script src="../../assets/js/sidebar-html.js?r=51kzf8c9"></script>
-  <script src="../../assets/js/sidebar.js?r=51kzf8c9"></script>
-  <script src="../../assets/js/profile-modal.js?r=51kzf8c9"></script>
-  <script src="../../assets/js/status-widget.js?r=51kzf8c9"></script>
+  <script src="../../assets/js/version.js?r=yx2wgdks"></script>
+  <script src="../../assets/js/supabase-client.js?r=yx2wgdks"></script>
+  <script src="../../assets/js/auth.js?r=yx2wgdks"></script>
+  <script src="../../assets/js/app.js?r=yx2wgdks"></script>
+  <script src="../../assets/js/theme.js?r=yx2wgdks"></script>
+  <script src="../../assets/js/sidebar-html.js?r=yx2wgdks"></script>
+  <script src="../../assets/js/sidebar.js?r=yx2wgdks"></script>
+  <script src="../../assets/js/profile-modal.js?r=yx2wgdks"></script>
+  <script src="../../assets/js/status-widget.js?r=yx2wgdks"></script>
   <script>
 const PDF_BUCKET          = 'documents';
 const PDF_VIEWER_URL      = '../../assets/pdfjs/web/viewer.html';
@@ -303,6 +303,8 @@ function updateActionButtons() {
   rejBtn.style.opacity = isDone ? '0.5' : '1';
   rejBtn.title = isRejected ? 'Already rejected' : isApproved ? 'Document has been acknowledged' : '';
 }
+
+function updateReferenceBtn() {
   const btn     = document.getElementById('referenceBtn');
   const wrap    = document.getElementById('referenceBtnWrap');
   const isApproved = currentItem?.status === 'APPROVED' || currentItem?.acknowledged === true;
@@ -373,7 +375,7 @@ async function loadItem(itemId) {
   // Load the file record
   const { data: files } = await sb
     .from('ad_document_file')
-    .select('storage_path, file_name, download_file_name')
+    .select('id, storage_path, source_type, external_url, external_ref, file_name, download_file_name')
     .eq('doc_id', dist.doc_id)
     .order('created_at', { ascending: false })
     .limit(1);
@@ -389,48 +391,40 @@ async function loadItem(itemId) {
 }
 
 async function loadPdf(pdfFile, docName) {
-  console.log('[Acknowledge] loadPdf: storage_path =', pdfFile.storage_path);
+  const sourceType = pdfFile.source_type || 'SUPABASE';
+  const fileName   = pdfFile.download_file_name || docName.replace(/[^a-z0-9._-]/gi, '_') + '.pdf';
+  let blobUrl;
 
-  const { data: signedData, error: signErr } = await sb.storage
-    .from(PDF_BUCKET)
-    .createSignedUrl(pdfFile.storage_path, SIGNED_URL_EXPIRY);
-
-  if (signErr || !signedData) {
-    const msg = signErr?.message || 'Unknown error';
-    console.error('[Acknowledge] createSignedUrl failed:', msg);
-    document.getElementById('viewerLoadingState').innerHTML =
-      `<div class="text-danger text-center p-4"><i class="ti ti-alert-circle d-block mb-2" style="font-size:2rem"></i>
-      <strong>Could not get file URL</strong><br><span class="small">${msg}</span></div>`;
-    return;
-  }
-
-  console.log('[Acknowledge] Signed URL obtained, fetching blob…');
-
-  // Fetch as blob so pdf.js's validateFileURL never blocks it
   try {
-    const resp = await fetch(signedData.signedUrl);
-    if (!resp.ok) throw new Error('HTTP ' + resp.status);
-    const blob     = await resp.blob();
-    const fileName = pdfFile.download_file_name || docName.replace(/[^a-z0-9._-]/gi, '_') + '.pdf';
-    const named    = new File([blob], fileName, { type: 'application/pdf' });
-    const blobUrl  = URL.createObjectURL(named);
+    if (sourceType === 'SUPABASE') {
+      const { data: signedData, error: signErr } = await sb.storage
+        .from(PDF_BUCKET).createSignedUrl(pdfFile.storage_path, SIGNED_URL_EXPIRY);
+      if (signErr || !signedData) throw new Error(signErr?.message || 'Could not get file URL');
+      const resp = await fetch(signedData.signedUrl);
+      if (!resp.ok) throw new Error('HTTP ' + resp.status);
+      blobUrl = URL.createObjectURL(new File([await resp.blob()], fileName, { type: 'application/pdf' }));
+    } else {
+      const saved = AppSession.load();
+      const resp  = await fetch(`${SUPABASE_URL}/functions/v1/fetch-document`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + saved?.access_token, 'apikey': SUPABASE_ANON_KEY },
+        body: JSON.stringify({ file_id: pdfFile.id }),
+      });
+      if (!resp.ok) throw new Error('HTTP ' + resp.status);
+      blobUrl = URL.createObjectURL(new File([await resp.blob()], fileName, { type: 'application/pdf' }));
+    }
 
     const frame = document.getElementById('pdfFrame');
     const hash  = 'page=1&zoom=page-fit&pagemode=thumbs&toolbar=1&navpanes=1&locale=en-US';
     frame.style.visibility = 'hidden';
-    frame.onload = () => {
-      injectPdfStyles(frame);
-      setTimeout(() => { frame.style.visibility = ''; }, 150);
-    };
+    frame.onload = () => { injectPdfStyles(frame); setTimeout(() => { frame.style.visibility = ''; }, 150); };
     frame.src = `${PDF_VIEWER_URL}?file=${encodeURIComponent(blobUrl)}#${hash}`;
     frame.removeAttribute('style');
     document.getElementById('viewerLoadingState').style.display = 'none';
   } catch (e) {
     document.getElementById('viewerLoadingState').innerHTML =
       `<div class="text-danger text-center p-4"><i class="ti ti-alert-circle d-block mb-2" style="font-size:2rem"></i>
-      <strong>Could not load PDF</strong><br><span class="small">${e.message}</span><br>
-      <span class="small text-secondary mt-1 d-block">Check browser console for CSP or network errors</span></div>`;
-    App.toast('Could not load PDF: ' + e.message, 'danger');
+      <strong>Could not load document</strong><br><span class="small">${e.message}</span></div>`;
   }
 }
 

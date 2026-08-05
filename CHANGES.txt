@@ -1,1 +1,1 @@
-Distribution: move _distSaved to module scope so saveDistribution can set it; fixes discard prompt after save
+Acknowledge: fix missing function declaration for updateReferenceBtn causing JS syntax error; add external source support to loadPdf
