@@ -15,7 +15,7 @@
 
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/core@1.4.0/dist/css/tabler.min.css" />
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.44.0/dist/tabler-icons.min.css" />
-  <link rel="stylesheet" href="../../assets/css/theme.css?r=mc4w6qta" />
+  <link rel="stylesheet" href="../../assets/css/theme.css?r=18xw4ryo" />
 
   <script>
     (function() {
@@ -214,8 +214,10 @@
             <div class="btn-group w-100" role="group" id="docSourceGroup">
               <input type="radio" class="btn-check" name="docSource" id="docSourceFile" value="file" checked autocomplete="off">
               <label class="btn btn-sm btn-outline-secondary" for="docSourceFile"><i class="ti ti-upload me-1"></i>Upload file</label>
+              <input type="radio" class="btn-check" name="docSource" id="docSourceGdrive" value="gdrive" autocomplete="off">
+              <label class="btn btn-sm btn-outline-secondary" for="docSourceGdrive"><i class="ti ti-brand-google-drive me-1"></i>Google Drive</label>
               <input type="radio" class="btn-check" name="docSource" id="docSourceUrl" value="url" autocomplete="off">
-              <label class="btn btn-sm btn-outline-secondary" for="docSourceUrl"><i class="ti ti-link me-1"></i>External URL</label>
+              <label class="btn btn-sm btn-outline-secondary" for="docSourceUrl"><i class="ti ti-link me-1"></i>Direct URL</label>
               <input type="radio" class="btn-check" name="docSource" id="docSourceRest" value="rest" autocomplete="off">
               <label class="btn btn-sm btn-outline-secondary" for="docSourceRest"><i class="ti ti-api me-1"></i>REST API</label>
             </div>
@@ -227,7 +229,19 @@
             <input type="file" id="docModalFile" class="form-control" accept="application/pdf" />
           </div>
 
-          <!-- External URL -->
+          <!-- Google Drive -->
+          <div class="mb-3 d-none" id="docSourceGdriveField">
+            <div class="alert alert-info py-2 small mb-3">
+              <i class="ti ti-info-circle me-1"></i>
+              Google Drive integration requires setup — see <code>docs/GOOGLE-DRIVE-SETUP.md</code>.
+              Once configured, users will be able to browse and select files directly.
+            </div>
+            <label class="form-label">Google Drive file URL</label>
+            <input type="url" id="docModalGdriveUrl" class="form-control" placeholder="https://drive.google.com/file/d/…/view" />
+            <div class="form-text">Paste a Google Drive sharing URL. The file must be shared with "Anyone with the link can view".</div>
+          </div>
+
+          <!-- Direct URL -->
           <div class="mb-3 d-none" id="docSourceUrlField">
             <label class="form-label">URL <span class="text-danger">*</span></label>
             <input type="url" id="docModalUrl" class="form-control" placeholder="https://example.com/document.pdf" />
@@ -381,16 +395,16 @@
   <script src="https://cdn.jsdelivr.net/npm/@tabler/core@1.4.0/dist/js/tabler.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="../../assets/js/version.js?r=mc4w6qta"></script>
-  <script src="../../assets/js/supabase-client.js?r=mc4w6qta"></script>
-  <script src="../../assets/js/auth.js?r=mc4w6qta"></script>
-  <script src="../../assets/js/app.js?r=mc4w6qta"></script>
-  <script src="../../assets/js/theme.js?r=mc4w6qta"></script>
-  <script src="../../assets/js/sidebar-html.js?r=mc4w6qta"></script>
-  <script src="../../assets/js/sidebar.js?r=mc4w6qta"></script>
-  <script src="../../assets/js/profile-modal.js?r=mc4w6qta"></script>
-  <script src="../../assets/js/status-widget.js?r=mc4w6qta"></script>
-  <script src="config.js?r=mc4w6qta"></script>
-  <script src="documents.js?r=mc4w6qta"></script>
+  <script src="../../assets/js/version.js?r=18xw4ryo"></script>
+  <script src="../../assets/js/supabase-client.js?r=18xw4ryo"></script>
+  <script src="../../assets/js/auth.js?r=18xw4ryo"></script>
+  <script src="../../assets/js/app.js?r=18xw4ryo"></script>
+  <script src="../../assets/js/theme.js?r=18xw4ryo"></script>
+  <script src="../../assets/js/sidebar-html.js?r=18xw4ryo"></script>
+  <script src="../../assets/js/sidebar.js?r=18xw4ryo"></script>
+  <script src="../../assets/js/profile-modal.js?r=18xw4ryo"></script>
+  <script src="../../assets/js/status-widget.js?r=18xw4ryo"></script>
+  <script src="config.js?r=18xw4ryo"></script>
+  <script src="documents.js?r=18xw4ryo"></script>
 </body>
 </html>

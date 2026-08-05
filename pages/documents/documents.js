@@ -767,6 +767,7 @@ function bindUpload() {
     radio.addEventListener('change', () => {
       const v = radio.value;
       document.getElementById('docSourceFileField').classList.toggle('d-none', v !== 'file');
+      document.getElementById('docSourceGdriveField').classList.toggle('d-none', v !== 'gdrive');
       document.getElementById('docSourceUrlField').classList.toggle('d-none', v !== 'url');
       document.getElementById('docSourceRestField').classList.toggle('d-none', v !== 'rest');
       document.getElementById('docModalSaveBtn').textContent = v === 'file' ? 'Upload' : 'Save';
@@ -807,16 +808,32 @@ function bindUpload() {
     } else {
       // External source — create doc record + file record, no upload
       const orgId = Auth.getOrganisationId();
-      const externalUrl = source === 'url'
-        ? document.getElementById('docModalUrl').value.trim()
-        : document.getElementById('docModalRestUrl').value.trim();
-      const externalRef = document.getElementById('docModalRestRef')?.value.trim() || null;
 
-      if (!externalUrl) {
-        App.toast(source === 'url' ? 'URL is required' : 'API endpoint is required', 'warning');
-        saveBtn.disabled = false;
-        return;
+      let externalUrl = '';
+      let sourceTypeVal = '';
+
+      if (source === 'gdrive') {
+        const raw = document.getElementById('docModalGdriveUrl').value.trim();
+        if (!raw) { App.toast('Google Drive URL is required', 'warning'); saveBtn.disabled = false; return; }
+        // Convert share URL to direct download URL
+        const idMatch = raw.match(/\/d\/([a-zA-Z0-9_-]+)/);
+        const fileId = idMatch ? idMatch[1] : null;
+        if (!fileId) { App.toast('Could not extract file ID from Google Drive URL', 'warning'); saveBtn.disabled = false; return; }
+        externalUrl = `https://drive.google.com/uc?export=download&id=${fileId}`;
+        sourceTypeVal = 'URL';
+
+      } else if (source === 'url') {
+        externalUrl = document.getElementById('docModalUrl').value.trim();
+        sourceTypeVal = 'URL';
+        if (!externalUrl) { App.toast('URL is required', 'warning'); saveBtn.disabled = false; return; }
+
+      } else if (source === 'rest') {
+        externalUrl = document.getElementById('docModalRestUrl').value.trim();
+        sourceTypeVal = 'REST';
+        if (!externalUrl) { App.toast('API endpoint is required', 'warning'); saveBtn.disabled = false; return; }
       }
+
+      const externalRef = document.getElementById('docModalRestRef')?.value.trim() || null;
 
       try {
         // Create document
@@ -839,7 +856,7 @@ function bindUpload() {
           storage_path:  'external', // satisfies NOT NULL — not used for external sources
           download_file_name: fileName,
           mime_type:     'application/pdf',
-          source_type:   source === 'url' ? 'URL' : 'REST',
+          source_type:   sourceTypeVal,
           external_url:  externalUrl,
           external_ref:  externalRef,
         });
@@ -866,10 +883,12 @@ function bindUpload() {
           document.getElementById('docModalCategory').value = '';
           document.getElementById('docModalFile').value = '';
           document.getElementById('docModalUrl').value = '';
+          document.getElementById('docModalGdriveUrl').value = '';
           document.getElementById('docModalRestUrl').value = '';
           document.getElementById('docModalRestRef').value = '';
           document.getElementById('docSourceFile').checked = true;
           document.getElementById('docSourceFileField').classList.remove('d-none');
+          document.getElementById('docSourceGdriveField').classList.add('d-none');
           document.getElementById('docSourceUrlField').classList.add('d-none');
           document.getElementById('docSourceRestField').classList.add('d-none');
           document.getElementById('docModalSaveBtn').textContent = 'Upload';
