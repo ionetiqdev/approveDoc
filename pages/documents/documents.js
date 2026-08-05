@@ -337,7 +337,7 @@ async function loadDocuments() {
 
   const { data, error } = await sb
     .from(DOC_CONFIG.tableDocs)
-    .select(`${DOC_CONFIG.colDocId}, ${DOC_CONFIG.colDocDesc}, description, ${DOC_CONFIG.colDocCatId}, ${DOC_CONFIG.tableFiles}(id, file_name, storage_path, download_file_name, mime_type, created_at)`)
+    .select(`${DOC_CONFIG.colDocId}, ${DOC_CONFIG.colDocDesc}, description, ${DOC_CONFIG.colDocCatId}, ${DOC_CONFIG.tableFiles}(id, file_name, storage_path, source_type, external_url, external_ref, download_file_name, mime_type, created_at)`)
     .eq(DOC_CONFIG.colOrgId, orgId)
     .order(DOC_CONFIG.colDocId);
 
@@ -493,25 +493,85 @@ async function selectDoc(id) {
   docViewerName.textContent = doc[DOC_CONFIG.colDocDesc] || pdfFile.file_name;
   docViewerToolbar.style.display = 'flex';
 
-  // PRIVATE bucket - createSignedUrl, not getPublicUrl (see config.js
-  // header comment). The signed URL is short-lived and only used to
-  // fetch the file once into a blob immediately below - it's never
-  // stored or displayed anywhere.
-  const { data: signedData, error: signError } = await sb.storage
-    .from(DOC_CONFIG.bucket)
-    .createSignedUrl(pdfFile.storage_path, DOC_CONFIG.signedUrlExpirySeconds);
+  // Fetch the PDF — route depends on source type
+  let fetchUrl;
+  const sourceType = pdfFile.source_type || 'SUPABASE';
 
-  if (signError || !signedData) {
-    App.toast('Could not access file: ' + (signError?.message || 'Unknown error'), 'danger');
-    return;
+  if (sourceType === 'SUPABASE') {
+    // Private bucket — get a short-lived signed URL then fetch to blob
+    const { data: signedData, error: signError } = await sb.storage
+      .from(DOC_CONFIG.bucket)
+      .createSignedUrl(pdfFile.storage_path, DOC_CONFIG.signedUrlExpirySeconds);
+
+    if (signError || !signedData) {
+      App.toast('Could not access file: ' + (signError?.message || 'Unknown error'), 'danger');
+      return;
+    }
+    fetchUrl = signedData.signedUrl;
+    currentFileUrl = fetchUrl;
+
+  } else {
+    // External source — proxy through edge function with auth token
+    const saved = AppSession.load();
+    const token = saved?.access_token;
+    fetchUrl = `${SUPABASE_URL}/functions/v1/fetch-document`;
+    currentFileUrl = fetchUrl;
+
+    // We'll use a special fetch below for the edge function
+    let pdfBlobUrl;
+    try {
+      const resp = await fetch(fetchUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer ' + token,
+          'apikey': SUPABASE_ANON_KEY,
+        },
+        body: JSON.stringify({ file_id: pdfFile.id }),
+      });
+      if (!resp.ok) throw new Error('HTTP ' + resp.status);
+      const blob = await resp.blob();
+      if (window._currentDocBlob) URL.revokeObjectURL(window._currentDocBlob);
+
+      const downloadName = pdfFile.download_file_name || sanitizeFileName(doc[DOC_CONFIG.colDocDesc] || pdfFile.file_name);
+      const namedFile = new File([blob], downloadName, { type: 'application/pdf' });
+      pdfBlobUrl = URL.createObjectURL(namedFile);
+      window._currentDocBlob = pdfBlobUrl;
+
+      const downloadBtn = document.getElementById('docDownloadBtn');
+      if (downloadBtn) {
+        downloadBtn.onclick = () => {
+          const a = document.createElement('a');
+          a.href = pdfBlobUrl;
+          a.download = downloadName;
+          document.body.appendChild(a);
+          a.click();
+          a.remove();
+        };
+      }
+    } catch(e) {
+      App.toast('Could not fetch external document: ' + e.message, 'danger');
+      return;
+    }
+
+    const hash = buildPdfHash();
+    docEmptyState.style.display = 'none';
+    docPdfFrame.style.visibility = 'hidden';
+    docPdfFrame.style.display = 'block';
+    docPdfFrame.onload = () => {
+      injectPdfStyles();
+      setTimeout(() => { docPdfFrame.style.visibility = ''; }, 150);
+    };
+    docPdfFrame.src = `${DOC_CONFIG.pdfViewerUrl}?file=${encodeURIComponent(pdfBlobUrl)}#${hash}`;
+    return; // early return — frame is already set
   }
 
-  currentFileUrl = signedData.signedUrl;
+  currentFileUrl = fetchUrl;
 
   // Fetch as blob so pdf.js's validateFileURL never blocks it
   let pdfBlobUrl;
   try {
-    const resp = await fetch(currentFileUrl);
+    const resp = await fetch(fetchUrl);
     if (!resp.ok) throw new Error('HTTP ' + resp.status);
     const blob = await resp.blob();
     if (window._currentDocBlob) URL.revokeObjectURL(window._currentDocBlob);

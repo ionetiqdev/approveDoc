@@ -1,1 +1,1 @@
-Distribution: btn-check hover shows text colour change only, not background fill
+External document sources: migration applied, fetch-document edge function deployed, documents.js routes by source_type
