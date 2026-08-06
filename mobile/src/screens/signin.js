@@ -4,30 +4,37 @@ import { passwordFieldHtml, wirePasswordEye } from '../lib/password-field.js';
 
 export function mount(app) {
   app.innerHTML = `
-    <div style="flex:1;display:flex;flex-direction:column;justify-content:center;padding:0 24px;max-width:400px;margin:0 auto;width:100%;">
-      <div style="display:flex;flex-direction:column;align-items:center;margin-bottom:28px;">
-        <h1 style="margin:0 0 2px;font-size:22px;">approveDoc</h1>
-        <p style="font-size:13px;color:var(--text-secondary);margin:0;">Sign in to continue</p>
+    <div style="position:relative;min-height:100vh;display:flex;flex-direction:column;justify-content:flex-end;overflow:hidden;">
+      <div style="position:absolute;inset:0;background-image:url('/images/login-hero.jpg');background-size:cover;background-position:center 15%;"></div>
+      <div style="position:absolute;inset:0;background:linear-gradient(to bottom, rgba(0,0,0,0.15) 0%, rgba(0,0,0,0.35) 55%, rgba(0,0,0,0.7) 100%);"></div>
+
+      <div style="position:relative;padding:0 24px 40px;">
+        <div style="max-width:400px;margin:0 auto;width:100%;">
+          <div style="margin-bottom:24px;">
+            <h1 style="margin:0 0 2px;font-size:24px;color:#ffffff;text-shadow:0 1px 4px rgba(0,0,0,0.4);">approveDoc</h1>
+            <p style="font-size:13px;color:rgba(255,255,255,0.85);margin:0;text-shadow:0 1px 3px rgba(0,0,0,0.4);">Sign in to continue</p>
+          </div>
+
+          <label style="font-size:12px;color:rgba(255,255,255,0.85);margin-bottom:4px;display:block;">Email</label>
+          <input id="email" type="email" autocomplete="username" placeholder="name@company.com"
+            style="width:100%;padding:10px;margin-bottom:14px;border:none;border-radius:8px;background:rgba(255,255,255,0.94);color:#1a1917;" />
+
+          <label style="font-size:12px;color:rgba(255,255,255,0.85);margin-bottom:4px;display:block;">Password</label>
+          <div style="margin-bottom:8px;">
+            ${passwordFieldHtml('password', 'Enter your password', 'current-password')}
+          </div>
+
+          <div style="text-align:right;margin-bottom:20px;">
+            <a id="forgot" href="#" style="font-size:12px;color:#ffffff;text-decoration:underline;">Forgot password?</a>
+          </div>
+
+          <div id="error" style="display:none;font-size:12px;color:#ffffff;background:rgba(163,45,45,0.85);padding:8px 10px;border-radius:8px;margin-bottom:12px;"></div>
+
+          <button id="submit" style="width:100%;padding:12px;font-size:14px;border:none;border-radius:8px;background:var(--accent);color:var(--on-accent);">
+            Sign in
+          </button>
+        </div>
       </div>
-
-      <label style="font-size:12px;color:var(--text-secondary);margin-bottom:4px;display:block;">Email</label>
-      <input id="email" type="email" autocomplete="username" placeholder="name@company.com"
-        style="width:100%;padding:10px;margin-bottom:14px;border:1px solid var(--border);border-radius:8px;background:var(--bg-0);color:var(--text-primary);" />
-
-      <label style="font-size:12px;color:var(--text-secondary);margin-bottom:4px;display:block;">Password</label>
-      <div style="margin-bottom:8px;">
-        ${passwordFieldHtml('password', 'Enter your password', 'current-password')}
-      </div>
-
-      <div style="text-align:right;margin-bottom:20px;">
-        <a id="forgot" href="#" style="font-size:12px;color:var(--accent);">Forgot password?</a>
-      </div>
-
-      <div id="error" style="display:none;font-size:12px;color:var(--danger);margin-bottom:12px;"></div>
-
-      <button id="submit" style="width:100%;padding:12px;font-size:14px;border:none;border-radius:8px;background:var(--accent);color:var(--on-accent);">
-        Sign in
-      </button>
     </div>
   `;
 

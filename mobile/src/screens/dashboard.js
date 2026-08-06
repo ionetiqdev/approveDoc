@@ -1,5 +1,6 @@
 import { sb } from '../lib/supabase-client.js';
 import { showScreen } from '../router.js';
+import { bottomNavHtml, wireBottomNav } from '../lib/bottom-nav.js';
 
 export async function mount(app) {
   const { data: { user } } = await sb.auth.getUser();
@@ -61,19 +62,12 @@ export async function mount(app) {
         </div>
       </div>
 
-      <div id="bottom-nav" style="display:flex;border-top:1px solid var(--border);">
-        <button id="nav-home" style="flex:1;border:none;background:none;padding:10px;color:var(--accent);">Home</button>
-        <button id="nav-docs" style="flex:1;border:none;background:none;padding:10px;color:var(--text-secondary);">Documents</button>
-        ${profile?.role_admin ? `<button id="nav-admin" style="flex:1;border:none;background:none;padding:10px;color:var(--text-secondary);">Insights</button>` : ''}
-        <button id="nav-profile" style="flex:1;border:none;background:none;padding:10px;color:var(--text-secondary);">Profile</button>
-      </div>
+      ${bottomNavHtml('home', profile?.role_admin)}
     </div>
   `;
 
-  app.querySelector('#nav-docs').addEventListener('click', () => showScreen('documents'));
-  app.querySelector('#nav-profile').addEventListener('click', () => showScreen('profile'));
-  const adminBtn = app.querySelector('#nav-admin');
-  if (adminBtn) adminBtn.addEventListener('click', () => showScreen('admin-insights'));
+  wireBottomNav(app, showScreen);
+
   app.querySelector('#stat-overdue').addEventListener('click', () => showScreen('documents', { statusFilter: 'overdue' }));
   app.querySelector('#stat-pending').addEventListener('click', () => showScreen('documents', { statusFilter: 'pending' }));
   app.querySelector('#stat-done').addEventListener('click', () => showScreen('documents', { statusFilter: 'done' }));

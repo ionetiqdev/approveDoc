@@ -1,10 +1,17 @@
 import { sb } from '../lib/supabase-client.js';
 import { showScreen } from '../router.js';
+import { bottomNavHtml, wireBottomNav } from '../lib/bottom-nav.js';
 
 let allItems = [];
 
 export async function mount(app, params = {}) {
   const { data: { user } } = await sb.auth.getUser();
+
+  const { data: profile } = await sb
+    .from('ad_user')
+    .select('role_admin')
+    .eq('user_id', user.id)
+    .single();
 
   const { data: items, error } = await sb
     .from('ad_distribution_item')
@@ -17,40 +24,43 @@ export async function mount(app, params = {}) {
   const statusFilter = params.statusFilter || null;
 
   if (statusFilter) {
-    renderFocusedView(app, statusFilter, error);
+    renderFocusedView(app, statusFilter, error, profile?.role_admin);
   } else {
-    renderBrowseView(app, error);
+    renderBrowseView(app, error, profile?.role_admin);
   }
 }
 
 /* Opened from a dashboard stat card (Overdue/Pending/Done) - a single
    focused list with no toggle, since the filter was already chosen. */
-function renderFocusedView(app, statusFilter, error) {
+function renderFocusedView(app, statusFilter, error, isAdmin) {
   const labels = { overdue: 'Overdue', pending: 'Pending', done: 'Completed' };
 
   app.innerHTML = `
     <div style="flex:1;display:flex;flex-direction:column;">
       <div style="padding:16px 16px 0;display:flex;align-items:center;gap:8px;">
-        <button id="back" style="border:none;background:none;padding:4px;color:var(--text-primary);">&larr;</button>
+        <button id="back" style="border:none;background:none;padding:8px;font-size:22px;color:var(--text-primary);line-height:1;">&larr;</button>
         <h2 style="margin:0;font-size:18px;">${labels[statusFilter] || 'Documents'}</h2>
       </div>
 
       ${error ? `<p style="padding:16px 16px 0;font-size:13px;color:var(--danger);">Couldn't load documents: ${error.message}</p>` : ''}
 
       <div id="doc-list" style="padding:12px 16px 16px;display:flex;flex-direction:column;gap:8px;flex:1;"></div>
+
+      ${bottomNavHtml('documents', isAdmin)}
     </div>
   `;
 
   app.querySelector('#back').addEventListener('click', () => showScreen('dashboard'));
+  wireBottomNav(app, showScreen);
   renderList(app, filterByStatus(statusFilter));
 }
 
 /* Opened from the bottom nav - the general Pending/All browser. */
-function renderBrowseView(app, error) {
+function renderBrowseView(app, error, isAdmin) {
   app.innerHTML = `
     <div style="flex:1;display:flex;flex-direction:column;">
       <div style="padding:16px 16px 0;display:flex;align-items:center;gap:8px;">
-        <button id="back" style="border:none;background:none;padding:4px;color:var(--text-primary);">&larr;</button>
+        <button id="back" style="border:none;background:none;padding:8px;font-size:22px;color:var(--text-primary);line-height:1;">&larr;</button>
         <h2 style="margin:0;font-size:18px;">Documents</h2>
       </div>
 
@@ -64,10 +74,13 @@ function renderBrowseView(app, error) {
       ${error ? `<p style="padding:0 16px;font-size:13px;color:var(--danger);">Couldn't load documents: ${error.message}</p>` : ''}
 
       <div id="doc-list" style="padding:0 16px 16px;display:flex;flex-direction:column;gap:8px;flex:1;"></div>
+
+      ${bottomNavHtml('documents', isAdmin)}
     </div>
   `;
 
   app.querySelector('#back').addEventListener('click', () => showScreen('dashboard'));
+  wireBottomNav(app, showScreen);
   app.querySelector('#filter-pending').addEventListener('click', (e) => setToggle(app, filterByStatus('pending'), e.target));
   app.querySelector('#filter-all').addEventListener('click', (e) => setToggle(app, allItems, e.target));
 
