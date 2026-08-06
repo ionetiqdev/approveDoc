@@ -9,8 +9,10 @@
   --on-accent: #ffffff;
   --danger: #a32d2d;
   --danger-bg: #f7c1c1;
+  --on-danger: #ffffff;
   --success: #3b6d11;
   --success-bg: #c0dd97;
+  --on-success: #ffffff;
   --warning: #854f0b;
   --warning-bg: #fac775;
 }
@@ -26,8 +28,10 @@
   --on-accent: #042c53;
   --danger: #f09595;
   --danger-bg: #501313;
+  --on-danger: #501313;
   --success: #97c459;
   --success-bg: #173404;
+  --on-success: #173404;
   --warning: #ef9f27;
   --warning-bg: #412402;
 }

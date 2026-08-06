@@ -1,5 +1,6 @@
 import { sb } from '../lib/supabase-client.js';
 import { showScreen } from '../router.js';
+import { passwordFieldHtml, wirePasswordEye } from '../lib/password-field.js';
 
 export function mount(app) {
   app.innerHTML = `
@@ -11,11 +12,12 @@ export function mount(app) {
 
       <label style="font-size:12px;color:var(--text-secondary);margin-bottom:4px;display:block;">Email</label>
       <input id="email" type="email" autocomplete="username" placeholder="name@company.com"
-        style="width:100%;padding:10px;margin-bottom:14px;border:1px solid var(--border);border-radius:8px;background:var(--bg-1);color:var(--text-primary);" />
+        style="width:100%;padding:10px;margin-bottom:14px;border:1px solid var(--border);border-radius:8px;background:var(--bg-0);color:var(--text-primary);" />
 
       <label style="font-size:12px;color:var(--text-secondary);margin-bottom:4px;display:block;">Password</label>
-      <input id="password" type="password" autocomplete="current-password" placeholder="Enter your password"
-        style="width:100%;padding:10px;margin-bottom:8px;border:1px solid var(--border);border-radius:8px;background:var(--bg-1);color:var(--text-primary);" />
+      <div style="margin-bottom:8px;">
+        ${passwordFieldHtml('password', 'Enter your password', 'current-password')}
+      </div>
 
       <div style="text-align:right;margin-bottom:20px;">
         <a id="forgot" href="#" style="font-size:12px;color:var(--accent);">Forgot password?</a>
@@ -28,6 +30,8 @@ export function mount(app) {
       </button>
     </div>
   `;
+
+  wirePasswordEye(app, 'password');
 
   const emailInput = app.querySelector('#email');
   const pwInput = app.querySelector('#password');
