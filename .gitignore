@@ -9,3 +9,11 @@ debug.html
 node_modules/
 package.json
 package-lock.json
+
+# mobile/ is a real npm project - its package.json and package-lock.json
+# must be tracked for reproducible installs, unlike the bare entries above
+# (which exist for something at repo root, not mobile/)
+!mobile/package.json
+!mobile/package-lock.json
+mobile/dist/
+mobile/node_modules/

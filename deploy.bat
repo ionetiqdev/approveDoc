@@ -342,6 +342,9 @@ if "%TIMEPART%"=="" (endlocal & set "%~2=-1" & exit /b)
 set "DD=%DATEPART:~0,2%"
 set "MM=%DATEPART:~2,2%"
 set "YYYY=%DATEPART:~4,4%"
+set /a "DD=1%DD%-100"
+set /a "MM=1%MM%-100"
+set /a "TIMEPART=1%TIMEPART%-10000"
 set /a RESULT=(%YYYY%*100000000) + (%MM%*1000000) + (%DD%*10000) + %TIMEPART%
 endlocal & set "%~2=%RESULT%"
 exit /b
