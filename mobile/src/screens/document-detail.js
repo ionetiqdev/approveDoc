@@ -10,7 +10,7 @@ export async function mount(app, params = {}) {
 
   app.innerHTML = `
     <div style="flex:1;display:flex;flex-direction:column;padding:16px;">
-      <button id="back" style="align-self:flex-start;border:none;background:none;padding:4px;color:var(--text-primary);margin-bottom:8px;">&larr;</button>
+      <button id="back" style="align-self:flex-start;border:none;background:none;padding:8px;font-size:22px;color:var(--text-primary);line-height:1;margin-bottom:8px;">&larr;</button>
       <p style="font-size:13px;color:var(--text-secondary);">Loading...</p>
     </div>
   `;
@@ -94,7 +94,7 @@ export async function mount(app, params = {}) {
 function renderError(app, backTarget, message) {
   app.innerHTML = `
     <div style="flex:1;display:flex;flex-direction:column;padding:16px;">
-      <button id="back" style="align-self:flex-start;border:none;background:none;padding:4px;color:var(--text-primary);margin-bottom:16px;">&larr;</button>
+      <button id="back" style="align-self:flex-start;border:none;background:none;padding:8px;font-size:22px;color:var(--text-primary);line-height:1;margin-bottom:16px;">&larr;</button>
       <p style="font-size:13px;color:var(--danger);">${message}</p>
     </div>
   `;
@@ -109,7 +109,7 @@ function renderStaticShell(app, ctx) {
   app.innerHTML = `
     <div style="flex:1;display:flex;flex-direction:column;padding:16px;position:relative;">
       <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
-        <button id="back" style="border:none;background:none;padding:4px;color:var(--text-primary);">&larr;</button>
+        <button id="back" style="border:none;background:none;padding:8px;font-size:22px;color:var(--text-primary);line-height:1;">&larr;</button>
         <h2 style="margin:0;font-size:16px;flex:1;">${ctx.title}</h2>
       </div>
 

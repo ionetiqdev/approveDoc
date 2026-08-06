@@ -9,7 +9,7 @@ const RESET_REDIRECT_URL = import.meta.env.VITE_PASSWORD_RESET_REDIRECT_URL;
 export function mount(app) {
   app.innerHTML = `
     <div style="flex:1;display:flex;flex-direction:column;justify-content:center;padding:0 24px;max-width:400px;margin:0 auto;width:100%;">
-      <button id="back" style="align-self:flex-start;border:none;background:none;padding:4px;color:var(--text-primary);margin-bottom:16px;">&larr;</button>
+      <button id="back" style="align-self:flex-start;border:none;background:none;padding:8px;font-size:22px;color:var(--text-primary);line-height:1;margin-bottom:16px;">&larr;</button>
       <h1 style="margin:0 0 4px;font-size:20px;">Reset your password</h1>
       <p style="font-size:13px;color:var(--text-secondary);margin:0 0 20px;">We'll email you a link to set a new one.</p>
 
