@@ -6,6 +6,7 @@
   --text-muted: #888780;
   --border: #d3d1c7;
   --accent: #185fa5;
+  --accent-bg: #e6f1fb;
   --on-accent: #ffffff;
   --danger: #a32d2d;
   --danger-bg: #f7c1c1;
@@ -25,6 +26,7 @@
   --text-muted: #888780;
   --border: #444441;
   --accent: #85b7eb;
+  --accent-bg: #042c53;
   --on-accent: #042c53;
   --danger: #f09595;
   --danger-bg: #501313;

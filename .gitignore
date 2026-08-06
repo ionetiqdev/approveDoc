@@ -17,3 +17,11 @@ package-lock.json
 !mobile/package-lock.json
 mobile/dist/
 mobile/node_modules/
+mobile/.env.local
+
+# These are local dev tools, not app code - keeping them out of git
+# entirely avoids the class of bugs where a script that switches
+# branches differs (or doesn't exist) depending on which branch it's
+# currently checked out on.
+deploy-mobile.bat
+promote-mobile.bat
