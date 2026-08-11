@@ -9,19 +9,3 @@ debug.html
 node_modules/
 package.json
 package-lock.json
-
-# mobile/ is a real npm project - its package.json and package-lock.json
-# must be tracked for reproducible installs, unlike the bare entries above
-# (which exist for something at repo root, not mobile/)
-!mobile/package.json
-!mobile/package-lock.json
-mobile/dist/
-mobile/node_modules/
-mobile/.env.local
-
-# These are local dev tools, not app code - keeping them out of git
-# entirely avoids the class of bugs where a script that switches
-# branches differs (or doesn't exist) depending on which branch it's
-# currently checked out on.
-deploy-mobile.bat
-promote-mobile.bat
