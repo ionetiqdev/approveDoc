@@ -1,6 +1,7 @@
 site_name: approveDoc Developer Docs
 site_description: Technical documentation for the approveDoc compliance platform
 site_author: ionetiq
+site_url: https://ionetiqdev.github.io/approveDoc/
 repo_url: https://github.com/ionetiqdev/approveDoc
 repo_name: ionetiqdev/approveDoc
 

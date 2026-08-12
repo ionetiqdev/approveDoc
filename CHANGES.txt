@@ -1,1 +1,1 @@
-Fix mkdocs.yml: add docs_dir and site_dir so mkdocs serve works from docs/ directory
+Add GitHub Actions workflow to auto-deploy mkdocs to GitHub Pages on push to main
