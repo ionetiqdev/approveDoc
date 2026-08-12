@@ -4,6 +4,9 @@ site_author: ionetiq
 repo_url: https://github.com/ionetiqdev/approveDoc
 repo_name: ionetiqdev/approveDoc
 
+docs_dir: mkdocs
+site_dir: mkdocs-site
+
 theme:
   name: material
   palette:

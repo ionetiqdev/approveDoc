@@ -1,1 +1,1 @@
-Add mkdocs documentation site — full developer docs in docs/mkdocs/
+Fix mkdocs.yml: add docs_dir and site_dir so mkdocs serve works from docs/ directory
