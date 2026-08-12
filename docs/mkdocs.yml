@@ -1,0 +1,94 @@
+site_name: approveDoc Developer Docs
+site_description: Technical documentation for the approveDoc compliance platform
+site_author: ionetiq
+repo_url: https://github.com/ionetiqdev/approveDoc
+repo_name: ionetiqdev/approveDoc
+
+theme:
+  name: material
+  palette:
+    - scheme: default
+      primary: indigo
+      accent: indigo
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+    - scheme: slate
+      primary: indigo
+      accent: indigo
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+  features:
+    - navigation.tabs
+    - navigation.sections
+    - navigation.expand
+    - navigation.top
+    - search.highlight
+    - search.suggest
+    - content.code.copy
+    - content.code.annotate
+  icon:
+    repo: fontawesome/brands/github
+
+nav:
+  - Home: index.md
+  - Architecture:
+    - Overview: architecture/overview.md
+    - Directory Structure: architecture/directory-structure.md
+    - Page Conventions: architecture/page-conventions.md
+    - Cross-Domain Compatibility: architecture/cross-domain.md
+    - localStorage Isolation: architecture/localstorage.md
+  - JS Modules:
+    - supabase-client.js: modules/supabase-client.md
+    - auth.js: modules/auth.md
+    - app.js: modules/app.md
+    - sidebar-html.js: modules/sidebar-html.md
+    - sidebar.js / theme.js: modules/sidebar-theme.md
+    - status-widget.js: modules/status-widget.md
+    - profile-modal.js: modules/profile-modal.md
+  - Features:
+    - Documents: features/documents.md
+    - Audiences: features/audiences.md
+    - Distribution: features/distribution.md
+    - User View: features/user-view.md
+    - Acknowledge: features/acknowledge.md
+    - Org Chart: features/org-chart.md
+    - Users (Admin): features/users-admin.md
+  - Database:
+    - Schema Overview: database/schema.md
+    - RLS Patterns: database/rls.md
+    - Migration History: database/migrations.md
+  - Edge Functions:
+    - manage-user: edge-functions/manage-user.md
+    - fetch-document: edge-functions/fetch-document.md
+  - Deployment:
+    - deploy.bat: deployment/deploy-bat.md
+    - Environments: deployment/environments.md
+  - Guides:
+    - Authentication: guides/authentication.md
+    - External Documents: guides/external-documents.md
+    - Google Drive Setup: guides/google-drive-setup.md
+    - PDF Viewer: guides/pdf-viewer.md
+    - Supabase Auth Setup: guides/supabase-auth-setup.md
+    - Patterns & Conventions: guides/patterns.md
+
+markdown_extensions:
+  - admonition
+  - pymdownx.details
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
+  - pymdownx.highlight:
+      anchor_linenums: true
+  - pymdownx.inlinehilite
+  - pymdownx.tabbed:
+      alternate_style: true
+  - pymdownx.emoji:
+      emoji_index: !!python/name:material.extensions.emoji.twemoji
+      emoji_generator: !!python/name:material.extensions.emoji.to_svg
+  - tables
+  - toc:
+      permalink: true

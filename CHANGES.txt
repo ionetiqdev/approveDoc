@@ -1,1 +1,1 @@
-Add CODEBASE.md — comprehensive developer documentation covering architecture, modules, DB schema, patterns
+Add mkdocs documentation site — full developer docs in docs/mkdocs/
