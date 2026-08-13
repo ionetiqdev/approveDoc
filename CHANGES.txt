@@ -1,1 +1,1 @@
-deploy.bat: auto-stash before branch switch to prevent checkout conflicts
+Fix syntax error in 07-lookup-data and 00-FULL-SCHEMA.sql (missing quote and comma on Policy/Procedure)

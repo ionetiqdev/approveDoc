@@ -129,8 +129,8 @@ insert into public.document_category_lookup (organisation_id, name, document_cat
 select o.id, c.name, c.sort_order
 from public.organisations o
 cross join (values
-  ('Policy, 1),
-  ('Procedure' 2),
+  ('Policy', 1),
+  ('Procedure', 2),
   ('Other', 3)
 ) as c(name, sort_order)
 where o.name = 'REPLACE ME - Organisation Name'
