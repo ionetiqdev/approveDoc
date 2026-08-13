@@ -1,1 +1,1 @@
-Fix 00-FULL-SCHEMA.sql: move organisation insert before country/lookup data to fix FK violation
+Add supabase/dev-data-migration.sql — full data dump from production for dev project setup
