@@ -182,6 +182,9 @@ del "BUILD_TIMESTAMP.txt" 2>nul
 for /f "delims=" %%C in ('git rev-parse --abbrev-ref HEAD 2^>nul') do set CURRENT_BRANCH=%%C
 
 if not "%CURRENT_BRANCH%"=="%BRANCH%" (
+  :: Stash any local changes (including the just-extracted files) so we can switch branches cleanly
+  git stash push -m "pre-deploy-switch" --include-untracked >nul 2>&1
+
   git rev-parse --verify %BRANCH% >nul 2>&1
   if errorlevel 1 (
     echo Branch "%BRANCH%" doesn't exist yet locally - creating it from the current branch.
@@ -191,8 +194,12 @@ if not "%CURRENT_BRANCH%"=="%BRANCH%" (
   )
   if errorlevel 1 (
     echo ERROR: Could not switch to branch "%BRANCH%".
+    git stash pop >nul 2>&1
     exit /b 1
   )
+
+  :: Re-apply the extracted files on top of the target branch
+  git stash pop >nul 2>&1
 )
 
 if not exist "CHANGES.txt" (

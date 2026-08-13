@@ -21,9 +21,18 @@ jobs:
         # repo secrets. Nothing here is ever written back to git -
         # the real values never appear in git history, only in the
         # deployed files on the FTP server.
+        # main branch → production Supabase project
+        # all other branches → dev Supabase project
         run: |
-          sed -i "s|{{SUPABASE_URL}}|${{ secrets.SUPABASE_URL }}|g" assets/js/supabase-client.js
-          sed -i "s|{{SUPABASE_ANON_KEY}}|${{ secrets.SUPABASE_ANON_KEY }}|g" assets/js/supabase-client.js
+          if [ "${{ github.ref_name }}" = "main" ]; then
+            SUPABASE_URL="${{ secrets.SUPABASE_URL }}"
+            SUPABASE_ANON_KEY="${{ secrets.SUPABASE_ANON_KEY }}"
+          else
+            SUPABASE_URL="${{ secrets.SUPABASE_URL_DEV }}"
+            SUPABASE_ANON_KEY="${{ secrets.SUPABASE_ANON_KEY_DEV }}"
+          fi
+          sed -i "s|{{SUPABASE_URL}}|${SUPABASE_URL}|g" assets/js/supabase-client.js
+          sed -i "s|{{SUPABASE_ANON_KEY}}|${SUPABASE_ANON_KEY}|g" assets/js/supabase-client.js
 
       - name: Determine deploy target
         id: target

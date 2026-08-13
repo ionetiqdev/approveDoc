@@ -1,1 +1,1 @@
-Add GitHub Actions workflow to auto-deploy mkdocs to GitHub Pages on push to main
+deploy.bat: auto-stash before branch switch to prevent checkout conflicts
