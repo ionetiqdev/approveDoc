@@ -749,6 +749,11 @@ alter table public.document_files add column if not exists download_file_name te
 -- 07-lookup-data - approvedoc.sql
 -- ============================================================================
 
+-- Insert organisation first so all FK references resolve
+INSERT INTO organisations (id, name, created_at) 
+VALUES ('0b116913-5b27-4c19-8eb9-bf5c4787e780', 'gardenSOL', '2026-06-27 14:21:41.674144+00')
+ON CONFLICT DO NOTHING;
+
 -- ============================================================
 -- {{PROJECT_NAME}} - Lookup table starting data
 --
@@ -2455,9 +2460,7 @@ create policy "Admins: manage languages"
 -- ============================================================================
 
 -- Organisation
-INSERT INTO organisations (id, name, created_at) 
-VALUES ('0b116913-5b27-4c19-8eb9-bf5c4787e780', 'gardenSOL', '2026-06-27 14:21:41.674144+00')
-ON CONFLICT DO NOTHING;
+-- (organisation inserted earlier)
 
 -- Categories
 INSERT INTO ad_category (category_id, organisation_id, name) VALUES

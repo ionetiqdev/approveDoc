@@ -1,1 +1,1 @@
-Fix syntax error in 07-lookup-data and 00-FULL-SCHEMA.sql (missing quote and comma on Policy/Procedure)
+Fix 00-FULL-SCHEMA.sql: move organisation insert before country/lookup data to fix FK violation
