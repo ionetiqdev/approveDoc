@@ -92,14 +92,20 @@
                 </select>
               </div>
               <div class="col-md-2">
+                <label class="form-label">User</label>
+                <select id="filterUser" class="form-select form-select-sm">
+                  <option value="">All users</option>
+                </select>
+              </div>
+              <div class="col-md-1">
                 <label class="form-label">From</label>
                 <input type="date" id="filterFrom" class="form-control form-control-sm" />
               </div>
-              <div class="col-md-2">
+              <div class="col-md-1">
                 <label class="form-label">To</label>
                 <input type="date" id="filterTo" class="form-control form-control-sm" />
               </div>
-              <div class="col-md-3">
+              <div class="col-md-2">
                 <label class="form-label">Search comment</label>
                 <input type="text" id="filterSearch" class="form-control form-control-sm" placeholder="Keyword..." />
               </div>
@@ -130,12 +136,12 @@
               </colgroup>
               <thead>
                 <tr>
-                  <th>When</th>
-                  <th>User</th>
-                  <th>Action</th>
-                  <th>Table</th>
+                  <th class="sortable-col" data-col="created_at" style="cursor:pointer">When <span class="sort-icon">↓</span></th>
+                  <th class="sortable-col" data-col="user_id" style="cursor:pointer">User <span class="sort-icon"></span></th>
+                  <th class="sortable-col" data-col="action" style="cursor:pointer">Action <span class="sort-icon"></span></th>
+                  <th class="sortable-col" data-col="table_name" style="cursor:pointer">Table <span class="sort-icon"></span></th>
                   <th>Changes</th>
-                  <th>Comment</th>
+                  <th class="sortable-col" data-col="comment" style="cursor:pointer">Comment <span class="sort-icon"></span></th>
                 </tr>
               </thead>
               <tbody id="auditBody">
@@ -177,6 +183,8 @@ const PAGE_SIZE = 50;
 let currentPage = 0;
 let totalCount   = 0;
 let userCache    = {};
+let sortCol      = 'created_at';
+let sortAsc      = false;
 
 (async () => {
   const session = await Auth.requireAuth();
@@ -192,11 +200,29 @@ let userCache    = {};
   StatusWidget.init();
 
   await loadTableList();
+  await loadUserList();
   await loadPage(0);
 
   document.getElementById('applyFilters').addEventListener('click', () => loadPage(0));
   document.getElementById('prevPage').addEventListener('click', () => loadPage(currentPage - 1));
   document.getElementById('nextPage').addEventListener('click', () => loadPage(currentPage + 1));
+
+  // Sortable columns
+  document.querySelectorAll('.sortable-col').forEach(th => {
+    th.addEventListener('click', () => {
+      const col = th.dataset.col;
+      if (sortCol === col) {
+        sortAsc = !sortAsc;
+      } else {
+        sortCol = col;
+        sortAsc = col !== 'created_at'; // default desc for date, asc for others
+      }
+      // Update sort icons
+      document.querySelectorAll('.sortable-col .sort-icon').forEach(el => el.textContent = '');
+      th.querySelector('.sort-icon').textContent = sortAsc ? '↑' : '↓';
+      loadPage(0);
+    });
+  });
 })();
 
 async function loadTableList() {
@@ -211,6 +237,24 @@ async function loadTableList() {
   });
 }
 
+async function loadUserList() {
+  const { data } = await sb.from('audit_log').select('user_id').eq('organisation_id', Auth.getOrganisationId());
+  if (!data) return;
+  const userIds = [...new Set(data.filter(r => r.user_id).map(r => r.user_id))];
+  if (!userIds.length) return;
+  const { data: profiles } = await sb.from('profiles').select('id, display_name').in('id', userIds);
+  (profiles || []).forEach(p => { userCache[p.id] = p.display_name; });
+  const sel = document.getElementById('filterUser');
+  (profiles || []).sort((a,b) => (a.display_name||'').localeCompare(b.display_name||'')).forEach(p => {
+    const opt = document.createElement('option');
+    opt.value = p.id; opt.textContent = p.display_name || p.id.slice(0,8);
+    sel.appendChild(opt);
+  });
+  const sysOpt = document.createElement('option');
+  sysOpt.value = 'system'; sysOpt.textContent = 'System';
+  sel.appendChild(sysOpt);
+}
+
 async function loadPage(page) {
   currentPage = page;
   const tbody = document.getElementById('auditBody');
@@ -218,6 +262,7 @@ async function loadPage(page) {
 
   const action  = document.getElementById('filterAction').value;
   const table   = document.getElementById('filterTable').value;
+  const user    = document.getElementById('filterUser').value;
   const from    = document.getElementById('filterFrom').value;
   const to      = document.getElementById('filterTo').value;
   const search  = document.getElementById('filterSearch').value.trim();
@@ -226,13 +271,15 @@ async function loadPage(page) {
   let query = sb.from('audit_log').select('*', { count: 'exact' });
 
   if (!Auth.isSuperAdmin()) query = query.eq('organisation_id', orgId);
-  if (action)  query = query.eq('action', action);
-  if (table)   query = query.eq('table_name', table);
-  if (from)    query = query.gte('created_at', from);
-  if (to)      query = query.lte('created_at', to + 'T23:59:59');
-  if (search)  query = query.or(`record_id.ilike.%${search}%,comment.ilike.%${search}%`);
+  if (action)           query = query.eq('action', action);
+  if (table)            query = query.eq('table_name', table);
+  if (user === 'system') query = query.is('user_id', null);
+  else if (user)        query = query.eq('user_id', user);
+  if (from)             query = query.gte('created_at', from);
+  if (to)               query = query.lte('created_at', to + 'T23:59:59');
+  if (search)           query = query.ilike('comment', `%${search}%`);
 
-  query = query.order('created_at', { ascending: false })
+  query = query.order(sortCol, { ascending: sortAsc })
                .range(page * PAGE_SIZE, (page + 1) * PAGE_SIZE - 1);
 
   const { data, count, error } = await query;
@@ -253,7 +300,7 @@ async function loadPage(page) {
     return;
   }
 
-  // Load user display names
+  // Load any user display names not already in cache
   const userIds = [...new Set(data.filter(r => r.user_id).map(r => r.user_id))].filter(id => !userCache[id]);
   if (userIds.length) {
     const { data: profiles } = await sb.from('profiles').select('id, display_name').in('id', userIds);

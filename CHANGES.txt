@@ -1,1 +1,1 @@
-Audit UI: table-layout fixed with colgroup, wider User/Table, Changes/Comment fluid 66/33
+Audit UI: add User filter picklist, sortable columns with direction indicators
