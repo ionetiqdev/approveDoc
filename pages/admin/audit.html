@@ -100,8 +100,8 @@
                 <input type="date" id="filterTo" class="form-control form-control-sm" />
               </div>
               <div class="col-md-3">
-                <label class="form-label">Search record ID or comment</label>
-                <input type="text" id="filterSearch" class="form-control form-control-sm" placeholder="UUID or keyword..." />
+                <label class="form-label">Search comment</label>
+                <input type="text" id="filterSearch" class="form-control form-control-sm" placeholder="Keyword..." />
               </div>
               <div class="col-md-1 d-flex gap-2">
                 <button class="btn btn-primary btn-sm w-100" id="applyFilters">Filter</button>
@@ -122,17 +122,16 @@
             <table class="table table-vcenter table-hover card-table mb-0">
               <thead>
                 <tr>
-                  <th style="width:140px">When</th>
+                  <th style="width:155px">When</th>
                   <th style="width:130px">User</th>
-                  <th style="width:70px">Action</th>
-                  <th style="width:160px">Table</th>
-                  <th style="width:200px">Record ID</th>
-                  <th>Changes</th>
-                  <th style="width:160px">Comment</th>
+                  <th style="width:80px">Action</th>
+                  <th style="width:150px">Table</th>
+                  <th style="width:66%">Changes</th>
+                  <th style="width:33%">Comment</th>
                 </tr>
               </thead>
               <tbody id="auditBody">
-                <tr><td colspan="7" class="text-center py-4 text-secondary">
+                <tr><td colspan="6" class="text-center py-4 text-secondary">
                   <div class="spinner-border spinner-border-sm me-2"></div>Loading...
                 </td></tr>
               </tbody>
@@ -207,7 +206,7 @@ async function loadTableList() {
 async function loadPage(page) {
   currentPage = page;
   const tbody = document.getElementById('auditBody');
-  tbody.innerHTML = '<tr><td colspan="7" class="text-center py-4 text-secondary"><div class="spinner-border spinner-border-sm me-2"></div>Loading...</td></tr>';
+  tbody.innerHTML = '<tr><td colspan="6" class="text-center py-4 text-secondary"><div class="spinner-border spinner-border-sm me-2"></div>Loading...</td></tr>';
 
   const action  = document.getElementById('filterAction').value;
   const table   = document.getElementById('filterTable').value;
@@ -231,7 +230,7 @@ async function loadPage(page) {
   const { data, count, error } = await query;
 
   if (error) {
-    tbody.innerHTML = `<tr><td colspan="7" class="text-center text-danger py-4">${App.escHtml(error.message)}</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="6" class="text-center text-danger py-4">${App.escHtml(error.message)}</td></tr>`;
     return;
   }
 
@@ -242,7 +241,7 @@ async function loadPage(page) {
   document.getElementById('nextPage').disabled = (page + 1) * PAGE_SIZE >= totalCount;
 
   if (!data?.length) {
-    tbody.innerHTML = '<tr><td colspan="7" class="text-center text-secondary py-4">No audit records found</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="6" class="text-center text-secondary py-4">No audit records found</td></tr>';
     return;
   }
 
@@ -255,19 +254,36 @@ async function loadPage(page) {
 
   tbody.innerHTML = data.map(row => {
     const userName = row.user_id ? (userCache[row.user_id] || row.user_id.slice(0,8) + '...') : 'System';
-    const when = App.formatDateTime(row.created_at);
-    const actionClass = `audit-action-${row.action}`;
+    const when = formatAuditDate(row.created_at);
+    const actionPill = renderActionPill(row.action);
     const changes = renderChanges(row);
     return `<tr>
-      <td class="text-secondary small">${App.escHtml(when)}</td>
+      <td class="text-secondary small" style="white-space:nowrap">${App.escHtml(when)}</td>
       <td class="small">${App.escHtml(userName)}</td>
-      <td><span class="fw-semibold ${actionClass}">${row.action}</span></td>
+      <td>${actionPill}</td>
       <td class="text-secondary small">${App.escHtml(row.table_name)}</td>
-      <td class="small text-secondary" style="font-family:monospace;font-size:.7rem">${App.escHtml(row.record_id)}</td>
       <td>${changes}</td>
       <td class="text-secondary small">${App.escHtml(row.comment || '')}</td>
     </tr>`;
   }).join('');
+}
+
+function formatAuditDate(iso) {
+  if (!iso) return '-';
+  const d = new Date(iso);
+  const pad = n => String(n).padStart(2, '0');
+  return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
+}
+
+function renderActionPill(action) {
+  const map = {
+    INSERT: 'bg-success-lt text-success',
+    UPDATE: 'bg-warning-lt text-warning',
+    DELETE: 'bg-danger-lt text-danger',
+    CUSTOM: 'bg-primary-lt text-primary',
+  };
+  const cls = map[action] || 'bg-secondary-lt text-secondary';
+  return `<span class="badge ${cls}" style="font-size:.7rem">${action}</span>`;
 }
 
 function renderChanges(row) {

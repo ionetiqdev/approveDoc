@@ -1,1 +1,1 @@
-deploy.bat: substitute Supabase credentials on server AFTER git push so placeholders stay in git
+Audit UI: date format YYYY-MM-DD HH:MM:SS, action coloured pills, remove record ID, changes 66% comment 33%
