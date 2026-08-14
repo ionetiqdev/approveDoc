@@ -133,6 +133,7 @@ const SidebarHtml = (() => {
             <ul class="nav-submenu list-unstyled" id="adminSubmenu">
               <li class="nav-item role-hidden" data-require-role="super_admin"><a href="${root}pages/admin/organisations.html" class="nav-link"><span class="nav-link-text">Organisations</span></a></li>
               <li class="nav-item"><a href="${root}pages/admin/users.html" class="nav-link"><span class="nav-link-text">Users</span></a></li>
+              <li class="nav-item"><a href="${root}pages/admin/audit.html" class="nav-link"><span class="nav-link-text">Audit Trail</span></a></li>
               <li class="nav-item">
                 <a href="#" class="nav-link" data-submenu="lookupsSubmenu">
                   <span class="nav-link-text">Lookups</span>
