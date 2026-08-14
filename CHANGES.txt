@@ -1,1 +1,1 @@
-Add supabase/dev-data-migration.sql — full data dump from production for dev project setup
+feature/auditing: clean audit trail on dev — audit_log table + 15 triggers
