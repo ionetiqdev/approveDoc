@@ -1,1 +1,1 @@
-Audit Trail: add pages/admin/audit.html with filters, pagination, diff view; add to sidebar under Admin
+deploy.bat: substitute Supabase credentials from project.conf based on branch (main vs dev)

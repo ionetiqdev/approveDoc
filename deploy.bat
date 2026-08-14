@@ -176,7 +176,25 @@ if errorlevel 1 (
 
 del "BUILD_TIMESTAMP.txt" 2>nul
 
-:: ── Step 5: switch to the right branch, commit, push ──
+:: ── Step 4b: substitute Supabase credentials ──
+:: Select credentials based on branch
+if "%BRANCH%"=="main" (
+  set "SUPABASE_URL=%SUPABASE_URL_MAIN%"
+  set "SUPABASE_ANON_KEY=%SUPABASE_ANON_KEY_MAIN%"
+) else (
+  set "SUPABASE_URL=%SUPABASE_URL_DEV%"
+  set "SUPABASE_ANON_KEY=%SUPABASE_ANON_KEY_DEV%"
+)
+
+if "%SUPABASE_URL%"=="" (
+  echo WARNING: SUPABASE_URL not set in project.conf - credentials not substituted.
+  echo          Add SUPABASE_URL_MAIN and SUPABASE_URL_DEV to project.conf
+) else (
+  echo Substituting Supabase credentials for branch: %BRANCH%
+  powershell -NoProfile -ExecutionPolicy Bypass -Command ^
+    "(Get-Content 'assets\js\supabase-client.js') -replace '\{\{SUPABASE_URL\}\}', '%SUPABASE_URL%' -replace '\{\{SUPABASE_ANON_KEY\}\}', '%SUPABASE_ANON_KEY%' | Set-Content 'assets\js\supabase-client.js'"
+  echo Supabase credentials substituted.
+)
 
 :: Find out what branch we're actually on right now
 for /f "delims=" %%C in ('git rev-parse --abbrev-ref HEAD 2^>nul') do set CURRENT_BRANCH=%%C
@@ -247,6 +265,10 @@ set DOWNLOADS_DIR=
 set WORKING_DIR=
 set GITHUB_REPO_URL=
 set SUPABASE_PROJECT_NAME=
+set SUPABASE_URL_MAIN=
+set SUPABASE_ANON_KEY_MAIN=
+set SUPABASE_URL_DEV=
+set SUPABASE_ANON_KEY_DEV=
 
 if exist "project.conf" (
   for /f "usebackq tokens=1,* delims==" %%A in ("project.conf") do (
@@ -257,6 +279,10 @@ if exist "project.conf" (
     if "%%A"=="WORKING_DIR"            set "WORKING_DIR=%%B"
     if "%%A"=="GITHUB_REPO_URL"        set "GITHUB_REPO_URL=%%B"
     if "%%A"=="SUPABASE_PROJECT_NAME"  set "SUPABASE_PROJECT_NAME=%%B"
+    if "%%A"=="SUPABASE_URL_MAIN"      set "SUPABASE_URL_MAIN=%%B"
+    if "%%A"=="SUPABASE_ANON_KEY_MAIN" set "SUPABASE_ANON_KEY_MAIN=%%B"
+    if "%%A"=="SUPABASE_URL_DEV"       set "SUPABASE_URL_DEV=%%B"
+    if "%%A"=="SUPABASE_ANON_KEY_DEV"  set "SUPABASE_ANON_KEY_DEV=%%B"
   )
 )
 
