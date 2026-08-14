@@ -1,1 +1,1 @@
-Audit UI: date format YYYY-MM-DD HH:MM:SS, action coloured pills, remove record ID, changes 66% comment 33%
+Audit UI: wider User (160px) and Table (180px) columns, Changes/Comment share remainder 66/33
