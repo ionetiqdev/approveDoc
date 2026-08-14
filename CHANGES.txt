@@ -1,1 +1,1 @@
-Audit UI: wider User (160px) and Table (180px) columns, Changes/Comment share remainder 66/33
+Audit UI: table-layout fixed with colgroup, wider User/Table, Changes/Comment fluid 66/33

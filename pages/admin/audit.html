@@ -119,15 +119,23 @@
             </div>
           </div>
           <div class="table-responsive">
-            <table class="table table-vcenter table-hover card-table mb-0">
+            <table class="table table-vcenter table-hover card-table mb-0" style="table-layout:fixed;width:100%">
+              <colgroup>
+                <col style="width:155px">
+                <col style="width:240px">
+                <col style="width:80px">
+                <col style="width:270px">
+                <col style="width:66%">
+                <col style="width:33%">
+              </colgroup>
               <thead>
                 <tr>
-                  <th style="width:155px">When</th>
-                  <th style="width:160px">User</th>
-                  <th style="width:80px">Action</th>
-                  <th style="width:180px">Table</th>
-                  <th style="width:66%">Changes</th>
-                  <th style="width:33%">Comment</th>
+                  <th>When</th>
+                  <th>User</th>
+                  <th>Action</th>
+                  <th>Table</th>
+                  <th>Changes</th>
+                  <th>Comment</th>
                 </tr>
               </thead>
               <tbody id="auditBody">
@@ -258,10 +266,10 @@ async function loadPage(page) {
     const actionPill = renderActionPill(row.action);
     const changes = renderChanges(row);
     return `<tr>
-      <td class="text-secondary small" style="white-space:nowrap">${App.escHtml(when)}</td>
-      <td class="small">${App.escHtml(userName)}</td>
+      <td class="text-secondary small" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${App.escHtml(when)}</td>
+      <td class="small" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${App.escHtml(userName)}</td>
       <td>${actionPill}</td>
-      <td class="text-secondary small">${App.escHtml(row.table_name)}</td>
+      <td class="text-secondary small" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${App.escHtml(row.table_name)}</td>
       <td>${changes}</td>
       <td class="text-secondary small">${App.escHtml(row.comment || '')}</td>
     </tr>`;
