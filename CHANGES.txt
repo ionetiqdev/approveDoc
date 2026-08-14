@@ -1,1 +1,1 @@
-feature/auditing: clean audit trail on dev — audit_log table + 15 triggers
+Deploy workflow: exclude pdfjs, mobile, mkdocs-site from FTP; increase timeout to 30min
