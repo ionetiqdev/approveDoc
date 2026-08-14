@@ -1,1 +1,1 @@
-feature/auditing: add audit trail framework — audit_log table, triggers on 13 tables, set_audit_comment, audit_custom, audit_log_view
+feature/auditing: clean audit trail on dev — audit_log table + 15 triggers
