@@ -1,1 +1,1 @@
-deploy.bat: substitute Supabase credentials from project.conf based on branch (main vs dev)
+deploy.bat: substitute Supabase credentials on server AFTER git push so placeholders stay in git
