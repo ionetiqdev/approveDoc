@@ -103,7 +103,12 @@ echo Looking for %PROJECT_CODE%_*.zip in %DOWNLOADS_DIR% ...
 set LATEST_ZIP=
 set LATEST_EPOCH=-1
 for %%F in ("%DOWNLOADS_DIR%\%PROJECT_CODE%_*.zip") do (
-  call :ParseZipTimestamp "%%~nF" EPOCH
+  set "FNAME=%%~nF"
+  for /f "tokens=2,3 delims=_" %%a in ("%%~nF") do (
+    set "DP=%%a"
+    set "TP=%%b"
+  )
+  set /a EPOCH=(!DP:~4,4!*100000000) + (!DP:~2,2!*1000000) + (!DP:~0,2!*10000) + !TP!
   if !EPOCH! GTR !LATEST_EPOCH! (
     set LATEST_EPOCH=!EPOCH!
     set LATEST_ZIP=%%~fF
@@ -355,29 +360,3 @@ if "%PROJECT_CODE%"=="" (
 )
 exit /b 0
 
-
-:: ============================================================
-:: Parses a zip's base filename (no extension) of the form
-:: {code}_DDMMYYYY_HHmm into a single comparable integer
-:: (YYYYMMDDHHmm, so plain integer comparison sorts correctly
-:: across month/year boundaries even though the filename itself
-:: stays in DDMMYYYY order for human readability).
-:: ============================================================
-:: %1 = base filename (e.g. "acme_25062026_1501")
-:: %2 = variable name to receive the result
-:: ============================================================
-:ParseZipTimestamp
-set "NAME=%~1"
-set "DATEPART="
-set "TIMEPART="
-for /f "tokens=2,3 delims=_" %%a in ("%NAME%") do (
-  set "DATEPART=%%a"
-  set "TIMEPART=%%b"
-)
-if "%DATEPART%"=="" ( set "%~2=-1" & exit /b )
-if "%TIMEPART%"=="" ( set "%~2=-1" & exit /b )
-set "DD=%DATEPART:~0,2%"
-set "MM=%DATEPART:~2,2%"
-set "YYYY=%DATEPART:~4,4%"
-set /a %~2=(%YYYY%*100000000) + (%MM%*1000000) + (%DD%*10000) + %TIMEPART%
-exit /b

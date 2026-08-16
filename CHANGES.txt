@@ -1,1 +1,1 @@
-deploy.bat: fix ParseZipTimestamp label not found error caused by nested setlocal
+deploy.bat: fix ParseZipTimestamp error by inlining logic - remove subroutine call incompatible with ENABLEDELAYEDEXPANSION
