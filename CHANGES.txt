@@ -1,1 +1,1 @@
-deploy.bat: fix octal error in ParseZipTimestamp by stripping leading zeros before arithmetic
+Sidebar v2: tooltips on collapsed icons, floating submenu panel from collapsed state

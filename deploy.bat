@@ -236,7 +236,8 @@ echo Done. Pushed to %BRANCH%.
 :: but the live server file gets the real credentials.
 if not "%SUPABASE_URL%"=="" (
   echo Substituting Supabase credentials on server...
-  powershell -NoProfile -ExecutionPolicy Bypass -File "%~dp0substitute-credentials.ps1" -Url "%SUPABASE_URL%" -AnonKey "%SUPABASE_ANON_KEY%"
+  powershell -NoProfile -ExecutionPolicy Bypass -Command ^
+    "(Get-Content 'assets\js\supabase-client.js') -replace '\{\{SUPABASE_URL\}\}', '%SUPABASE_URL%' -replace '\{\{SUPABASE_ANON_KEY\}\}', '%SUPABASE_ANON_KEY%' | Set-Content 'assets\js\supabase-client.js'"
   echo Credentials substituted. Server is live.
 ) else (
   echo WARNING: SUPABASE_URL not found in project.conf - server credentials NOT substituted.
@@ -356,7 +357,11 @@ exit /b 0
 
 
 :: ============================================================
-:: Parses a zip base filename into a comparable integer
+:: Parses a zip's base filename (no extension) of the form
+:: {code}_DDMMYYYY_HHmm into a single comparable integer
+:: (YYYYMMDDHHmm, so plain integer comparison sorts correctly
+:: across month/year boundaries even though the filename itself
+:: stays in DDMMYYYY order for human readability).
 :: %1 = base filename (e.g. "acme_25062026_1501")
 :: %2 = variable name to receive the result
 :: ============================================================
@@ -372,13 +377,6 @@ if "%TIMEPART%"=="" (endlocal & set "%~2=-1" & exit /b)
 set "DD=%DATEPART:~0,2%"
 set "MM=%DATEPART:~2,2%"
 set "YYYY=%DATEPART:~4,4%"
-set "HH=%TIMEPART:~0,2%"
-set "MI=%TIMEPART:~2,2%"
-:: Strip leading zeros to avoid octal interpretation
-if "%DD:~0,1%"=="0" set "DD=%DD:~1%"
-if "%MM:~0,1%"=="0" set "MM=%MM:~1%"
-if "%HH:~0,1%"=="0" set "HH=%HH:~1%"
-if "%MI:~0,1%"=="0" set "MI=%MI:~1%"
-set /a RESULT=(%YYYY%*100000000) + (%MM%*1000000) + (%DD%*10000) + (%HH%*100) + %MI%
+set /a RESULT=(%YYYY%*100000000) + (%MM%*1000000) + (%DD%*10000) + %TIMEPART%
 endlocal & set "%~2=%RESULT%"
 exit /b
