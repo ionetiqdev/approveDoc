@@ -355,3 +355,57 @@ header .navbar-brand.page-title-lg {
 header [data-user-initials] {
   margin-left: 10px !important;
 }
+
+/* ── Collapsed sidebar: tooltips ─────────────────────────────────────────── */
+/* Show nav-link-text as a tooltip on hover when sidebar is collapsed */
+#sidebar.collapsed .nav-link[data-tippy],
+#sidebar.collapsed .sidebar-footer .nav-link[data-tippy] {
+  position: relative;
+}
+
+/* Floating submenu panel from collapsed sidebar */
+.sidebar-float-menu {
+  position: fixed;
+  left: var(--sidebar-width-collapsed);
+  background: var(--bg-sidebar);
+  color: var(--sidebar-fg);
+  border-radius: .375rem;
+  box-shadow: 0 4px 24px rgba(0,0,0,.18);
+  min-width: 180px;
+  padding: .4rem 0;
+  z-index: 1080;
+  opacity: 0;
+  pointer-events: none;
+  transform: translateX(-6px);
+  transition: opacity .15s, transform .15s;
+}
+.sidebar-float-menu.visible {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateX(0);
+}
+.sidebar-float-menu .float-menu-title {
+  font-size: .7rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: .05em;
+  padding: .3rem .9rem .2rem;
+  opacity: .5;
+}
+.sidebar-float-menu .nav-link {
+  display: flex;
+  align-items: center;
+  padding: .4rem .9rem;
+  color: var(--sidebar-fg);
+  text-decoration: none;
+  font-size: .85rem;
+  white-space: nowrap;
+  gap: .5rem;
+}
+.sidebar-float-menu .nav-link:hover {
+  background: rgba(var(--sidebar-fg-rgb), .08);
+}
+.sidebar-float-menu .nav-link.active {
+  color: var(--tblr-primary);
+  font-weight: 600;
+}

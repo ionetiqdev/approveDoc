@@ -1,1 +1,1 @@
-Audit UI: add User filter picklist, sortable columns with direction indicators
+Sidebar v2: tooltips on collapsed icons, floating submenu panel from collapsed state
