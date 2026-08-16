@@ -1,1 +1,1 @@
-Sidebar v2: tooltips on collapsed icons, floating submenu panel from collapsed state
+Restore working deploy with credential substitution via ps1 script
