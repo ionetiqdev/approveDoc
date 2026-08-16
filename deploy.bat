@@ -362,21 +362,22 @@ exit /b 0
 :: (YYYYMMDDHHmm, so plain integer comparison sorts correctly
 :: across month/year boundaries even though the filename itself
 :: stays in DDMMYYYY order for human readability).
+:: ============================================================
 :: %1 = base filename (e.g. "acme_25062026_1501")
 :: %2 = variable name to receive the result
 :: ============================================================
 :ParseZipTimestamp
-setlocal
 set "NAME=%~1"
+set "DATEPART="
+set "TIMEPART="
 for /f "tokens=2,3 delims=_" %%a in ("%NAME%") do (
   set "DATEPART=%%a"
   set "TIMEPART=%%b"
 )
-if "%DATEPART%"=="" (endlocal & set "%~2=-1" & exit /b)
-if "%TIMEPART%"=="" (endlocal & set "%~2=-1" & exit /b)
+if "%DATEPART%"=="" ( set "%~2=-1" & exit /b )
+if "%TIMEPART%"=="" ( set "%~2=-1" & exit /b )
 set "DD=%DATEPART:~0,2%"
 set "MM=%DATEPART:~2,2%"
 set "YYYY=%DATEPART:~4,4%"
-set /a RESULT=(%YYYY%*100000000) + (%MM%*1000000) + (%DD%*10000) + %TIMEPART%
-endlocal & set "%~2=%RESULT%"
+set /a %~2=(%YYYY%*100000000) + (%MM%*1000000) + (%DD%*10000) + %TIMEPART%
 exit /b

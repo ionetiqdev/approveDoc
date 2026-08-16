@@ -1,1 +1,1 @@
-Sidebar v2: tooltips on collapsed icons, floating submenu panel from collapsed state
+deploy.bat: fix ParseZipTimestamp label not found error caused by nested setlocal
