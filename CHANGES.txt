@@ -1,1 +1,1 @@
-deploy.bat: fix ParseZipTimestamp error by inlining logic - remove subroutine call incompatible with ENABLEDELAYEDEXPANSION
+deploy.bat: move credential substitution to ps1 script to avoid cmd.exe parsing issues with URLs

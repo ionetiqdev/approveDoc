@@ -103,12 +103,7 @@ echo Looking for %PROJECT_CODE%_*.zip in %DOWNLOADS_DIR% ...
 set LATEST_ZIP=
 set LATEST_EPOCH=-1
 for %%F in ("%DOWNLOADS_DIR%\%PROJECT_CODE%_*.zip") do (
-  set "FNAME=%%~nF"
-  for /f "tokens=2,3 delims=_" %%a in ("%%~nF") do (
-    set "DP=%%a"
-    set "TP=%%b"
-  )
-  set /a EPOCH=(!DP:~4,4!*100000000) + (!DP:~2,2!*1000000) + (!DP:~0,2!*10000) + !TP!
+  call :ParseZipTimestamp "%%~nF" EPOCH
   if !EPOCH! GTR !LATEST_EPOCH! (
     set LATEST_EPOCH=!EPOCH!
     set LATEST_ZIP=%%~fF
@@ -241,8 +236,7 @@ echo Done. Pushed to %BRANCH%.
 :: but the live server file gets the real credentials.
 if not "%SUPABASE_URL%"=="" (
   echo Substituting Supabase credentials on server...
-  powershell -NoProfile -ExecutionPolicy Bypass -Command ^
-    "(Get-Content 'assets\js\supabase-client.js') -replace '\{\{SUPABASE_URL\}\}', '%SUPABASE_URL%' -replace '\{\{SUPABASE_ANON_KEY\}\}', '%SUPABASE_ANON_KEY%' | Set-Content 'assets\js\supabase-client.js'"
+  powershell -NoProfile -ExecutionPolicy Bypass -File "%~dp0substitute-credentials.ps1" -Url "%SUPABASE_URL%" -AnonKey "%SUPABASE_ANON_KEY%"
   echo Credentials substituted. Server is live.
 ) else (
   echo WARNING: SUPABASE_URL not found in project.conf - server credentials NOT substituted.
@@ -360,3 +354,24 @@ if "%PROJECT_CODE%"=="" (
 )
 exit /b 0
 
+
+:: ============================================================
+:: Parses a zip base filename into a comparable integer
+:: %1 = base filename (e.g. "acme_25062026_1501")
+:: %2 = variable name to receive the result
+:: ============================================================
+:ParseZipTimestamp
+setlocal
+set "NAME=%~1"
+for /f "tokens=2,3 delims=_" %%a in ("%NAME%") do (
+  set "DATEPART=%%a"
+  set "TIMEPART=%%b"
+)
+if "%DATEPART%"=="" (endlocal & set "%~2=-1" & exit /b)
+if "%TIMEPART%"=="" (endlocal & set "%~2=-1" & exit /b)
+set "DD=%DATEPART:~0,2%"
+set "MM=%DATEPART:~2,2%"
+set "YYYY=%DATEPART:~4,4%"
+set /a RESULT=(%YYYY%*100000000) + (%MM%*1000000) + (%DD%*10000) + %TIMEPART%
+endlocal & set "%~2=%RESULT%"
+exit /b
