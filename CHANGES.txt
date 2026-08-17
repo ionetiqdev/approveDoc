@@ -1,1 +1,1 @@
-Restore working deploy with credential substitution via ps1 script
+Restore: sidebar v2, audit trail UI, credential substitution, all working
