@@ -1,1 +1,1 @@
-Audit UI: dynamic PAGE_SIZE from actual rendered row height, re-renders on resize
+Audit UI: use tallest row height for page size calculation to eliminate gap

@@ -222,9 +222,12 @@ function calcPageSize() {
   const thead = document.querySelector('.audit-table-wrap thead');
   if (!wrap || !thead) return false;
   const available = wrap.clientHeight - thead.offsetHeight;
-  // Measure a real rendered row if one exists
-  const firstRow = wrap.querySelector('tbody tr');
-  const rowH = firstRow ? firstRow.offsetHeight : 38;
+  // Measure the tallest rendered row for worst-case calculation
+  const rows = wrap.querySelectorAll('tbody tr');
+  let rowH = 38;
+  if (rows.length) {
+    rowH = Math.max(...[...rows].map(r => r.offsetHeight));
+  }
   const newSize = Math.max(5, Math.floor(available / rowH));
   if (newSize !== PAGE_SIZE) { PAGE_SIZE = newSize; return true; }
   return false;
