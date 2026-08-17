@@ -158,7 +158,47 @@
     </div>
   </div>
 
-  <script src="https://cdn.jsdelivr.net/npm/@tabler/core@1.4.0/dist/js/tabler.min.js"></script>
+  <!-- Detail modal -->
+  <div class="modal modal-blur fade" id="auditDetailModal" tabindex="-1">
+    <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Audit Record Detail</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body p-0">
+          <div class="p-3 border-bottom d-flex gap-3 flex-wrap">
+            <span class="text-secondary small"><strong>When:</strong> <span id="modalWhen"></span></span>
+            <span class="text-secondary small"><strong>User:</strong> <span id="modalUser"></span></span>
+            <span class="text-secondary small"><strong>Action:</strong> <span id="modalAction"></span></span>
+            <span class="text-secondary small"><strong>Table:</strong> <span id="modalTable"></span></span>
+            <span class="text-secondary small"><strong>Record:</strong> <span id="modalRecord" style="font-family:monospace;font-size:.75rem"></span></span>
+          </div>
+          <div id="modalChangesWrap" class="p-3 border-bottom">
+            <h6 class="text-secondary mb-2" style="font-size:.75rem;text-transform:uppercase;letter-spacing:.05em">Changes</h6>
+            <div id="modalChanges"></div>
+          </div>
+          <div class="row g-0">
+            <div class="col-6 p-3 border-end">
+              <h6 class="text-secondary mb-2" style="font-size:.75rem;text-transform:uppercase;letter-spacing:.05em">Before</h6>
+              <pre id="modalBefore" class="mb-0" style="font-size:.75rem;max-height:300px;overflow-y:auto;white-space:pre-wrap;word-break:break-all"></pre>
+            </div>
+            <div class="col-6 p-3">
+              <h6 class="text-secondary mb-2" style="font-size:.75rem;text-transform:uppercase;letter-spacing:.05em">After</h6>
+              <pre id="modalAfter" class="mb-0" style="font-size:.75rem;max-height:300px;overflow-y:auto;white-space:pre-wrap;word-break:break-all"></pre>
+            </div>
+          </div>
+          <div class="p-3 border-top" id="modalCommentWrap">
+            <h6 class="text-secondary mb-1" style="font-size:.75rem;text-transform:uppercase;letter-spacing:.05em">Comment</h6>
+            <p id="modalComment" class="mb-0 small"></p>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+        </div>
+      </div>
+    </div>
+  </div>
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="../../assets/js/version.js"></script>
@@ -313,12 +353,12 @@ async function loadPage(page) {
     (profiles || []).forEach(p => { userCache[p.id] = p.display_name; });
   }
 
-  tbody.innerHTML = data.map(row => {
+  tbody.innerHTML = data.map((row, i) => {
     const userName   = row.user_id ? (userCache[row.user_id] || row.user_id.slice(0,8) + '...') : 'System';
     const when       = formatAuditDate(row.created_at);
     const actionPill = renderActionPill(row.action);
     const changes    = renderChanges(row);
-    return `<tr>
+    return `<tr style="cursor:pointer" data-row-idx="${i}">
       <td class="text-secondary small" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${App.escHtml(when)}</td>
       <td class="small" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${App.escHtml(userName)}</td>
       <td>${actionPill}</td>
@@ -327,6 +367,12 @@ async function loadPage(page) {
       <td class="text-secondary small">${App.escHtml(row.comment || '')}</td>
     </tr>`;
   }).join('');
+
+  // Store data for detail modal and wire double-click
+  tbody._rowData = data;
+  tbody.querySelectorAll('tr[data-row-idx]').forEach(tr => {
+    tr.addEventListener('dblclick', () => openDetail(tbody._rowData[+tr.dataset.rowIdx], tbody._rowData[+tr.dataset.rowIdx].user_id ? (userCache[tbody._rowData[+tr.dataset.rowIdx].user_id] || 'Unknown') : 'System'));
+  });
 }
 
 function renderPagination(page, totalPages) {
@@ -396,6 +442,26 @@ function renderChanges(row) {
   }
   if (row.action === 'CUSTOM') return `<span class="text-secondary small">${App.escHtml(row.comment || '-')}</span>`;
   return '';
+}
+
+function openDetail(row, userName) {
+  document.getElementById('modalWhen').textContent    = formatAuditDate(row.created_at);
+  document.getElementById('modalUser').textContent    = userName;
+  document.getElementById('modalAction').innerHTML    = renderActionPill(row.action);
+  document.getElementById('modalTable').textContent   = row.table_name;
+  document.getElementById('modalRecord').textContent  = row.record_id;
+  document.getElementById('modalBefore').textContent  = row.old_values ? JSON.stringify(row.old_values, null, 2) : '—';
+  document.getElementById('modalAfter').textContent   = row.new_values ? JSON.stringify(row.new_values, null, 2) : '—';
+  document.getElementById('modalChanges').innerHTML   = renderChanges(row) || '<span class="text-secondary small">—</span>';
+  const commentWrap = document.getElementById('modalCommentWrap');
+  const commentEl   = document.getElementById('modalComment');
+  if (row.comment) {
+    commentEl.textContent = row.comment;
+    commentWrap.style.display = '';
+  } else {
+    commentWrap.style.display = 'none';
+  }
+  bootstrap.Modal.getOrCreate(document.getElementById('auditDetailModal')).show();
 }
 
 function summarise(obj) {

@@ -1,1 +1,1 @@
-Audit UI: action filter with distinct list, datetime filters, clear button, full pagination with << < 1 2 ... > >>
+Audit UI: double-click row opens detail modal with formatted JSON before/after, changes diff, comment
