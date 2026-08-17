@@ -1,1 +1,1 @@
-Audit: fix Bootstrap Modal.getOrCreate -> getOrCreateInstance
+Audiences: improve audit_custom error logging

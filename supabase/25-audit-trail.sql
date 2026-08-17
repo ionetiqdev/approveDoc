@@ -56,6 +56,8 @@ begin
     v_new := to_jsonb(NEW); v_old := null; v_row := v_new;
   elsif TG_OP = 'UPDATE' then
     v_old := to_jsonb(OLD); v_new := to_jsonb(NEW); v_row := v_new;
+    -- Skip if nothing actually changed
+    if v_old = v_new then return NEW; end if;
   else
     v_old := to_jsonb(OLD); v_new := null; v_row := v_old;
   end if;
