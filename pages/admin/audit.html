@@ -34,7 +34,7 @@
     html, body { height: 100%; overflow: hidden; }
     .app-content-wrapper { height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
     .page-body { flex: 1; min-height: 0; display: flex; flex-direction: column; overflow: hidden; padding: .75rem; gap: .75rem; }
-    .audit-card { flex: 1; min-height: 0; display: flex; flex-direction: column; overflow: hidden; }
+    .audit-card { flex: 1 !important; min-height: 0 !important; display: flex !important; flex-direction: column !important; overflow: hidden !important; }
     .audit-card .card-header { flex-shrink: 0; }
     .audit-card .card-footer { flex-shrink: 0; }
     .audit-table-wrap { flex: 1; min-height: 0; overflow: hidden; }
@@ -115,7 +115,7 @@
       </div>
 
       <!-- Results -->
-      <div class="card audit-card" style="height:100%">
+      <div class="card audit-card">
         <div class="card-header py-2">
           <h3 class="card-title">Audit Log</h3>
           <div class="card-options">

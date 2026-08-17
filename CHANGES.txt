@@ -1,1 +1,1 @@
-Audit UI: hardcode PAGE_SIZE 14 based on actual measured row heights
+Audit UI: force card flex layout with !important to override Tabler defaults
