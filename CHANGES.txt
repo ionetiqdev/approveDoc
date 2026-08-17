@@ -1,1 +1,1 @@
-Audit UI: no vertical scroll on table, PAGE_SIZE calculated from available height, reflows on window resize
+Audit UI: fixed PAGE_SIZE 25, table scrolls within card, no dynamic height calculation
