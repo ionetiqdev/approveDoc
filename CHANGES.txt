@@ -1,1 +1,1 @@
-Audit UI: force card flex layout with !important to override Tabler defaults
+Audit UI: set table height 100% to fill wrapper
