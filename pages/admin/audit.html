@@ -210,12 +210,25 @@
   <script src="../../assets/js/profile-modal.js"></script>
   <script src="../../assets/js/status-widget.js"></script>
   <script>
-const PAGE_SIZE = 15;
+let PAGE_SIZE = 20;
 let currentPage = 0;
 let totalCount  = 0;
 let userCache   = {};
 let sortCol     = 'created_at';
 let sortAsc     = false;
+
+function calcPageSize() {
+  const wrap  = document.querySelector('.audit-table-wrap');
+  const thead = document.querySelector('.audit-table-wrap thead');
+  if (!wrap || !thead) return false;
+  const available = wrap.clientHeight - thead.offsetHeight;
+  // Measure a real rendered row if one exists
+  const firstRow = wrap.querySelector('tbody tr');
+  const rowH = firstRow ? firstRow.offsetHeight : 38;
+  const newSize = Math.max(5, Math.floor(available / rowH));
+  if (newSize !== PAGE_SIZE) { PAGE_SIZE = newSize; return true; }
+  return false;
+}
 
 (async () => {
   const session = await Auth.requireAuth();
@@ -234,8 +247,12 @@ let sortAsc     = false;
   await loadTableList();
   await loadUserList();
   await loadPage(0);
+  // After first render, measure actual row height and recalculate
+  if (calcPageSize()) await loadPage(0);
 
-  window.addEventListener('resize', () => loadPage(currentPage));
+  window.addEventListener('resize', async () => {
+    if (calcPageSize()) await loadPage(currentPage);
+  });
 
   document.getElementById('applyFilters').addEventListener('click', () => loadPage(0));
   document.getElementById('clearFilters').addEventListener('click', () => {

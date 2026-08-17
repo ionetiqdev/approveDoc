@@ -1,1 +1,1 @@
-Audit UI: fix vertical scrollbar - overflow hidden on table wrap, PAGE_SIZE 15
+Audit UI: dynamic PAGE_SIZE from actual rendered row height, re-renders on resize
