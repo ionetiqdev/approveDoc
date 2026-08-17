@@ -26,24 +26,26 @@
           document.documentElement.style.setProperty('--tblr-primary-rgb', parseInt(ah.slice(0,2),16) + ', ' + parseInt(ah.slice(2,4),16) + ', ' + parseInt(ah.slice(4,6),16));
         }
         var sidebarBg = localStorage.getItem('app_sidebar_bg' + suffix);
-        if (sidebarBg) {
-          document.documentElement.style.setProperty('--bg-sidebar', sidebarBg);
-        }
+        if (sidebarBg) document.documentElement.style.setProperty('--bg-sidebar', sidebarBg);
       } catch(e) {}
     })();
   </script>
   <style>
     html, body { height: 100%; overflow: hidden; }
-    .app-content-wrapper { height: 100vh; display: flex; flex-direction: column; }
-    .page-body { flex: 1; min-height: 0; overflow-y: auto; }
-    .audit-action-INSERT  { color: #2fb344; }
-    .audit-action-UPDATE  { color: #f76707; }
-    .audit-action-DELETE  { color: #d63939; }
-    .audit-action-CUSTOM  { color: #4263eb; }
-    .json-diff { font-size: .75rem; font-family: monospace; max-height: 200px; overflow-y: auto; }
+    .app-content-wrapper { height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
+    .page-body { flex: 1; min-height: 0; display: flex; flex-direction: column; overflow: hidden; padding: .75rem; gap: .75rem; }
+    .audit-card { flex: 1; min-height: 0; display: flex; flex-direction: column; }
+    .audit-table-wrap { flex: 1; min-height: 0; overflow-y: auto; }
+    .json-diff { font-size: .72rem; font-family: monospace; max-height: 160px; overflow-y: auto; }
     .diff-added   { background: rgba(47,179,68,.12);  border-left: 3px solid #2fb344; padding: 2px 6px; }
     .diff-removed { background: rgba(214,57,57,.12);  border-left: 3px solid #d63939; padding: 2px 6px; }
-    .diff-same    { background: transparent; padding: 2px 6px; color: var(--tblr-secondary-color); }
+    .sortable-col { cursor: pointer; user-select: none; white-space: nowrap; }
+    .sortable-col:hover { background: rgba(var(--tblr-body-color-rgb),.04); }
+    /* Pagination */
+    .pagination { margin: 0; gap: 2px; }
+    .pagination .page-link { min-width: 32px; text-align: center; padding: .25rem .5rem; font-size: .8rem; }
+    .pagination .page-item.active .page-link { background: var(--tblr-primary); border-color: var(--tblr-primary); color: #fff; }
+    .pagination .page-item.disabled .page-link { opacity: .4; }
   </style>
 </head>
 <body>
@@ -69,100 +71,90 @@
     </header>
 
     <div class="page-body">
-      <div class="container-fluid py-3">
 
-        <!-- Filters -->
-        <div class="card mb-3">
-          <div class="card-body">
-            <div class="row g-2 align-items-end">
-              <div class="col-md-2">
-                <label class="form-label">Action</label>
-                <select id="filterAction" class="form-select form-select-sm">
-                  <option value="">All</option>
-                  <option value="INSERT">Insert</option>
-                  <option value="UPDATE">Update</option>
-                  <option value="DELETE">Delete</option>
-                  <option value="CUSTOM">Custom</option>
-                </select>
-              </div>
-              <div class="col-md-2">
-                <label class="form-label">Table</label>
-                <select id="filterTable" class="form-select form-select-sm">
-                  <option value="">All tables</option>
-                </select>
-              </div>
-              <div class="col-md-2">
-                <label class="form-label">User</label>
-                <select id="filterUser" class="form-select form-select-sm">
-                  <option value="">All users</option>
-                </select>
-              </div>
-              <div class="col-md-1">
-                <label class="form-label">From</label>
-                <input type="date" id="filterFrom" class="form-control form-control-sm" />
-              </div>
-              <div class="col-md-1">
-                <label class="form-label">To</label>
-                <input type="date" id="filterTo" class="form-control form-control-sm" />
-              </div>
-              <div class="col-md-2">
-                <label class="form-label">Search comment</label>
-                <input type="text" id="filterSearch" class="form-control form-control-sm" placeholder="Keyword..." />
-              </div>
-              <div class="col-md-1 d-flex gap-2">
-                <button class="btn btn-primary btn-sm w-100" id="applyFilters">Filter</button>
-              </div>
+      <!-- Filters -->
+      <div class="card flex-shrink-0">
+        <div class="card-body py-2">
+          <div class="row g-2 align-items-end">
+            <div class="col-md-2">
+              <label class="form-label mb-1">Action</label>
+              <select id="filterAction" class="form-select form-select-sm"></select>
+            </div>
+            <div class="col-md-2">
+              <label class="form-label mb-1">Table</label>
+              <select id="filterTable" class="form-select form-select-sm">
+                <option value="">All tables</option>
+              </select>
+            </div>
+            <div class="col-md-2">
+              <label class="form-label mb-1">User</label>
+              <select id="filterUser" class="form-select form-select-sm">
+                <option value="">All users</option>
+              </select>
+            </div>
+            <div class="col-md-2">
+              <label class="form-label mb-1">From</label>
+              <input type="datetime-local" id="filterFrom" class="form-control form-control-sm" />
+            </div>
+            <div class="col-md-2">
+              <label class="form-label mb-1">To</label>
+              <input type="datetime-local" id="filterTo" class="form-control form-control-sm" />
+            </div>
+            <div class="col-md-1">
+              <label class="form-label mb-1">Search</label>
+              <input type="text" id="filterSearch" class="form-control form-control-sm" placeholder="Comment..." />
+            </div>
+            <div class="col-md-1 d-flex gap-1">
+              <button class="btn btn-primary btn-sm flex-grow-1" id="applyFilters">Filter</button>
+              <button class="btn btn-outline-secondary btn-sm" id="clearFilters" title="Clear filters"><i class="ti ti-x"></i></button>
             </div>
           </div>
         </div>
-
-        <!-- Results -->
-        <div class="card">
-          <div class="card-header">
-            <h3 class="card-title">Audit Log</h3>
-            <div class="card-options">
-              <span class="text-secondary small" id="resultCount"></span>
-            </div>
-          </div>
-          <div class="table-responsive">
-            <table class="table table-vcenter table-hover card-table mb-0" style="table-layout:fixed;width:100%">
-              <colgroup>
-                <col style="width:155px">
-                <col style="width:240px">
-                <col style="width:80px">
-                <col style="width:270px">
-                <col style="width:66%">
-                <col style="width:33%">
-              </colgroup>
-              <thead>
-                <tr>
-                  <th class="sortable-col" data-col="created_at" style="cursor:pointer">When <span class="sort-icon">↓</span></th>
-                  <th class="sortable-col" data-col="user_id" style="cursor:pointer">User <span class="sort-icon"></span></th>
-                  <th class="sortable-col" data-col="action" style="cursor:pointer">Action <span class="sort-icon"></span></th>
-                  <th class="sortable-col" data-col="table_name" style="cursor:pointer">Table <span class="sort-icon"></span></th>
-                  <th>Changes</th>
-                  <th class="sortable-col" data-col="comment" style="cursor:pointer">Comment <span class="sort-icon"></span></th>
-                </tr>
-              </thead>
-              <tbody id="auditBody">
-                <tr><td colspan="6" class="text-center py-4 text-secondary">
-                  <div class="spinner-border spinner-border-sm me-2"></div>Loading...
-                </td></tr>
-              </tbody>
-            </table>
-          </div>
-          <div class="card-footer d-flex justify-content-between align-items-center">
-            <button class="btn btn-sm btn-outline-secondary" id="prevPage" disabled>
-              <i class="ti ti-chevron-left"></i> Previous
-            </button>
-            <span class="text-secondary small" id="pageInfo"></span>
-            <button class="btn btn-sm btn-outline-secondary" id="nextPage" disabled>
-              Next <i class="ti ti-chevron-right"></i>
-            </button>
-          </div>
-        </div>
-
       </div>
+
+      <!-- Results -->
+      <div class="card audit-card">
+        <div class="card-header py-2">
+          <h3 class="card-title">Audit Log</h3>
+          <div class="card-options">
+            <span class="text-secondary small" id="resultCount"></span>
+          </div>
+        </div>
+        <div class="audit-table-wrap">
+          <table class="table table-vcenter table-hover card-table mb-0" style="table-layout:fixed;width:100%">
+            <colgroup>
+              <col style="width:155px">
+              <col style="width:240px">
+              <col style="width:80px">
+              <col style="width:270px">
+              <col style="width:66%">
+              <col style="width:33%">
+            </colgroup>
+            <thead>
+              <tr>
+                <th class="sortable-col" data-col="created_at">When <span class="sort-icon">↓</span></th>
+                <th class="sortable-col" data-col="user_id">User <span class="sort-icon"></span></th>
+                <th class="sortable-col" data-col="action">Action <span class="sort-icon"></span></th>
+                <th class="sortable-col" data-col="table_name">Table <span class="sort-icon"></span></th>
+                <th>Changes</th>
+                <th class="sortable-col" data-col="comment">Comment <span class="sort-icon"></span></th>
+              </tr>
+            </thead>
+            <tbody id="auditBody">
+              <tr><td colspan="6" class="text-center py-4 text-secondary">
+                <div class="spinner-border spinner-border-sm me-2"></div>Loading...
+              </td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="card-footer py-2 d-flex justify-content-between align-items-center">
+          <span class="text-secondary small" id="pageInfo"></span>
+          <nav>
+            <ul class="pagination" id="pagination"></ul>
+          </nav>
+        </div>
+      </div>
+
     </div>
   </div>
 
@@ -181,10 +173,10 @@
   <script>
 const PAGE_SIZE = 50;
 let currentPage = 0;
-let totalCount   = 0;
-let userCache    = {};
-let sortCol      = 'created_at';
-let sortAsc      = false;
+let totalCount  = 0;
+let userCache   = {};
+let sortCol     = 'created_at';
+let sortAsc     = false;
 
 (async () => {
   const session = await Auth.requireAuth();
@@ -199,31 +191,48 @@ let sortAsc      = false;
   Auth.refreshUI();
   StatusWidget.init();
 
+  await loadActionList();
   await loadTableList();
   await loadUserList();
   await loadPage(0);
 
   document.getElementById('applyFilters').addEventListener('click', () => loadPage(0));
-  document.getElementById('prevPage').addEventListener('click', () => loadPage(currentPage - 1));
-  document.getElementById('nextPage').addEventListener('click', () => loadPage(currentPage + 1));
+  document.getElementById('clearFilters').addEventListener('click', () => {
+    document.getElementById('filterAction').value = '';
+    document.getElementById('filterTable').value  = '';
+    document.getElementById('filterUser').value   = '';
+    document.getElementById('filterFrom').value   = '';
+    document.getElementById('filterTo').value     = '';
+    document.getElementById('filterSearch').value = '';
+    loadPage(0);
+  });
 
-  // Sortable columns
   document.querySelectorAll('.sortable-col').forEach(th => {
     th.addEventListener('click', () => {
       const col = th.dataset.col;
-      if (sortCol === col) {
-        sortAsc = !sortAsc;
-      } else {
-        sortCol = col;
-        sortAsc = col !== 'created_at'; // default desc for date, asc for others
-      }
-      // Update sort icons
+      sortAsc = (sortCol === col) ? !sortAsc : (col !== 'created_at');
+      sortCol = col;
       document.querySelectorAll('.sortable-col .sort-icon').forEach(el => el.textContent = '');
       th.querySelector('.sort-icon').textContent = sortAsc ? '↑' : '↓';
       loadPage(0);
     });
   });
 })();
+
+async function loadActionList() {
+  const { data } = await sb.from('audit_log').select('action').eq('organisation_id', Auth.getOrganisationId());
+  const sel = document.getElementById('filterAction');
+  sel.innerHTML = '<option value="">All actions</option><option disabled>──────────</option><option value="INSERT">INSERT</option><option value="UPDATE">UPDATE</option><option value="DELETE">DELETE</option>';
+  if (data) {
+    const others = [...new Set(data.map(r => r.action))]
+      .filter(a => !['INSERT','UPDATE','DELETE'].includes(a))
+      .sort();
+    if (others.length) {
+      sel.innerHTML += '<option disabled>──────────</option>';
+      others.forEach(a => { sel.innerHTML += `<option value="${a}">${a}</option>`; });
+    }
+  }
+}
 
 async function loadTableList() {
   const { data } = await sb.from('audit_log').select('table_name').eq('organisation_id', Auth.getOrganisationId());
@@ -260,25 +269,23 @@ async function loadPage(page) {
   const tbody = document.getElementById('auditBody');
   tbody.innerHTML = '<tr><td colspan="6" class="text-center py-4 text-secondary"><div class="spinner-border spinner-border-sm me-2"></div>Loading...</td></tr>';
 
-  const action  = document.getElementById('filterAction').value;
-  const table   = document.getElementById('filterTable').value;
-  const user    = document.getElementById('filterUser').value;
-  const from    = document.getElementById('filterFrom').value;
-  const to      = document.getElementById('filterTo').value;
-  const search  = document.getElementById('filterSearch').value.trim();
-  const orgId   = Auth.getOrganisationId();
+  const action = document.getElementById('filterAction').value;
+  const table  = document.getElementById('filterTable').value;
+  const user   = document.getElementById('filterUser').value;
+  const from   = document.getElementById('filterFrom').value;
+  const to     = document.getElementById('filterTo').value;
+  const search = document.getElementById('filterSearch').value.trim();
+  const orgId  = Auth.getOrganisationId();
 
   let query = sb.from('audit_log').select('*', { count: 'exact' });
-
   if (!Auth.isSuperAdmin()) query = query.eq('organisation_id', orgId);
-  if (action)           query = query.eq('action', action);
-  if (table)            query = query.eq('table_name', table);
+  if (action)            query = query.eq('action', action);
+  if (table)             query = query.eq('table_name', table);
   if (user === 'system') query = query.is('user_id', null);
-  else if (user)        query = query.eq('user_id', user);
-  if (from)             query = query.gte('created_at', from);
-  if (to)               query = query.lte('created_at', to + 'T23:59:59');
-  if (search)           query = query.ilike('comment', `%${search}%`);
-
+  else if (user)         query = query.eq('user_id', user);
+  if (from)              query = query.gte('created_at', from);
+  if (to)                query = query.lte('created_at', to);
+  if (search)            query = query.ilike('comment', `%${search}%`);
   query = query.order(sortCol, { ascending: sortAsc })
                .range(page * PAGE_SIZE, (page + 1) * PAGE_SIZE - 1);
 
@@ -290,17 +297,16 @@ async function loadPage(page) {
   }
 
   totalCount = count || 0;
+  const totalPages = Math.max(1, Math.ceil(totalCount / PAGE_SIZE));
   document.getElementById('resultCount').textContent = `${totalCount.toLocaleString()} record${totalCount !== 1 ? 's' : ''}`;
-  document.getElementById('pageInfo').textContent = `Page ${page + 1} of ${Math.max(1, Math.ceil(totalCount / PAGE_SIZE))}`;
-  document.getElementById('prevPage').disabled = page === 0;
-  document.getElementById('nextPage').disabled = (page + 1) * PAGE_SIZE >= totalCount;
+  document.getElementById('pageInfo').textContent = `Page ${page + 1} of ${totalPages}`;
+  renderPagination(page, totalPages);
 
   if (!data?.length) {
     tbody.innerHTML = '<tr><td colspan="6" class="text-center text-secondary py-4">No audit records found</td></tr>';
     return;
   }
 
-  // Load any user display names not already in cache
   const userIds = [...new Set(data.filter(r => r.user_id).map(r => r.user_id))].filter(id => !userCache[id]);
   if (userIds.length) {
     const { data: profiles } = await sb.from('profiles').select('id, display_name').in('id', userIds);
@@ -308,10 +314,10 @@ async function loadPage(page) {
   }
 
   tbody.innerHTML = data.map(row => {
-    const userName = row.user_id ? (userCache[row.user_id] || row.user_id.slice(0,8) + '...') : 'System';
-    const when = formatAuditDate(row.created_at);
+    const userName   = row.user_id ? (userCache[row.user_id] || row.user_id.slice(0,8) + '...') : 'System';
+    const when       = formatAuditDate(row.created_at);
     const actionPill = renderActionPill(row.action);
-    const changes = renderChanges(row);
+    const changes    = renderChanges(row);
     return `<tr>
       <td class="text-secondary small" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${App.escHtml(when)}</td>
       <td class="small" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${App.escHtml(userName)}</td>
@@ -323,6 +329,43 @@ async function loadPage(page) {
   }).join('');
 }
 
+function renderPagination(page, totalPages) {
+  const ul = document.getElementById('pagination');
+  const maxVisible = 7;
+  let pages = [];
+
+  if (totalPages <= maxVisible) {
+    pages = Array.from({length: totalPages}, (_, i) => i);
+  } else {
+    pages = [0];
+    let start = Math.max(1, page - 2);
+    let end   = Math.min(totalPages - 2, page + 2);
+    if (start > 1) pages.push('...');
+    for (let i = start; i <= end; i++) pages.push(i);
+    if (end < totalPages - 2) pages.push('...');
+    pages.push(totalPages - 1);
+  }
+
+  const btn = (label, p, disabled, active) =>
+    `<li class="page-item${disabled?' disabled':''}${active?' active':''}">
+      <a class="page-link" href="#" data-page="${p}">${label}</a>
+    </li>`;
+
+  ul.innerHTML =
+    btn('&laquo;', 0,           page === 0,           false) +
+    btn('&lsaquo;', page - 1,   page === 0,           false) +
+    pages.map(p => p === '...'
+      ? `<li class="page-item disabled"><span class="page-link">…</span></li>`
+      : btn(p + 1, p, false, p === page)
+    ).join('') +
+    btn('&rsaquo;', page + 1,   page >= totalPages-1, false) +
+    btn('&raquo;',  totalPages-1, page >= totalPages-1, false);
+
+  ul.querySelectorAll('a.page-link[data-page]').forEach(a => {
+    a.addEventListener('click', e => { e.preventDefault(); loadPage(+a.dataset.page); });
+  });
+}
+
 function formatAuditDate(iso) {
   if (!iso) return '-';
   const d = new Date(iso);
@@ -331,52 +374,34 @@ function formatAuditDate(iso) {
 }
 
 function renderActionPill(action) {
-  const map = {
-    INSERT: 'bg-success-lt text-success',
-    UPDATE: 'bg-warning-lt text-warning',
-    DELETE: 'bg-danger-lt text-danger',
-    CUSTOM: 'bg-primary-lt text-primary',
-  };
+  const map = { INSERT:'bg-success-lt text-success', UPDATE:'bg-warning-lt text-warning', DELETE:'bg-danger-lt text-danger', CUSTOM:'bg-primary-lt text-primary' };
   const cls = map[action] || 'bg-secondary-lt text-secondary';
   return `<span class="badge ${cls}" style="font-size:.7rem">${action}</span>`;
 }
 
 function renderChanges(row) {
-  if (row.action === 'INSERT') {
-    return `<div class="json-diff"><div class="diff-added">+ ${summarise(row.new_values)}</div></div>`;
-  }
-  if (row.action === 'DELETE') {
-    return `<div class="json-diff"><div class="diff-removed">- ${summarise(row.old_values)}</div></div>`;
-  }
+  if (row.action === 'INSERT') return `<div class="json-diff"><div class="diff-added">+ ${summarise(row.new_values)}</div></div>`;
+  if (row.action === 'DELETE') return `<div class="json-diff"><div class="diff-removed">- ${summarise(row.old_values)}</div></div>`;
   if (row.action === 'UPDATE' && row.old_values && row.new_values) {
     const lines = [];
-    const allKeys = new Set([...Object.keys(row.old_values), ...Object.keys(row.new_values)]);
-    for (const key of allKeys) {
-      const oldVal = JSON.stringify(row.old_values[key]);
-      const newVal = JSON.stringify(row.new_values[key]);
-      if (oldVal !== newVal) {
-        lines.push(`<div class="diff-removed">- ${App.escHtml(key)}: ${App.escHtml(oldVal)}</div>`);
-        lines.push(`<div class="diff-added">+ ${App.escHtml(key)}: ${App.escHtml(newVal)}</div>`);
+    for (const key of new Set([...Object.keys(row.old_values), ...Object.keys(row.new_values)])) {
+      const ov = JSON.stringify(row.old_values[key]);
+      const nv = JSON.stringify(row.new_values[key]);
+      if (ov !== nv) {
+        lines.push(`<div class="diff-removed">- ${App.escHtml(key)}: ${App.escHtml(ov)}</div>`);
+        lines.push(`<div class="diff-added">+ ${App.escHtml(key)}: ${App.escHtml(nv)}</div>`);
       }
     }
-    return lines.length
-      ? `<div class="json-diff">${lines.join('')}</div>`
-      : '<span class="text-secondary small">No field changes</span>';
+    return lines.length ? `<div class="json-diff">${lines.join('')}</div>` : '<span class="text-secondary small">No field changes</span>';
   }
-  if (row.action === 'CUSTOM') {
-    return `<span class="text-secondary small">${App.escHtml(row.comment || '-')}</span>`;
-  }
+  if (row.action === 'CUSTOM') return `<span class="text-secondary small">${App.escHtml(row.comment || '-')}</span>`;
   return '';
 }
 
 function summarise(obj) {
   if (!obj) return '';
-  const skip = ['organisation_id', 'created_at', 'updated_at'];
-  return Object.entries(obj)
-    .filter(([k]) => !skip.includes(k))
-    .map(([k, v]) => `${k}: ${JSON.stringify(v)}`)
-    .join(', ')
-    .slice(0, 120);
+  const skip = ['organisation_id','created_at','updated_at'];
+  return Object.entries(obj).filter(([k]) => !skip.includes(k)).map(([k,v]) => `${k}: ${JSON.stringify(v)}`).join(', ').slice(0, 120);
 }
   </script>
 </body>
