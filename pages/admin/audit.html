@@ -461,7 +461,7 @@ function openDetail(row, userName) {
   } else {
     commentWrap.style.display = 'none';
   }
-  bootstrap.Modal.getOrCreate(document.getElementById('auditDetailModal')).show();
+  bootstrap.Modal.getOrCreateInstance(document.getElementById('auditDetailModal')).show();
 }
 
 function summarise(obj) {
