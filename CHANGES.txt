@@ -1,1 +1,1 @@
-Audiences: improve audit_custom error logging
+Audiences: move audit_custom call to saveNewAudience (the correct new audience function)
