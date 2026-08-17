@@ -34,8 +34,9 @@
     html, body { height: 100%; overflow: hidden; }
     .app-content-wrapper { height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
     .page-body { flex: 1; min-height: 0; display: flex; flex-direction: column; overflow: hidden; padding: .75rem; gap: .75rem; }
-    .audit-card { flex: 1; min-height: 0; display: flex; flex-direction: column; }
-    .audit-table-wrap { flex: 1; min-height: 0; overflow-y: auto; }
+    .audit-card { flex: 1; min-height: 0; display: flex; flex-direction: column; overflow: hidden; }
+    .audit-table-wrap { flex: 1; min-height: 0; overflow: hidden; }
+    .audit-table-wrap table { height: 100%; }
     .json-diff { font-size: .72rem; font-family: monospace; max-height: 160px; overflow-y: auto; }
     .diff-added   { background: rgba(47,179,68,.12);  border-left: 3px solid #2fb344; padding: 2px 6px; }
     .diff-removed { background: rgba(214,57,57,.12);  border-left: 3px solid #d63939; padding: 2px 6px; }
@@ -209,12 +210,21 @@
   <script src="../../assets/js/profile-modal.js"></script>
   <script src="../../assets/js/status-widget.js"></script>
   <script>
-const PAGE_SIZE = 50;
+const ROW_HEIGHT = 41; // px per table row (approximate)
+let PAGE_SIZE = 20;   // recalculated on init
 let currentPage = 0;
 let totalCount  = 0;
 let userCache   = {};
 let sortCol     = 'created_at';
 let sortAsc     = false;
+
+function calcPageSize() {
+  const wrap = document.querySelector('.audit-table-wrap');
+  const thead = document.querySelector('.audit-table-wrap thead');
+  if (!wrap || !thead) return;
+  const available = wrap.clientHeight - thead.offsetHeight - 4;
+  PAGE_SIZE = Math.max(5, Math.floor(available / ROW_HEIGHT));
+}
 
 (async () => {
   const session = await Auth.requireAuth();
@@ -232,7 +242,10 @@ let sortAsc     = false;
   await loadActionList();
   await loadTableList();
   await loadUserList();
+  calcPageSize();
   await loadPage(0);
+
+  window.addEventListener('resize', () => { calcPageSize(); loadPage(0); });
 
   document.getElementById('applyFilters').addEventListener('click', () => loadPage(0));
   document.getElementById('clearFilters').addEventListener('click', () => {

@@ -1,1 +1,1 @@
-Audit UI: wider action column, before/after stacked full width in modal with theme-aware styling
+Audit UI: no vertical scroll on table, PAGE_SIZE calculated from available height, reflows on window resize
