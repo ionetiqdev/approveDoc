@@ -1,1 +1,1 @@
-Audit UI: subtract 1 from page size to prevent bottom row cutoff
+Audit UI: use tallest row height / -1 for page size calculation

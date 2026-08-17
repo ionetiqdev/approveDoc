@@ -225,13 +225,11 @@ function calcPageSize() {
   const thead = document.querySelector('.audit-table-wrap thead');
   if (!wrap || !thead) return false;
   const available = wrap.clientHeight - thead.offsetHeight;
-  const rows = [...(wrap.querySelectorAll('tbody tr[data-row-idx]'))];
+  const rows = [...wrap.querySelectorAll('tbody tr[data-row-idx]')];
   if (!rows.length) return false;
-  // All rows now have consistent height - use median to avoid outliers
-  const heights = rows.map(r => r.offsetHeight).sort((a,b) => a-b);
-  const rowH = heights[Math.floor(heights.length / 2)];
-  if (rowH < 10) return false;
-  const newSize = Math.max(5, Math.floor(available / rowH) - 1);
+  const tallest = Math.max(...rows.map(r => r.offsetHeight));
+  if (tallest < 10) return false;
+  const newSize = Math.max(5, Math.floor(available / tallest) - 1);
   if (newSize !== PAGE_SIZE) { PAGE_SIZE = newSize; return true; }
   return false;
 }
