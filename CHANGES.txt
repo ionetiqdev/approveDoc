@@ -1,1 +1,1 @@
-Audit UI: set table height 100% to fill wrapper
+Audit UI: add filler row so last row doesn't stretch to fill table height
