@@ -1,1 +1,1 @@
-Audit UI: wait for layout settle before measuring row heights for page size calculation
+Audit UI: hardcode PAGE_SIZE 14 based on actual measured row heights
