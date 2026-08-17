@@ -35,8 +35,9 @@
     .app-content-wrapper { height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
     .page-body { flex: 1; min-height: 0; display: flex; flex-direction: column; overflow: hidden; padding: .75rem; gap: .75rem; }
     .audit-card { flex: 1; min-height: 0; display: flex; flex-direction: column; overflow: hidden; }
+    .audit-card .card-header { flex-shrink: 0; }
+    .audit-card .card-footer { flex-shrink: 0; }
     .audit-table-wrap { flex: 1; min-height: 0; overflow: hidden; }
-    .audit-table-wrap table { table-layout: fixed; width: 100%; }
     .json-diff { font-size: .72rem; font-family: monospace; max-height: 160px; overflow-y: auto; }
     .diff-added   { background: rgba(47,179,68,.12);  border-left: 3px solid #2fb344; padding: 2px 6px; }
     .diff-removed { background: rgba(214,57,57,.12);  border-left: 3px solid #d63939; padding: 2px 6px; }
@@ -114,7 +115,7 @@
       </div>
 
       <!-- Results -->
-      <div class="card audit-card">
+      <div class="card audit-card" style="height:100%">
         <div class="card-header py-2">
           <h3 class="card-title">Audit Log</h3>
           <div class="card-options">
@@ -222,12 +223,10 @@ function calcPageSize() {
   const thead = document.querySelector('.audit-table-wrap thead');
   if (!wrap || !thead) return false;
   const available = wrap.clientHeight - thead.offsetHeight;
-  // Measure the tallest rendered row for worst-case calculation
   const rows = wrap.querySelectorAll('tbody tr');
-  let rowH = 38;
-  if (rows.length) {
-    rowH = Math.max(...[...rows].map(r => r.offsetHeight));
-  }
+  if (!rows.length) return false;
+  // Use the tallest row as the unit
+  const rowH = Math.max(...[...rows].map(r => r.offsetHeight));
   const newSize = Math.max(5, Math.floor(available / rowH));
   if (newSize !== PAGE_SIZE) { PAGE_SIZE = newSize; return true; }
   return false;
@@ -250,10 +249,12 @@ function calcPageSize() {
   await loadTableList();
   await loadUserList();
   await loadPage(0);
-  // After first render, measure actual row height and recalculate
+  // Wait for layout to settle then recalculate
+  await new Promise(r => setTimeout(r, 100));
   if (calcPageSize()) await loadPage(0);
 
   window.addEventListener('resize', async () => {
+    await new Promise(r => setTimeout(r, 50));
     if (calcPageSize()) await loadPage(currentPage);
   });
 

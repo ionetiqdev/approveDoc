@@ -1,1 +1,1 @@
-Audit UI: use tallest row height for page size calculation to eliminate gap
+Audit UI: wait for layout settle before measuring row heights for page size calculation
