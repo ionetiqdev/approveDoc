@@ -35,7 +35,7 @@
     .app-content-wrapper { height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
     .page-body { flex: 1; min-height: 0; display: flex; flex-direction: column; overflow: hidden; padding: .75rem; gap: .75rem; }
     .audit-card { flex: 1; min-height: 0; display: flex; flex-direction: column; overflow: hidden; }
-    .audit-table-wrap { flex: 1; min-height: 0; overflow-x: auto; }
+    .audit-table-wrap { flex: 1; min-height: 0; overflow: hidden; }
     .audit-table-wrap table { table-layout: fixed; width: 100%; }
     .json-diff { font-size: .72rem; font-family: monospace; max-height: 160px; overflow-y: auto; }
     .diff-added   { background: rgba(47,179,68,.12);  border-left: 3px solid #2fb344; padding: 2px 6px; }
@@ -210,7 +210,7 @@
   <script src="../../assets/js/profile-modal.js"></script>
   <script src="../../assets/js/status-widget.js"></script>
   <script>
-const PAGE_SIZE = 25;
+const PAGE_SIZE = 15;
 let currentPage = 0;
 let totalCount  = 0;
 let userCache   = {};

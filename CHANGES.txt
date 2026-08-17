@@ -1,1 +1,1 @@
-Audit UI: fixed PAGE_SIZE 25, table scrolls within card, no dynamic height calculation
+Audit UI: fix vertical scrollbar - overflow hidden on table wrap, PAGE_SIZE 15
