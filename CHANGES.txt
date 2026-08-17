@@ -1,1 +1,1 @@
-Audit UI: increase PAGE_SIZE to 20
+Audit UI: dynamic PAGE_SIZE using median row height, recalculates on resize

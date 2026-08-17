@@ -213,12 +213,28 @@
   <script src="../../assets/js/profile-modal.js"></script>
   <script src="../../assets/js/status-widget.js"></script>
   <script>
-const PAGE_SIZE = 20;
+let PAGE_SIZE = 20;
 let currentPage = 0;
 let totalCount  = 0;
 let userCache   = {};
 let sortCol     = 'created_at';
 let sortAsc     = false;
+
+function calcPageSize() {
+  const wrap  = document.querySelector('.audit-table-wrap');
+  const thead = document.querySelector('.audit-table-wrap thead');
+  if (!wrap || !thead) return false;
+  const available = wrap.clientHeight - thead.offsetHeight;
+  const rows = [...(wrap.querySelectorAll('tbody tr[data-row-idx]'))];
+  if (!rows.length) return false;
+  // All rows now have consistent height - use median to avoid outliers
+  const heights = rows.map(r => r.offsetHeight).sort((a,b) => a-b);
+  const rowH = heights[Math.floor(heights.length / 2)];
+  if (rowH < 10) return false;
+  const newSize = Math.max(5, Math.floor(available / rowH));
+  if (newSize !== PAGE_SIZE) { PAGE_SIZE = newSize; return true; }
+  return false;
+}
 
 (async () => {
   const session = await Auth.requireAuth();
@@ -237,6 +253,11 @@ let sortAsc     = false;
   await loadTableList();
   await loadUserList();
   await loadPage(0);
+  if (calcPageSize()) await loadPage(0);
+
+  window.addEventListener('resize', async () => {
+    if (calcPageSize()) await loadPage(currentPage);
+  });
 
   document.getElementById('applyFilters').addEventListener('click', () => loadPage(0));
   document.getElementById('clearFilters').addEventListener('click', () => {
@@ -431,16 +452,27 @@ function renderChanges(row) {
   if (row.action === 'INSERT') return `<div class="json-diff"><div class="diff-added">+ ${summarise(row.new_values)}</div></div>`;
   if (row.action === 'DELETE') return `<div class="json-diff"><div class="diff-removed">- ${summarise(row.old_values)}</div></div>`;
   if (row.action === 'UPDATE' && row.old_values && row.new_values) {
-    const lines = [];
+    const changed = [];
     for (const key of new Set([...Object.keys(row.old_values), ...Object.keys(row.new_values)])) {
       const ov = JSON.stringify(row.old_values[key]);
       const nv = JSON.stringify(row.new_values[key]);
-      if (ov !== nv) {
-        lines.push(`<div class="diff-removed">- ${App.escHtml(key)}: ${App.escHtml(ov)}</div>`);
-        lines.push(`<div class="diff-added">+ ${App.escHtml(key)}: ${App.escHtml(nv)}</div>`);
-      }
+      if (ov !== nv) changed.push(key);
     }
-    return lines.length ? `<div class="json-diff">${lines.join('')}</div>` : '<span class="text-secondary small">No field changes</span>';
+    if (!changed.length) return '<span class="text-secondary small">No field changes</span>';
+    if (changed.length === 1) {
+      const key = changed[0];
+      const ov = JSON.stringify(row.old_values[key]);
+      const nv = JSON.stringify(row.new_values[key]);
+      return `<div class="json-diff">
+        <div class="diff-removed">- ${App.escHtml(key)}: ${App.escHtml(ov)}</div>
+        <div class="diff-added">+ ${App.escHtml(key)}: ${App.escHtml(nv)}</div>
+      </div>`;
+    }
+    // Multiple fields — just show field names, double-click for detail
+    return `<div class="json-diff">
+      <div class="diff-removed">- ${App.escHtml(changed.join(', '))}</div>
+      <div class="diff-added">+ ${App.escHtml(changed.join(', '))}</div>
+    </div>`;
   }
   if (row.action === 'CUSTOM') return `<span class="text-secondary small">${App.escHtml(row.comment || '-')}</span>`;
   return '';
