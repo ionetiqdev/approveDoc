@@ -1,1 +1,1 @@
-Audit UI: add filler row so last row doesn't stretch to fill table height
+Audit UI: increase PAGE_SIZE to 20
