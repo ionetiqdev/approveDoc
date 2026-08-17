@@ -1,1 +1,1 @@
-Audit UI: dynamic PAGE_SIZE using median row height, recalculates on resize
+Audit UI: subtract 1 from page size to prevent bottom row cutoff

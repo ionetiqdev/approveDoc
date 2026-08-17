@@ -231,7 +231,7 @@ function calcPageSize() {
   const heights = rows.map(r => r.offsetHeight).sort((a,b) => a-b);
   const rowH = heights[Math.floor(heights.length / 2)];
   if (rowH < 10) return false;
-  const newSize = Math.max(5, Math.floor(available / rowH));
+  const newSize = Math.max(5, Math.floor(available / rowH) - 1);
   if (newSize !== PAGE_SIZE) { PAGE_SIZE = newSize; return true; }
   return false;
 }
