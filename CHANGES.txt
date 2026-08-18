@@ -1,1 +1,1 @@
-Audit UI: 50px row height, subtract 1 from page size to prevent cutoff
+Audit UI: action column wider, Filter icon, Clear label+icon, Export CSV button

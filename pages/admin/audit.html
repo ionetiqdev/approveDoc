@@ -109,9 +109,10 @@
               <label class="form-label mb-1">Search</label>
               <input type="text" id="filterSearch" class="form-control form-control-sm" placeholder="Comment..." />
             </div>
-            <div class="col-md-1 d-flex gap-1">
-              <button class="btn btn-primary btn-sm flex-grow-1" id="applyFilters">Filter</button>
-              <button class="btn btn-outline-secondary btn-sm" id="clearFilters" title="Clear filters"><i class="ti ti-x"></i></button>
+            <div class="col-md-2 d-flex gap-1">
+              <button class="btn btn-primary btn-sm flex-grow-1" id="applyFilters"><i class="ti ti-filter me-1"></i>Filter</button>
+              <button class="btn btn-outline-secondary btn-sm" id="clearFilters"><i class="ti ti-x me-1"></i>Clear</button>
+              <button class="btn btn-outline-secondary btn-sm" id="exportCsv"><i class="ti ti-download me-1"></i>CSV</button>
             </div>
           </div>
         </div>
@@ -130,9 +131,9 @@
             <colgroup>
               <col style="width:155px">
               <col style="width:240px">
-              <col style="width:160px">
+              <col style="width:240px">
               <col style="width:270px">
-              <col style="width:58%">
+              <col style="width:50%">
               <col style="width:33%">
             </colgroup>
             <thead>
@@ -264,6 +265,8 @@ function calcPageSize() {
     document.getElementById('filterSearch').value = '';
     loadPage(0);
   });
+
+  document.getElementById('exportCsv').addEventListener('click', exportCsv);
 
   document.querySelectorAll('.sortable-col').forEach(th => {
     th.addEventListener('click', () => {
@@ -428,6 +431,63 @@ function renderPagination(page, totalPages) {
   ul.querySelectorAll('a.page-link[data-page]').forEach(a => {
     a.addEventListener('click', e => { e.preventDefault(); loadPage(+a.dataset.page); });
   });
+}
+
+async function exportCsv() {
+  const btn = document.getElementById('exportCsv');
+  btn.disabled = true;
+  btn.innerHTML = '<i class="ti ti-loader-2 me-1"></i>Exporting...';
+
+  const action = document.getElementById('filterAction').value;
+  const table  = document.getElementById('filterTable').value;
+  const user   = document.getElementById('filterUser').value;
+  const from   = document.getElementById('filterFrom').value;
+  const to     = document.getElementById('filterTo').value;
+  const search = document.getElementById('filterSearch').value.trim();
+  const orgId  = Auth.getOrganisationId();
+
+  let query = sb.from('audit_log').select('*');
+  if (!Auth.isSuperAdmin()) query = query.eq('organisation_id', orgId);
+  if (action)             query = query.eq('action', action);
+  if (table)              query = query.eq('table_name', table);
+  if (user === 'system')  query = query.is('user_id', null);
+  else if (user)          query = query.eq('user_id', user);
+  if (from)               query = query.gte('created_at', from);
+  if (to)                 query = query.lte('created_at', to);
+  if (search)             query = query.ilike('comment', `%${search}%`);
+  query = query.order(sortCol, { ascending: sortAsc });
+
+  const { data, error } = await query;
+  if (error || !data) {
+    App.toast('Export failed: ' + (error?.message || 'No data'), 'danger');
+    btn.disabled = false;
+    btn.innerHTML = '<i class="ti ti-download me-1"></i>CSV';
+    return;
+  }
+
+  const headers = ['When','User','Action','Table','Record ID','Old Values','New Values','Comment'];
+  const rows = data.map(r => [
+    formatAuditDate(r.created_at),
+    r.user_id ? (userCache[r.user_id] || r.user_id) : 'System',
+    r.action,
+    r.table_name,
+    r.record_id,
+    r.old_values ? JSON.stringify(r.old_values) : '',
+    r.new_values ? JSON.stringify(r.new_values) : '',
+    r.comment || ''
+  ].map(v => `"${String(v).replace(/"/g, '""')}"`).join(','));
+
+  const csv  = [headers.join(','), ...rows].join('\r\n');
+  const blob = new Blob([csv], { type: 'text/csv' });
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement('a');
+  a.href     = url;
+  a.download = `audit_log_${new Date().toISOString().slice(0,10)}.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
+
+  btn.disabled = false;
+  btn.innerHTML = '<i class="ti ti-download me-1"></i>CSV';
 }
 
 function formatAuditDate(iso) {
