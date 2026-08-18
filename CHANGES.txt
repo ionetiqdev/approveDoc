@@ -1,1 +1,1 @@
-Audit UI: fixed 52px row height for all rows, simple division for page size, no flash
+Audit UI: 50px row height, subtract 1 from page size to prevent cutoff
