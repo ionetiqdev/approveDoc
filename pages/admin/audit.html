@@ -80,39 +80,70 @@
       <!-- Filters -->
       <div class="card flex-shrink-0">
         <div class="card-body py-2">
-          <div class="row g-2 align-items-end">
-            <div class="col-md-2">
+          <div class="d-flex gap-2 align-items-end flex-wrap">
+            <div style="min-width:140px;flex:1">
               <label class="form-label mb-1">Action</label>
               <select id="filterAction" class="form-select form-select-sm"></select>
             </div>
-            <div class="col-md-2">
+            <div style="min-width:140px;flex:1">
               <label class="form-label mb-1">Table</label>
               <select id="filterTable" class="form-select form-select-sm">
                 <option value="">All tables</option>
               </select>
             </div>
-            <div class="col-md-2">
+            <div style="min-width:140px;flex:1">
               <label class="form-label mb-1">User</label>
               <select id="filterUser" class="form-select form-select-sm">
                 <option value="">All users</option>
               </select>
             </div>
-            <div class="col-md-2">
+            <div style="min-width:150px;flex:1">
               <label class="form-label mb-1">From</label>
-              <input type="datetime-local" id="filterFrom" class="form-control form-control-sm" />
+              <input type="date" id="filterFrom" class="form-control form-control-sm" />
             </div>
-            <div class="col-md-2">
+            <div style="min-width:150px;flex:1">
               <label class="form-label mb-1">To</label>
-              <input type="datetime-local" id="filterTo" class="form-control form-control-sm" />
+              <input type="date" id="filterTo" class="form-control form-control-sm" />
             </div>
-            <div class="col-md-1">
+            <div style="min-width:120px;flex:1">
               <label class="form-label mb-1">Search</label>
               <input type="text" id="filterSearch" class="form-control form-control-sm" placeholder="Comment..." />
             </div>
-            <div class="col-md-2 d-flex gap-1">
-              <button class="btn btn-primary btn-sm flex-grow-1" id="applyFilters"><i class="ti ti-filter me-1"></i>Filter</button>
+            <div class="d-flex gap-1 align-self-end">
+              <button class="btn btn-primary btn-sm" id="applyFilters"><i class="ti ti-filter me-1"></i>Filter</button>
               <button class="btn btn-outline-secondary btn-sm" id="clearFilters"><i class="ti ti-x me-1"></i>Clear</button>
               <button class="btn btn-outline-secondary btn-sm" id="exportCsv"><i class="ti ti-download me-1"></i>CSV</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Export CSV Modal -->
+      <div class="modal modal-blur fade" id="exportModal" tabindex="-1">
+        <div class="modal-dialog modal-sm modal-dialog-centered">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h5 class="modal-title">Export Audit Log</h5>
+              <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+              <div class="mb-3">
+                <label class="form-label">File name</label>
+                <div class="input-group input-group-sm">
+                  <input type="text" id="exportFilename" class="form-control" />
+                  <span class="input-group-text">.csv</span>
+                </div>
+              </div>
+              <div class="mb-0">
+                <label class="form-check form-switch">
+                  <input class="form-check-input" type="checkbox" id="exportIncludeJson" checked />
+                  <span class="form-check-label">Include JSON (Before / After)</span>
+                </label>
+              </div>
+            </div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancel</button>
+              <button type="button" class="btn btn-primary btn-sm" id="exportConfirm"><i class="ti ti-download me-1"></i>Download</button>
             </div>
           </div>
         </div>
@@ -266,7 +297,15 @@ function calcPageSize() {
     loadPage(0);
   });
 
-  document.getElementById('exportCsv').addEventListener('click', exportCsv);
+  document.getElementById('exportCsv').addEventListener('click', () => {
+    const today = new Date().toISOString().slice(0,10);
+    document.getElementById('exportFilename').value = `audit_log_${today}`;
+    bootstrap.Modal.getOrCreateInstance(document.getElementById('exportModal')).show();
+  });
+  document.getElementById('exportConfirm').addEventListener('click', () => {
+    bootstrap.Modal.getOrCreateInstance(document.getElementById('exportModal')).hide();
+    exportCsv();
+  });
 
   document.querySelectorAll('.sortable-col').forEach(th => {
     th.addEventListener('click', () => {
@@ -436,25 +475,27 @@ function renderPagination(page, totalPages) {
 async function exportCsv() {
   const btn = document.getElementById('exportCsv');
   btn.disabled = true;
-  btn.innerHTML = '<i class="ti ti-loader-2 me-1"></i>Exporting...';
+  btn.innerHTML = '<i class="ti ti-loader-2 me-1"></i>CSV';
 
-  const action = document.getElementById('filterAction').value;
-  const table  = document.getElementById('filterTable').value;
-  const user   = document.getElementById('filterUser').value;
-  const from   = document.getElementById('filterFrom').value;
-  const to     = document.getElementById('filterTo').value;
-  const search = document.getElementById('filterSearch').value.trim();
-  const orgId  = Auth.getOrganisationId();
+  const action      = document.getElementById('filterAction').value;
+  const table       = document.getElementById('filterTable').value;
+  const user        = document.getElementById('filterUser').value;
+  const from        = document.getElementById('filterFrom').value;
+  const to          = document.getElementById('filterTo').value;
+  const search      = document.getElementById('filterSearch').value.trim();
+  const orgId       = Auth.getOrganisationId();
+  const filename    = (document.getElementById('exportFilename').value.trim() || 'audit_log') + '.csv';
+  const includeJson = document.getElementById('exportIncludeJson').checked;
 
   let query = sb.from('audit_log').select('*');
   if (!Auth.isSuperAdmin()) query = query.eq('organisation_id', orgId);
-  if (action)             query = query.eq('action', action);
-  if (table)              query = query.eq('table_name', table);
-  if (user === 'system')  query = query.is('user_id', null);
-  else if (user)          query = query.eq('user_id', user);
-  if (from)               query = query.gte('created_at', from);
-  if (to)                 query = query.lte('created_at', to);
-  if (search)             query = query.ilike('comment', `%${search}%`);
+  if (action)            query = query.eq('action', action);
+  if (table)             query = query.eq('table_name', table);
+  if (user === 'system') query = query.is('user_id', null);
+  else if (user)         query = query.eq('user_id', user);
+  if (from)              query = query.gte('created_at', from);
+  if (to)                query = query.lte('created_at', to);
+  if (search)            query = query.ilike('comment', `%${search}%`);
   query = query.order(sortCol, { ascending: sortAsc });
 
   const { data, error } = await query;
@@ -465,25 +506,31 @@ async function exportCsv() {
     return;
   }
 
-  const headers = ['When','User','Action','Table','Record ID','Old Values','New Values','Comment'];
-  const rows = data.map(r => [
-    formatAuditDate(r.created_at),
-    r.user_id ? (userCache[r.user_id] || r.user_id) : 'System',
-    r.action,
-    r.table_name,
-    r.record_id,
-    r.old_values ? JSON.stringify(r.old_values) : '',
-    r.new_values ? JSON.stringify(r.new_values) : '',
-    r.comment || ''
-  ].map(v => `"${String(v).replace(/"/g, '""')}"`).join(','));
+  const headers = ['When','User','Action','Table','Record ID', ...(includeJson ? ['Old Values','New Values'] : []), 'Comment'];
+  const esc = v => `"${String(v ?? '').replace(/"/g, '""')}"`;
 
-  const csv  = [headers.join(','), ...rows].join('\r\n');
-  const blob = new Blob([csv], { type: 'text/csv' });
+  const rows = data.map(r => {
+    const userName = r.user_id ? (userCache[r.user_id] || r.user_id) : 'System';
+    const cols = [
+      formatAuditDate(r.created_at),
+      userName,
+      r.action,
+      r.table_name,
+      r.record_id,
+      ...(includeJson ? [
+        r.old_values ? JSON.stringify(r.old_values) : '',
+        r.new_values ? JSON.stringify(r.new_values) : ''
+      ] : []),
+      r.comment || ''
+    ];
+    return cols.map(esc).join(',');
+  });
+
+  const csv  = [headers.map(esc).join(','), ...rows].join('\r\n');
+  const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8' });
   const url  = URL.createObjectURL(blob);
   const a    = document.createElement('a');
-  a.href     = url;
-  a.download = `audit_log_${new Date().toISOString().slice(0,10)}.csv`;
-  a.click();
+  a.href = url; a.download = filename; a.click();
   URL.revokeObjectURL(url);
 
   btn.disabled = false;

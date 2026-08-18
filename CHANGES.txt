@@ -1,1 +1,1 @@
-Audit UI: action column wider, Filter icon, Clear label+icon, Export CSV button
+Audit UI: single-line filter bar, date-only pickers, export modal with filename and JSON toggle, user names in CSV
