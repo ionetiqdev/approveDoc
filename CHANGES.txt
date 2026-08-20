@@ -1,1 +1,1 @@
-Audit UI: single-line filter bar, date-only pickers, export modal with filename and JSON toggle, user names in CSV
+Session end: audit trail UI complete, user migration SQL, export CSV with modal
