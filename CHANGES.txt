@@ -1,1 +1,1 @@
-Session end: audit trail UI complete, user migration SQL, export CSV with modal
+Add Plyr video player - MIME type routing, video upload support, loadVideo function

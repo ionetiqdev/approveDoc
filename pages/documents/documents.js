@@ -401,6 +401,44 @@ if (docSearch) {
   docSearch.addEventListener('input', () => renderDocList(filterDocs()));
 }
 
+
+// ── Video viewer (Plyr) ───────────────────────────────────────────────────
+let _plyrInstance = null;
+
+async function loadVideo(file, docName) {
+  // Hide PDF frame, show video wrap
+  docPdfFrame.style.display = 'none';
+  docEmptyState.style.display = 'none';
+
+  const videoWrap = document.getElementById('docVideoWrap');
+  const videoEl   = document.getElementById('docVideoPlayer');
+  videoWrap.style.display = 'flex';
+
+  // Destroy previous Plyr instance
+  if (_plyrInstance) { _plyrInstance.destroy(); _plyrInstance = null; }
+
+  let src = '';
+  const sourceType = file.source_type || 'SUPABASE';
+
+  if (sourceType === 'SUPABASE') {
+    const { data: signed } = await sb.storage
+      .from(DOC_CONFIG.bucket)
+      .createSignedUrl(file.storage_path, 3600);
+    if (!signed?.signedUrl) { App.toast('Could not access video file', 'danger'); return; }
+    src = signed.signedUrl;
+  } else if (file.external_url) {
+    src = file.external_url;
+  }
+
+  videoEl.src = src;
+  videoEl.type = file.mime_type || 'video/mp4';
+
+  _plyrInstance = new Plyr(videoEl, {
+    controls: ['play-large','play','rewind','fast-forward','progress','current-time','duration','mute','volume','fullscreen'],
+    resetOnEnd: false,
+  });
+}
+
 // ── Inject CSS into pdf.js iframe ────────────────────────────────────
 function injectPdfStyles() {
   try {
@@ -493,6 +531,18 @@ async function selectDoc(id) {
   docViewerName.textContent = doc[DOC_CONFIG.colDocDesc] || pdfFile.file_name;
   docViewerToolbar.style.display = 'flex';
 
+  // Hide video wrap when switching docs
+  const videoWrap = document.getElementById('docVideoWrap');
+  if (videoWrap) videoWrap.style.display = 'none';
+  if (_plyrInstance) { _plyrInstance.destroy(); _plyrInstance = null; }
+
+  // Route to video or PDF viewer based on MIME type
+  const mime = pdfFile.mime_type || '';
+  if (mime.startsWith('video/') || mime.startsWith('audio/')) {
+    await loadVideo(pdfFile, doc[DOC_CONFIG.colDocDesc] || pdfFile.file_name);
+    return;
+  }
+
   // Fetch the PDF — route depends on source type
   let fetchUrl;
   const sourceType = pdfFile.source_type || 'SUPABASE';
@@ -542,7 +592,7 @@ async function selectDoc(id) {
       if (window._currentDocBlob) URL.revokeObjectURL(window._currentDocBlob);
 
       const downloadName = pdfFile.download_file_name || sanitizeFileName(doc[DOC_CONFIG.colDocDesc] || pdfFile.file_name);
-      const namedFile = new File([blob], downloadName, { type: 'application/pdf' });
+      const namedFile = new File([blob], downloadName, { type: file?.type || 'application/pdf' });
       pdfBlobUrl = URL.createObjectURL(namedFile);
       window._currentDocBlob = pdfBlobUrl;
 
@@ -586,7 +636,7 @@ async function selectDoc(id) {
     if (window._currentDocBlob) URL.revokeObjectURL(window._currentDocBlob);
 
     const downloadName = pdfFile.download_file_name || sanitizeFileName(doc[DOC_CONFIG.colDocDesc] || pdfFile.file_name);
-    const namedFile = new File([blob], downloadName, { type: 'application/pdf' });
+    const namedFile = new File([blob], downloadName, { type: file?.type || 'application/pdf' });
 
     pdfBlobUrl = URL.createObjectURL(namedFile);
     window._currentDocBlob = pdfBlobUrl;
@@ -729,7 +779,7 @@ async function uploadAndSave(description, file, progressBar, statusEl, categoryI
   if (statusEl) statusEl.textContent = 'Uploading file…';
   const { error: upErr } = await sb.storage
     .from(DOC_CONFIG.bucket)
-    .upload(safeName, file, { contentType: 'application/pdf', upsert: false });
+    .upload(safeName, file, { contentType: file.type || 'application/pdf', upsert: false });
 
   if (upErr) {
     App.toast('Upload failed: ' + upErr.message, 'danger');
@@ -747,7 +797,7 @@ async function uploadAndSave(description, file, progressBar, statusEl, categoryI
     storage_path: safeName,
     download_file_name: downloadFileName,
     file_size_bytes: file.size,
-    mime_type: 'application/pdf'
+    mime_type: file.type || 'application/pdf'
   });
 
   if (fileErr) { App.toast('File reference failed: ' + fileErr.message, 'danger'); return false; }
