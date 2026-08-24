@@ -1,1 +1,1 @@
-Video: add YouTube URL support via Plyr embed; detect YouTube ID from URL automatically
+Video: auto-detect mime_type from external URL (YouTube, Vimeo, mp4, webm, mov)

@@ -560,7 +560,7 @@ async function selectDoc(id) {
 
   // Route to video or PDF viewer based on MIME type
   const mime = pdfFile.mime_type || '';
-  if (mime.startsWith('video/') || mime.startsWith('audio/')) {
+  if (mime.startsWith('video/') || mime.startsWith('audio/') || mime === 'video/youtube' || mime === 'video/vimeo') {
     await loadVideo(pdfFile, doc[DOC_CONFIG.colDocDesc] || pdfFile.file_name);
     return;
   }
@@ -919,15 +919,25 @@ function bindUpload() {
           ? document.getElementById('docModalRestAuth').value
           : 'NONE';
 
+        // Detect mime type from URL
+        function _mimeFromUrl(url) {
+          if (/youtube\.com|youtu\.be/.test(url)) return 'video/youtube';
+          if (/vimeo\.com/.test(url)) return 'video/vimeo';
+          if (/\.mp4(\?|$)/i.test(url)) return 'video/mp4';
+          if (/\.webm(\?|$)/i.test(url)) return 'video/webm';
+          if (/\.mov(\?|$)/i.test(url)) return 'video/quicktime';
+          return 'application/pdf';
+        }
+
         // Create file record pointing to external source
-        const fileName = externalUrl.split('/').pop() || desc + '.pdf';
+        const fileName = externalUrl.split('/').pop()?.split('?')[0] || desc + '.pdf';
         const { error: fileErr } = await sb.from('ad_document_file').insert({
           doc_id:        docData.doc_id,
           organisation_id: orgId,
           file_name:     fileName,
           storage_path:  'external', // satisfies NOT NULL — not used for external sources
           download_file_name: fileName,
-          mime_type:     'application/pdf',
+          mime_type:     _mimeFromUrl(externalUrl),
           source_type:   sourceTypeVal,
           external_url:  externalUrl,
           external_ref:  externalRef,
