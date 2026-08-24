@@ -1,1 +1,1 @@
-Word to PDF: add CloudConvert conversion via Edge Function, accept .doc/.docx in file inputs
+Audit: add Audit tab to preferences with include-archived toggle and live/archive record counts

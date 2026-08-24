@@ -267,6 +267,11 @@ const SidebarHtml = (() => {
                       <i class="ti ti-user me-1"></i>Current User
                     </a>
                   </li>
+                  <li class="nav-item" id="prefTabAuditLi" style="display:none">
+                    <a class="nav-link" href="#prefTabAudit" data-bs-toggle="tab">
+                      <i class="ti ti-shield me-1"></i>Audit
+                    </a>
+                  </li>
                 </ul>
               </div>
               <div class="card-body">
@@ -380,6 +385,24 @@ const SidebarHtml = (() => {
                     </div>
                   </div>
 
+                  <!-- Audit tab (admin only) -->
+                  <div class="tab-pane" id="prefTabAudit" style="min-height:490px;padding:20px">
+                    <h4 class="mb-3">Audit Trail Settings</h4>
+                    <div class="mb-4">
+                      <label class="form-check form-switch">
+                        <input class="form-check-input" type="checkbox" id="prefIncludeArchived" />
+                        <span class="form-check-label fw-semibold">Include archived records by default</span>
+                      </label>
+                      <p class="text-secondary small mt-1">When enabled, the Audit Trail page will query both live and archived records. This may be slower on large datasets.</p>
+                    </div>
+                    <div class="mb-4">
+                      <h5 class="mb-2">Record Counts</h5>
+                      <div id="prefAuditCounts" class="text-secondary small">
+                        <span class="spinner-border spinner-border-sm me-1"></span>Loading…
+                      </div>
+                    </div>
+                  </div>
+
                 </div>
               </div>
             </div>
@@ -483,7 +506,38 @@ const SidebarHtml = (() => {
       document.getElementById('docPrefDeleteEnabled').checked = del.enabled          !== false;
     }
 
-    const openPreferences = e => {
+    async function _populateAuditTab() {
+      const auditTabLi = document.getElementById('prefTabAuditLi');
+      if (!auditTabLi) return;
+      if (!Auth.isAdmin()) return;
+      auditTabLi.style.display = '';
+
+      // Restore saved preference
+      const savedInclude = Auth.getPreference('auditIncludeArchived', false);
+      const toggle = document.getElementById('prefIncludeArchived');
+      if (toggle) toggle.checked = !!savedInclude;
+
+      // Load counts
+      const countsEl = document.getElementById('prefAuditCounts');
+      if (!countsEl) return;
+      countsEl.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Loading…';
+      try {
+        const orgId = Auth.getOrganisationId();
+        const [liveRes, archiveRes] = await Promise.all([
+          sb.from('audit_log').select('id', { count: 'exact', head: true }).eq('organisation_id', orgId),
+          sb.from('audit_log_archive').select('id', { count: 'exact', head: true }).eq('organisation_id', orgId),
+        ]);
+        countsEl.innerHTML = \`
+          <table class="table table-sm">
+            <tr><td>Live audit records</td><td class="fw-semibold">\${(liveRes.count || 0).toLocaleString()}</td></tr>
+            <tr><td>Archived audit records</td><td class="fw-semibold">\${(archiveRes.count || 0).toLocaleString()}</td></tr>
+          </table>\`;
+      } catch(e) {
+        countsEl.innerHTML = '<span class="text-danger">Could not load counts</span>';
+      }
+    }
+
+        const openPreferences = e => {
       e?.preventDefault();
       const modalEl = document.getElementById('preferencesModal');
       if (!modalEl) return;
@@ -495,6 +549,7 @@ const SidebarHtml = (() => {
 
       _populateProfile();
       _populateDocumentTab();
+      _populateAuditTab();
 
       // Reset password fields and error
       ['prefNewPassword','prefConfirmPassword','prefCurrentPassword'].forEach(id => {
@@ -558,6 +613,12 @@ const SidebarHtml = (() => {
         };
         await Auth.setPreference('docViewerPrefs', override);
         if (typeof loadDocFeatures === 'function') loadDocFeatures();
+      }
+
+      // Audit settings
+      const auditToggle = document.getElementById('prefIncludeArchived');
+      if (auditToggle !== null) {
+        await Auth.setPreference('auditIncludeArchived', auditToggle.checked);
       }
 
       // Profile updates
