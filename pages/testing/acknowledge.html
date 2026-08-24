@@ -15,7 +15,7 @@
 
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/core@1.4.0/dist/css/tabler.min.css" />
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.44.0/dist/tabler-icons.min.css" />
-  <link rel="stylesheet" href="../../assets/css/theme.css?r=05aigloe" />
+  <link rel="stylesheet" href="../../assets/css/theme.css?r=iafnhoe2" />
 
   <script>
     (function() {
@@ -102,6 +102,10 @@
               <span class="spinner-border spinner-border-sm me-2"></span>Loading document…
             </div>
             <iframe id="pdfFrame" style="display:none"></iframe>
+            <div id="ackVideoWrap" style="display:none;width:100%;height:100%;background:#000">
+              <video id="ackVideoPlayer" playsinline controls style="width:100%;height:100%;object-fit:contain"></video>
+              <div id="ackYoutubePlayer" style="width:100%;height:100%"></div>
+            </div>
           </div>
         </div>
 
@@ -175,16 +179,18 @@
 
   <script src="https://cdn.jsdelivr.net/npm/@tabler/core@1.4.0/dist/js/tabler.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/plyr@3/dist/plyr.css" />
+  <script src="https://cdn.jsdelivr.net/npm/plyr@3/dist/plyr.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="../../assets/js/version.js?r=05aigloe"></script>
-  <script src="../../assets/js/supabase-client.js?r=05aigloe"></script>
-  <script src="../../assets/js/auth.js?r=05aigloe"></script>
-  <script src="../../assets/js/app.js?r=05aigloe"></script>
-  <script src="../../assets/js/theme.js?r=05aigloe"></script>
-  <script src="../../assets/js/sidebar-html.js?r=05aigloe"></script>
-  <script src="../../assets/js/sidebar.js?r=05aigloe"></script>
-  <script src="../../assets/js/profile-modal.js?r=05aigloe"></script>
-  <script src="../../assets/js/status-widget.js?r=05aigloe"></script>
+  <script src="../../assets/js/version.js?r=iafnhoe2"></script>
+  <script src="../../assets/js/supabase-client.js?r=iafnhoe2"></script>
+  <script src="../../assets/js/auth.js?r=iafnhoe2"></script>
+  <script src="../../assets/js/app.js?r=iafnhoe2"></script>
+  <script src="../../assets/js/theme.js?r=iafnhoe2"></script>
+  <script src="../../assets/js/sidebar-html.js?r=iafnhoe2"></script>
+  <script src="../../assets/js/sidebar.js?r=iafnhoe2"></script>
+  <script src="../../assets/js/profile-modal.js?r=iafnhoe2"></script>
+  <script src="../../assets/js/status-widget.js?r=iafnhoe2"></script>
   <script>
 const PDF_BUCKET          = 'documents';
 const PDF_VIEWER_URL      = '../../assets/pdfjs/web/viewer.html';
@@ -388,7 +394,7 @@ async function loadItem(itemId) {
   // Load the file record
   const { data: files } = await sb
     .from('ad_document_file')
-    .select('id, storage_path, source_type, external_url, external_ref, file_name, download_file_name')
+    .select('id, storage_path, source_type, external_url, external_ref, file_name, download_file_name, mime_type')
     .eq('doc_id', dist.doc_id)
     .order('created_at', { ascending: false })
     .limit(1);
@@ -400,7 +406,73 @@ async function loadItem(itemId) {
     return;
   }
 
-  await loadPdf(pdfFile, doc?.name || dist.name);
+  const mime = pdfFile.mime_type || '';
+  if (mime.startsWith('video/') || mime.startsWith('audio/')) {
+    await loadVideo(pdfFile, doc?.name || dist.name);
+  } else {
+    await loadPdf(pdfFile, doc?.name || dist.name);
+  }
+}
+
+let _ackPlyr = null;
+
+function _youtubeId(url) {
+  if (!url) return null;
+  const m = url.match(/(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|embed\/|v\/))([a-zA-Z0-9_-]{11})/);
+  return m ? m[1] : null;
+}
+
+async function loadVideo(pdfFile, docName) {
+  const videoWrap  = document.getElementById('ackVideoWrap');
+  const videoEl    = document.getElementById('ackVideoPlayer');
+  const youtubeEl  = document.getElementById('ackYoutubePlayer');
+  const pdfFrame   = document.getElementById('pdfFrame');
+
+  pdfFrame.style.display = 'none';
+  videoWrap.style.display = 'block';
+  document.getElementById('viewerLoadingState').style.display = 'none';
+
+  if (_ackPlyr) { _ackPlyr.destroy(); _ackPlyr = null; }
+
+  const sourceType = pdfFile.source_type || 'SUPABASE';
+  let src = '';
+
+  try {
+    if (sourceType === 'SUPABASE') {
+      const { data: signed } = await sb.storage.from(PDF_BUCKET).createSignedUrl(pdfFile.storage_path, 3600);
+      if (!signed?.signedUrl) throw new Error('Could not get signed URL');
+      src = signed.signedUrl;
+    } else {
+      src = pdfFile.external_url || '';
+    }
+
+    const youtubeId = _youtubeId(src);
+    if (youtubeId) {
+      videoEl.style.display = 'none';
+      youtubeEl.style.display = 'block';
+      youtubeEl.innerHTML = `<div class="plyr__video-embed" id="ackYoutubeInner" style="width:100%;height:100%">
+        <iframe src="https://www.youtube.com/embed/${youtubeId}?origin=${encodeURIComponent(window.location.origin)}&iv_load_policy=3&modestbranding=1&playsinline=1&showinfo=0&rel=0&enablejsapi=1"
+          allowfullscreen allowtransparency allow="autoplay" style="width:100%;height:100%;border:none"></iframe>
+      </div>`;
+      _ackPlyr = new Plyr('#ackYoutubeInner', {
+        controls: ['play-large','play','progress','current-time','mute','volume','fullscreen'],
+      });
+    } else {
+      youtubeEl.style.display = 'none';
+      videoEl.style.display = 'block';
+      videoEl.src = src;
+      videoEl.type = pdfFile.mime_type || 'video/mp4';
+      _ackPlyr = new Plyr(videoEl, {
+        controls: ['play-large','play','rewind','fast-forward','progress','current-time','duration','mute','volume','fullscreen'],
+        resetOnEnd: false,
+      });
+    }
+  } catch(e) {
+    document.getElementById('viewerLoadingState').style.display = '';
+    document.getElementById('viewerLoadingState').innerHTML =
+      `<div class="text-danger text-center p-4"><i class="ti ti-alert-circle d-block mb-2" style="font-size:2rem"></i>
+      <strong>Could not load video</strong><br><span class="small">${e.message}</span></div>`;
+  }
 }
 
 async function loadPdf(pdfFile, docName) {
