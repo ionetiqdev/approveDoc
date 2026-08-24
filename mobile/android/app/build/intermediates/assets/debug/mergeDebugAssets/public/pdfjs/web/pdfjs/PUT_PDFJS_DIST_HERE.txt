@@ -1,9 +1,0 @@
-Drop the contents of the pdf.js prebuilt dist zip here.
-
-After unzipping pdfjs-x.x.x-dist.zip, copy its contents into this folder
-so that the path pdfjs/web/viewer.html exists.
-
-Then update js/config.js:
-  pdfViewerUrl: 'pdfjs/web/viewer.html',
-
-Download from: https://github.com/mozilla/pdf.js/releases

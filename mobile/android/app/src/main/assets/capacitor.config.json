@@ -1,8 +1,0 @@
-{
-	"appId": "app.approvedoc.mobile",
-	"appName": "approveDoc",
-	"webDir": "dist",
-	"server": {
-		"androidScheme": "https"
-	}
-}
