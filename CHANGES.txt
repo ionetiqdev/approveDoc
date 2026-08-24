@@ -1,1 +1,1 @@
-Sidebar: add 15px padding to version text in expanded state
+Video: full width viewer; sidebar: 15px padding above version text
