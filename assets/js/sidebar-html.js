@@ -546,7 +546,9 @@ const SidebarHtml = (() => {
       if (cutoffEl && !cutoffEl.value) {
         const d = new Date();
         d.setMonth(d.getMonth() - 36);
-        cutoffEl.value = d.toISOString().slice(0, 16);
+        // datetime-local requires YYYY-MM-DDTHH:MM format
+        const pad = n => String(n).padStart(2, '0');
+        cutoffEl.value = d.getFullYear() + '-' + pad(d.getMonth()+1) + '-' + pad(d.getDate()) + 'T' + pad(d.getHours()) + ':' + pad(d.getMinutes());
       }
 
       // Load counts
