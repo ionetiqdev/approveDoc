@@ -172,16 +172,14 @@
         <div class="card-header py-2">
           <h3 class="card-title">Audit Log</h3>
           <div class="card-options d-flex align-items-center gap-3">
-            <label class="form-check form-switch mb-0" id="includeArchivedWrap" title="Query includes archived records — may be slow">
-              <input class="form-check-input" type="checkbox" id="includeArchived" />
-              <span class="form-check-label small text-secondary">Include archived</span>
-            </label>
             <span class="text-secondary small" id="resultCount"></span>
-            <button class="btn btn-sm btn-outline-warning" id="archiveBtn" title="Move old records to archive">
-              <i class="ti ti-archive me-1"></i>Archive old records
-            </button>
+            <span id="archivedIndicator" style="display:none" class="badge bg-warning-lt text-warning"
+              data-bs-toggle="tooltip" data-bs-placement="left" data-bs-title="Showing archived records — change in Preferences">
+              <i class="ti ti-archive me-1"></i>Archived
+            </span>
           </div>
         </div>
+        <input type="hidden" id="includeArchived" value="0" />
         <div class="audit-table-wrap">
           <table class="table table-vcenter table-hover card-table mb-0" style="table-layout:fixed;width:100%">
             <colgroup>
@@ -308,39 +306,13 @@ function calcPageSize() {
   // Apply saved include-archived preference
   const savedIncludeArchived = Auth.getPreference('auditIncludeArchived', false);
   if (savedIncludeArchived) {
-    document.getElementById('includeArchived').checked = true;
+    document.getElementById('includeArchived').value = '1';
+  const ind = document.getElementById('archivedIndicator');
+  if (ind) { ind.style.display = ''; new bootstrap.Tooltip(ind); }
   }
 
   calcPageSize();
   await loadPage(0);
-
-  document.getElementById('archiveBtn').addEventListener('click', () => {
-    document.getElementById('archiveModalBody').innerHTML = `
-      <p class="text-secondary small mb-0">This will move audit records older than each organisation's retention period to <code>audit_log_archive</code>. The live audit log will only show recent records — archived records can be viewed by enabling "Include archived".</p>
-      <div class="mt-3 p-2 bg-warning-lt rounded small"><i class="ti ti-alert-triangle me-1"></i>This action cannot be undone.</div>`;
-    document.getElementById('archiveConfirm').disabled = false;
-    document.getElementById('archiveConfirm').innerHTML = '<i class="ti ti-archive me-1"></i>Archive now';
-    bootstrap.Modal.getOrCreateInstance(document.getElementById('archiveModal')).show();
-  });
-
-  document.getElementById('archiveConfirm').addEventListener('click', async () => {
-    const btn = document.getElementById('archiveConfirm');
-    btn.disabled = true;
-    btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Archiving…';
-    const { data, error } = await sb.rpc('archive_audit_log');
-    if (error) {
-      document.getElementById('archiveModalBody').innerHTML = `<div class="text-danger small"><i class="ti ti-alert-circle me-1"></i>${error.message}</div>`;
-      btn.disabled = false;
-      btn.innerHTML = '<i class="ti ti-archive me-1"></i>Archive now';
-    } else {
-      const total = data?.total_archived ?? 0;
-      document.getElementById('archiveModalBody').innerHTML = `<div class="text-success small"><i class="ti ti-circle-check me-1"></i><strong>${total}</strong> record${total !== 1 ? 's' : ''} archived successfully.</div>`;
-      btn.style.display = 'none';
-      await loadPage(0);
-    }
-  });
-
-  document.getElementById('includeArchived').addEventListener('change', () => loadPage(0));
 
   window.addEventListener('resize', async () => {
     if (calcPageSize()) await loadPage(currentPage);
@@ -436,7 +408,7 @@ async function loadPage(page) {
   const to     = document.getElementById('filterTo').value;
   const search = document.getElementById('filterSearch').value.trim();
   const orgId  = Auth.getOrganisationId();
-  const includeArchived = document.getElementById('includeArchived')?.checked;
+  const includeArchived = document.getElementById('includeArchived')?.value === '1';
   const auditTable = includeArchived ? 'audit_log_archive' : 'audit_log';
 
   let query = sb.from(auditTable).select('*', { count: 'exact' });

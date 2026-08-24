@@ -388,18 +388,42 @@ const SidebarHtml = (() => {
                   <!-- Audit tab (admin only) -->
                   <div class="tab-pane" id="prefTabAudit" style="min-height:490px;padding:20px">
                     <h4 class="mb-3">Audit Trail Settings</h4>
+
+                    <!-- Include archived -->
                     <div class="mb-4">
                       <label class="form-check form-switch">
                         <input class="form-check-input" type="checkbox" id="prefIncludeArchived" />
-                        <span class="form-check-label fw-semibold">Include archived records by default</span>
+                        <span class="form-check-label fw-semibold">Show archived records on Audit Trail page</span>
                       </label>
-                      <p class="text-secondary small mt-1">When enabled, the Audit Trail page will query both live and archived records. This may be slower on large datasets.</p>
+                      <p class="text-secondary small mt-1">When enabled, the Audit Trail page queries the archive table instead of the live table. An indicator will appear on the page. This may be slower on large datasets.</p>
                     </div>
+
+                    <!-- Record counts -->
                     <div class="mb-4">
                       <h5 class="mb-2">Record Counts</h5>
                       <div id="prefAuditCounts" class="text-secondary small">
                         <span class="spinner-border spinner-border-sm me-1"></span>Loading…
                       </div>
+                    </div>
+
+                    <!-- Archive action -->
+                    <div class="mb-3 border-top pt-3">
+                      <h5 class="mb-1">Archive Old Records</h5>
+                      <p class="text-secondary small mb-3">Move records older than the selected date to the archive table. This cannot be undone.</p>
+                      <div class="row g-2 align-items-end mb-3">
+                        <div class="col">
+                          <label class="form-label mb-1 small">Archive records older than</label>
+                          <input type="datetime-local" id="prefArchiveCutoff" class="form-control form-control-sm" />
+                        </div>
+                        <div class="col-auto">
+                          <button class="btn btn-sm btn-outline-secondary" id="prefArchivePreview">Preview count</button>
+                        </div>
+                      </div>
+                      <div id="prefArchivePreviewResult" class="small text-secondary mb-3" style="display:none"></div>
+                      <button class="btn btn-sm btn-warning" id="prefArchiveRun" disabled>
+                        <i class="ti ti-archive me-1"></i>Archive now
+                      </button>
+                      <div id="prefArchiveResult" class="small mt-2" style="display:none"></div>
                     </div>
                   </div>
 
@@ -517,23 +541,79 @@ const SidebarHtml = (() => {
       const toggle = document.getElementById('prefIncludeArchived');
       if (toggle) toggle.checked = !!savedInclude;
 
+      // Set default cutoff to org retention months ago
+      const cutoffEl = document.getElementById('prefArchiveCutoff');
+      if (cutoffEl && !cutoffEl.value) {
+        const d = new Date();
+        d.setMonth(d.getMonth() - 36);
+        cutoffEl.value = d.toISOString().slice(0, 16);
+      }
+
       // Load counts
       const countsEl = document.getElementById('prefAuditCounts');
-      if (!countsEl) return;
-      countsEl.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Loading…';
-      try {
-        const orgId = Auth.getOrganisationId();
-        const [liveRes, archiveRes] = await Promise.all([
-          sb.from('audit_log').select('id', { count: 'exact', head: true }).eq('organisation_id', orgId),
-          sb.from('audit_log_archive').select('id', { count: 'exact', head: true }).eq('organisation_id', orgId),
-        ]);
-        countsEl.innerHTML = '<table class="table table-sm">' +
-          '<tr><td>Live audit records</td><td class="fw-semibold">' + (liveRes.count || 0).toLocaleString() + '</td></tr>' +
-          '<tr><td>Archived audit records</td><td class="fw-semibold">' + (archiveRes.count || 0).toLocaleString() + '</td></tr>' +
-          '</table>';
-      } catch(e) {
-        countsEl.innerHTML = '<span class="text-danger">Could not load counts</span>';
+      if (countsEl) {
+        countsEl.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Loading…';
+        try {
+          const orgId = Auth.getOrganisationId();
+          const [liveRes, archiveRes] = await Promise.all([
+            sb.from('audit_log').select('id', { count: 'exact', head: true }).eq('organisation_id', orgId),
+            sb.from('audit_log_archive').select('id', { count: 'exact', head: true }).eq('organisation_id', orgId),
+          ]);
+          countsEl.innerHTML = '<table class="table table-sm">' +
+            '<tr><td>Live audit records</td><td class="fw-semibold">' + (liveRes.count || 0).toLocaleString() + '</td></tr>' +
+            '<tr><td>Archived audit records</td><td class="fw-semibold">' + (archiveRes.count || 0).toLocaleString() + '</td></tr>' +
+            '</table>';
+        } catch(e) {
+          countsEl.innerHTML = '<span class="text-danger">Could not load counts</span>';
+        }
       }
+
+      // Preview button
+      const previewBtn = document.getElementById('prefArchivePreview');
+      const previewResult = document.getElementById('prefArchivePreviewResult');
+      const archiveRunBtn = document.getElementById('prefArchiveRun');
+
+      previewBtn?.addEventListener('click', async () => {
+        const cutoff = document.getElementById('prefArchiveCutoff')?.value;
+        if (!cutoff) { App.toast('Please select a date', 'warning'); return; }
+        previewBtn.disabled = true;
+        previewBtn.textContent = 'Counting…';
+        const orgId = Auth.getOrganisationId();
+        const { count } = await sb.from('audit_log')
+          .select('id', { count: 'exact', head: true })
+          .eq('organisation_id', orgId)
+          .lt('created_at', cutoff);
+        previewBtn.disabled = false;
+        previewBtn.textContent = 'Preview count';
+        previewResult.style.display = '';
+        previewResult.innerHTML = '<i class="ti ti-info-circle me-1"></i><strong>' + (count || 0).toLocaleString() + '</strong> record' + (count !== 1 ? 's' : '') + ' would be archived.';
+        archiveRunBtn.disabled = count === 0;
+      });
+
+      // Archive button
+      const archiveResult = document.getElementById('prefArchiveResult');
+      archiveRunBtn?.addEventListener('click', async () => {
+        const cutoff = document.getElementById('prefArchiveCutoff')?.value;
+        if (!cutoff) return;
+        if (!await App.confirm({ title: 'Archive audit records?', message: 'This will move records older than ' + cutoff + ' to the archive. This cannot be undone.', confirmText: 'Archive', confirmClass: 'btn-warning' })) return;
+        archiveRunBtn.disabled = true;
+        archiveRunBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Archiving…';
+        const orgId = Auth.getOrganisationId();
+
+        // Move to archive
+        const { data: rows } = await sb.from('audit_log').select('*').eq('organisation_id', orgId).lt('created_at', cutoff);
+        if (rows?.length) {
+          await sb.from('audit_log_archive').insert(rows);
+          await sb.from('audit_log').delete().eq('organisation_id', orgId).lt('created_at', cutoff);
+        }
+        const moved = rows?.length || 0;
+        archiveRunBtn.innerHTML = '<i class="ti ti-archive me-1"></i>Archive now';
+        archiveResult.style.display = '';
+        archiveResult.className = 'small mt-2 text-success';
+        archiveResult.innerHTML = '<i class="ti ti-circle-check me-1"></i>' + moved.toLocaleString() + ' record' + (moved !== 1 ? 's' : '') + ' archived.';
+        previewResult.style.display = 'none';
+        await _populateAuditTab(); // refresh counts
+      });
     }
 
     const openPreferences = e => {

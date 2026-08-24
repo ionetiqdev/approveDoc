@@ -1,1 +1,1 @@
-Fix: broken template literal in _populateAuditTab causing sidebar to fail
+Audit: move all archive actions to Preferences - date picker, count preview, archive button; indicator on audit page
