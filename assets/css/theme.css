@@ -427,7 +427,7 @@ header [data-user-initials] {
   opacity: .4;
   color: var(--sidebar-fg);
   text-align: center;
-  padding: .1rem .5rem .5rem;
+  padding: .1rem 15px .5rem;
   margin-top: auto;
 }
 #sidebar.collapsed .sidebar-published-text { display: none; }

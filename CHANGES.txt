@@ -1,1 +1,1 @@
-Sidebar: clean footer - published text pinned to bottom in expanded; collapsed shows logout+version icon stacked
+Sidebar: add 15px padding to version text in expanded state
