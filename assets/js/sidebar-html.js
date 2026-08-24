@@ -545,8 +545,6 @@ const SidebarHtml = (() => {
       const cutoffEl = document.getElementById('prefArchiveCutoff');
       if (cutoffEl && !cutoffEl.value) {
         const d = new Date();
-        d.setMonth(d.getMonth() - 36);
-        // datetime-local requires YYYY-MM-DDTHH:MM format
         const pad = n => String(n).padStart(2, '0');
         cutoffEl.value = d.getFullYear() + '-' + pad(d.getMonth()+1) + '-' + pad(d.getDate()) + 'T' + pad(d.getHours()) + ':' + pad(d.getMinutes());
       }
@@ -584,7 +582,7 @@ const SidebarHtml = (() => {
         const { count } = await sb.from('audit_log')
           .select('id', { count: 'exact', head: true })
           .eq('organisation_id', orgId)
-          .lt('created_at', cutoff);
+          .lte('created_at', cutoff + ':59');
         previewBtn.disabled = false;
         previewBtn.textContent = 'Preview count';
         previewResult.style.display = '';
@@ -597,24 +595,25 @@ const SidebarHtml = (() => {
       archiveRunBtn?.addEventListener('click', async () => {
         const cutoff = document.getElementById('prefArchiveCutoff')?.value;
         if (!cutoff) return;
-        if (!await App.confirm({ title: 'Archive audit records?', message: 'This will move records older than ' + cutoff + ' to the archive. This cannot be undone.', confirmText: 'Archive', confirmClass: 'btn-warning' })) return;
+        if (!await App.confirm({ title: 'Archive audit records?', message: 'This will move records older than ' + cutoff.replace('T', ' ') + ' to the archive. This cannot be undone.', confirmText: 'Archive', confirmClass: 'btn-warning' })) return;
         archiveRunBtn.disabled = true;
         archiveRunBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Archiving…';
-        const orgId = Auth.getOrganisationId();
 
-        // Move to archive
-        const { data: rows } = await sb.from('audit_log').select('*').eq('organisation_id', orgId).lt('created_at', cutoff);
-        if (rows?.length) {
-          await sb.from('audit_log_archive').insert(rows);
-          await sb.from('audit_log').delete().eq('organisation_id', orgId).lt('created_at', cutoff);
-        }
-        const moved = rows?.length || 0;
+        const { data, error } = await sb.rpc('archive_audit_log', { p_cutoff: new Date(cutoff + ':59').toISOString() });
+
+        archiveRunBtn.disabled = false;
         archiveRunBtn.innerHTML = '<i class="ti ti-archive me-1"></i>Archive now';
         archiveResult.style.display = '';
-        archiveResult.className = 'small mt-2 text-success';
-        archiveResult.innerHTML = '<i class="ti ti-circle-check me-1"></i>' + moved.toLocaleString() + ' record' + (moved !== 1 ? 's' : '') + ' archived.';
-        previewResult.style.display = 'none';
-        await _populateAuditTab(); // refresh counts
+        if (error) {
+          archiveResult.className = 'small mt-2 text-danger';
+          archiveResult.innerHTML = '<i class="ti ti-alert-circle me-1"></i>' + error.message;
+        } else {
+          const moved = data?.total_archived || 0;
+          archiveResult.className = 'small mt-2 text-success';
+          archiveResult.innerHTML = '<i class="ti ti-circle-check me-1"></i>' + moved.toLocaleString() + ' record' + (moved !== 1 ? 's' : '') + ' archived.';
+          previewResult.style.display = 'none';
+          await _populateAuditTab();
+        }
       });
     }
 
