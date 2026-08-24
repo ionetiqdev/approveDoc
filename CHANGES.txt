@@ -1,1 +1,1 @@
-Sidebar: clean collapsed footer - logout icon only + version icon with tooltip; expanded shows avatar/name/role/logout
+Sidebar: fix expanded version label, version icon on own line, consistent tooltip style on logout

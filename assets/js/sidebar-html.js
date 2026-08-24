@@ -190,13 +190,16 @@ const SidebarHtml = (() => {
             <div class="sidebar-user-name" data-user-name>—</div>
             <div class="sidebar-user-role" data-user-role>—</div>
           </div>
-          <a href="#" class="sidebar-logout-btn ms-auto" data-action="signout" title="Sign out"><i class="ti ti-logout-2"></i></a>
+          <a href="#" class="sidebar-logout-btn ms-auto" data-action="signout" data-bs-toggle="tooltip" data-bs-placement="right" data-bs-title="Sign out"><i class="ti ti-logout-2"></i></a>
         </div>
+        <div class="sidebar-published-text" data-published>Published —</div>
         <div class="sidebar-footer-meta">
-          <a href="#" class="nav-link sidebar-logout-collapsed" data-action="signout" title="Sign out">
+          <a href="#" class="sidebar-logout-collapsed" data-action="signout" data-bs-toggle="tooltip" data-bs-placement="right" data-bs-title="Sign out">
             <i class="ti ti-logout-2"></i>
           </a>
-          <span class="sidebar-version-icon" id="sidebarVersionBtn" title="">
+        </div>
+        <div class="sidebar-footer-meta">
+          <span class="sidebar-version-icon" id="sidebarVersionBtn">
             <i class="ti ti-info-circle"></i>
           </span>
         </div>
@@ -222,9 +225,16 @@ const SidebarHtml = (() => {
     // Version icon tooltip
     const versionBtn = document.getElementById('sidebarVersionBtn');
     if (versionBtn && typeof APP_PUBLISHED !== 'undefined') {
-      versionBtn.setAttribute('title', 'Published ' + APP_PUBLISHED);
+      versionBtn.setAttribute('data-bs-toggle', 'tooltip');
+      versionBtn.setAttribute('data-bs-placement', 'right');
+      versionBtn.setAttribute('data-bs-title', 'Published ' + APP_PUBLISHED);
       new bootstrap.Tooltip(versionBtn, { placement: 'right', trigger: 'hover' });
     }
+
+    // Init Bootstrap tooltips on logout buttons
+    document.querySelectorAll('[data-bs-toggle="tooltip"]').forEach(function(el) {
+      if (!bootstrap.Tooltip.getInstance(el)) new bootstrap.Tooltip(el);
+    });
   }
 
   function _injectPreferencesModal() {

@@ -424,14 +424,23 @@ header [data-user-initials] {
 .sidebar-footer-meta {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  padding: .25rem .5rem;
+  justify-content: center;
+  padding: .25rem .5rem .5rem;
 }
-/* In expanded state: hide the collapsed-only logout and version icon */
+/* In expanded state: hide collapsed-only elements, show published text */
 #sidebar:not(.collapsed) .sidebar-logout-collapsed { display: none; }
 #sidebar:not(.collapsed) .sidebar-version-icon { display: none; }
-/* In expanded state: keep published message hidden (removed from DOM) */
-/* In collapsed state: hide user row */
+#sidebar:not(.collapsed) .sidebar-footer-meta { justify-content: center; }
+/* Published text for expanded state */
+.sidebar-published-text {
+  font-size: .65rem;
+  opacity: .4;
+  color: var(--sidebar-fg);
+  text-align: center;
+  padding: .15rem .5rem .4rem;
+}
+#sidebar.collapsed .sidebar-published-text { display: none; }
+/* In collapsed state: hide user row and published text */
 #sidebar.collapsed .sidebar-user-row { display: none; }
 /* Version icon styling */
 .sidebar-version-icon {
@@ -441,6 +450,9 @@ header [data-user-initials] {
   padding: .25rem;
   font-size: 1rem;
   line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 .sidebar-version-icon:hover { opacity: .8; }
 /* Collapsed logout icon */
@@ -448,5 +460,8 @@ header [data-user-initials] {
   padding: .25rem .5rem;
   color: var(--sidebar-fg);
   opacity: .6;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 .sidebar-logout-collapsed:hover { opacity: 1; }
