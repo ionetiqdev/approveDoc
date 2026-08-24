@@ -405,20 +405,25 @@ if (docSearch) {
 // ── Video viewer (Plyr) ───────────────────────────────────────────────────
 let _plyrInstance = null;
 
+function _youtubeId(url) {
+  if (!url) return null;
+  const m = url.match(/(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|embed\/|v\/))([a-zA-Z0-9_-]{11})/);
+  return m ? m[1] : null;
+}
+
 async function loadVideo(file, docName) {
-  // Hide PDF frame, show video wrap
   docPdfFrame.style.display = 'none';
   docEmptyState.style.display = 'none';
 
-  const videoWrap = document.getElementById('docVideoWrap');
-  const videoEl   = document.getElementById('docVideoPlayer');
-  videoWrap.style.display = 'flex';
+  const videoWrap  = document.getElementById('docVideoWrap');
+  const videoEl    = document.getElementById('docVideoPlayer');
+  const youtubeEl  = document.getElementById('docYoutubePlayer');
+  videoWrap.style.display = 'block';
 
-  // Destroy previous Plyr instance
   if (_plyrInstance) { _plyrInstance.destroy(); _plyrInstance = null; }
 
-  let src = '';
   const sourceType = file.source_type || 'SUPABASE';
+  let src = '';
 
   if (sourceType === 'SUPABASE') {
     const { data: signed } = await sb.storage
@@ -430,13 +435,30 @@ async function loadVideo(file, docName) {
     src = file.external_url;
   }
 
-  videoEl.src = src;
-  videoEl.type = file.mime_type || 'video/mp4';
+  const youtubeId = _youtubeId(src);
 
-  _plyrInstance = new Plyr(videoEl, {
-    controls: ['play-large','play','rewind','fast-forward','progress','current-time','duration','mute','volume','fullscreen'],
-    resetOnEnd: false,
-  });
+  if (youtubeId) {
+    // YouTube — use Plyr embed div
+    videoEl.style.display = 'none';
+    youtubeEl.style.display = 'block';
+    youtubeEl.innerHTML = `<div class="plyr__video-embed" id="plyrYoutubeInner" style="width:100%;height:100%">
+      <iframe src="https://www.youtube.com/embed/${youtubeId}?origin=${encodeURIComponent(window.location.origin)}&iv_load_policy=3&modestbranding=1&playsinline=1&showinfo=0&rel=0&enablejsapi=1"
+        allowfullscreen allowtransparency allow="autoplay" style="width:100%;height:100%;border:none"></iframe>
+    </div>`;
+    _plyrInstance = new Plyr('#plyrYoutubeInner', {
+      controls: ['play-large','play','progress','current-time','mute','volume','fullscreen'],
+    });
+  } else {
+    // Native video
+    youtubeEl.style.display = 'none';
+    videoEl.style.display = 'block';
+    videoEl.src = src;
+    videoEl.type = file.mime_type || 'video/mp4';
+    _plyrInstance = new Plyr(videoEl, {
+      controls: ['play-large','play','rewind','fast-forward','progress','current-time','duration','mute','volume','fullscreen'],
+      resetOnEnd: false,
+    });
+  }
 }
 
 // ── Inject CSS into pdf.js iframe ────────────────────────────────────
