@@ -1,1 +1,1 @@
-Acknowledge page: add Plyr video support with YouTube detection, route by mime_type
+User view: REFERENCE items now appear in both Acknowledged and Reference sections
