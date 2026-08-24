@@ -1,1 +1,1 @@
-Fix: document viewer - file variable out of scope, use pdfFile.mime_type instead
+Audit: add audit_custom calls to Acknowledge, Reject, Reference and Distribution created/updated
