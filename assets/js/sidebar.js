@@ -43,21 +43,47 @@ const Sidebar = (() => {
     const submenu = document.getElementById(submenuId);
     if (!submenu) return;
 
-    // Build content
     const title = link.querySelector('.nav-link-text')?.textContent?.trim() || '';
-    const items = [...submenu.querySelectorAll('.nav-link[href]')].map(a => {
-      const text   = a.querySelector('.nav-link-text')?.textContent?.trim() || a.textContent.trim();
-      const icon   = a.querySelector('i')?.outerHTML || '';
-      const active = a.classList.contains('active') ? ' active' : '';
-      return `<a href="${a.href}" class="nav-link${active}">${icon}${text}</a>`;
-    }).join('');
 
-    _floatEl.innerHTML = `<div class="float-menu-title">${title}</div>${items}`;
+    // Build items — detect nested submenus and render as expandable rows
+    let html = `<div class="float-menu-title">${title}</div>`;
+
+    submenu.querySelectorAll(':scope > li').forEach(li => {
+      const subTrigger = li.querySelector(':scope > a[data-submenu]');
+      if (subTrigger) {
+        // Nested submenu — render as item with arrow
+        const subText = subTrigger.querySelector('.nav-link-text')?.textContent?.trim() || '';
+        const subId   = subTrigger.dataset.submenu;
+        html += `<div class="nav-link float-submenu-trigger" data-submenu-id="${subId}" style="justify-content:space-between">
+          <span>${subText}</span><i class="ti ti-chevron-right" style="font-size:.75rem;opacity:.6"></i>
+        </div>`;
+        // Also render nested items inline below with indent
+        const nested = document.getElementById(subId);
+        if (nested) {
+          nested.querySelectorAll('a[href]').forEach(a => {
+            const text   = a.querySelector('.nav-link-text')?.textContent?.trim() || a.textContent.trim();
+            const icon   = a.querySelector('i')?.outerHTML || '';
+            const active = a.classList.contains('active') ? ' active' : '';
+            html += `<a href="${a.href}" class="nav-link${active}" style="padding-left:1.5rem;font-size:.8rem">${icon}${text}</a>`;
+          });
+        }
+      } else {
+        // Regular link
+        const a = li.querySelector('a[href]');
+        if (!a) return;
+        const text   = a.querySelector('.nav-link-text')?.textContent?.trim() || a.textContent.trim();
+        const icon   = a.querySelector('i')?.outerHTML || '';
+        const active = a.classList.contains('active') ? ' active' : '';
+        html += `<a href="${a.href}" class="nav-link${active}">${icon}${text}</a>`;
+      }
+    });
+
+    _floatEl.innerHTML = html;
 
     // Position vertically aligned to the link
-    const rect = link.getBoundingClientRect();
+    const rect  = link.getBoundingClientRect();
     const menuH = _floatEl.offsetHeight || 200;
-    let top = rect.top;
+    let top     = rect.top;
     if (top + menuH > window.innerHeight - 8) top = window.innerHeight - menuH - 8;
     _floatEl.style.top = top + 'px';
 

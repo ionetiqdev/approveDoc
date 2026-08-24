@@ -1,1 +1,1 @@
-Audit: add audit_custom calls to Acknowledge, Reject, Reference and Distribution created/updated
+Sidebar: fix floating submenu for nested submenus - show section header with arrow, items indented below

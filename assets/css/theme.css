@@ -409,3 +409,13 @@ header [data-user-initials] {
   color: var(--tblr-primary);
   font-weight: 600;
 }
+.sidebar-float-menu .float-submenu-trigger {
+  font-size: .8rem;
+  font-weight: 600;
+  opacity: .7;
+  cursor: default;
+  padding: .5rem .9rem .2rem;
+}
+.sidebar-float-menu .float-submenu-trigger:hover {
+  background: transparent;
+}
