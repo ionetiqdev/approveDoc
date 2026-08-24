@@ -1,1 +1,1 @@
-User view: REFERENCE items now appear in both Acknowledged and Reference sections
+Word to PDF: add CloudConvert conversion via Edge Function, accept .doc/.docx in file inputs

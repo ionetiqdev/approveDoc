@@ -775,7 +775,11 @@ async function deleteDoc(id, e) {
 
 // ── Upload ────────────────────────────────────────────────────────────
 async function uploadAndSave(description, file, progressBar, statusEl, categoryId, descriptionText) {
-  if (!file) { App.toast('Please select a PDF file', 'warning'); return false; }
+  if (!file) { App.toast('Please select a file', 'warning'); return false; }
+
+  const isWord = /\.(docx?|doc)$/i.test(file.name) ||
+    file.type === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' ||
+    file.type === 'application/msword';
 
   const orgId = Auth.getOrganisationId();
   if (!orgId) { App.toast('No organisation assigned to your account', 'danger'); return false; }
@@ -783,7 +787,7 @@ async function uploadAndSave(description, file, progressBar, statusEl, categoryI
   const safeName = `${orgId}/${Date.now()}_${file.name.replace(/[^a-z0-9._-]/gi, '_')}`;
 
   if (statusEl) statusEl.textContent = 'Creating document record…';
-  if (progressBar) progressBar.style.width = '15%';
+  if (progressBar) progressBar.style.width = '10%';
 
   const docPayload = { [DOC_CONFIG.colDocDesc]: description || file.name, [DOC_CONFIG.colOrgId]: orgId };
   if (categoryId) docPayload[DOC_CONFIG.colDocCatId] = categoryId;
@@ -796,7 +800,7 @@ async function uploadAndSave(description, file, progressBar, statusEl, categoryI
     .single();
 
   if (docErr) { App.toast('Failed to create record: ' + (docErr.message || docErr.code), 'danger'); return false; }
-  if (progressBar) progressBar.style.width = '35%';
+  if (progressBar) progressBar.style.width = '25%';
 
   if (statusEl) statusEl.textContent = 'Uploading file…';
   const { error: upErr } = await sb.storage
@@ -808,18 +812,45 @@ async function uploadAndSave(description, file, progressBar, statusEl, categoryI
     await sb.from(DOC_CONFIG.tableDocs).delete().eq(DOC_CONFIG.colDocId, docData[DOC_CONFIG.colDocId]);
     return false;
   }
-  if (progressBar) progressBar.style.width = '70%';
+  if (progressBar) progressBar.style.width = '50%';
 
+  let finalPath = safeName;
+  let finalMime = file.type || 'application/pdf';
+
+  if (isWord) {
+    if (statusEl) statusEl.textContent = 'Converting to PDF…';
+    try {
+      const saved = AppSession.load();
+      const convRes = await fetch(`${SUPABASE_URL}/functions/v1/convert-document`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer ' + saved?.access_token,
+          'apikey': SUPABASE_ANON_KEY,
+        },
+        body: JSON.stringify({ storage_path: safeName, bucket: DOC_CONFIG.bucket }),
+      });
+      const convData = await convRes.json();
+      if (!convRes.ok || convData.error) throw new Error(convData.error || 'Conversion failed');
+      finalPath = convData.pdf_path;
+      finalMime = 'application/pdf';
+      if (progressBar) progressBar.style.width = '80%';
+    } catch(e) {
+      App.toast('Word conversion failed: ' + e.message + '. Original file saved.', 'warning');
+    }
+  }
+
+  if (progressBar) progressBar.style.width = '90%';
   if (statusEl) statusEl.textContent = 'Saving file reference…';
-  const downloadFileName = sanitizeFileName(description || file.name);
+  const downloadFileName = sanitizeFileName(description || file.name).replace(/\.(docx?|doc)$/i, '.pdf');
   const { error: fileErr } = await sb.from(DOC_CONFIG.tableFiles).insert({
     [DOC_CONFIG.colDocId]: docData[DOC_CONFIG.colDocId],
     [DOC_CONFIG.colOrgId]: orgId,
     file_name: file.name,
-    storage_path: safeName,
+    storage_path: finalPath,
     download_file_name: downloadFileName,
     file_size_bytes: file.size,
-    mime_type: file.type || 'application/pdf'
+    mime_type: finalMime
   });
 
   if (fileErr) { App.toast('File reference failed: ' + fileErr.message, 'danger'); return false; }
