@@ -1,0 +1,62 @@
+# Rafter security scanner configuration
+# False positives suppressed with justification
+
+suppress:
+  # pdf.js third-party library - not our code, not maintainable
+  - rule: R-EFEEF
+    paths:
+      - assets/pdfjs/**
+      - mobile/public/pdfjs/**
+
+  # Capacitor WebView navigation allowlist - required config, not CORS headers
+  - rule: R-CDD76
+    paths:
+      - mobile/android/app/src/main/res/xml/config.xml
+
+  # Android auto-generated test file - not our code
+  - rule: R-2CBE9
+    paths:
+      - mobile/android/**
+
+  # Open redirect false positives - URLs derived from hardcoded data-app-root HTML attribute
+  - rule: R-23B73
+    paths:
+      - assets/js/auth.js
+    comment: "_redirectToLogin and _rootPath use window._appRootUrl computed from data-app-root HTML attribute - not user input"
+
+  # href/navigation false positives - appRoot from hardcoded HTML attribute, expandSection is internal constant
+  - rule: R-6C5D6
+    paths:
+      - assets/js/status-widget.js
+  - rule: R-15BB5
+    paths:
+      - assets/js/status-widget.js
+
+  # iframe src false positives - blob: URLs constructed internally, pdf.js paths are constants
+  - rule: R-82D8E
+    paths:
+      - pages/documents/documents.js
+    comment: "iframe src is a blob: URL created from our own fetch, or a pdf.js path constant"
+
+  # innerHTML false positives - all use App.escHtml() on user values, remainder is static HTML
+  - rule: R-E3886
+    paths:
+      - assets/js/app.js
+      - assets/js/auth.js
+      - assets/js/profile-modal.js
+      - assets/js/sidebar-html.js
+      - assets/js/sidebar.js
+      - assets/js/status-widget.js
+      - pages/documents/documents.js
+    comment: "All user-controlled values escaped via App.escHtml() before innerHTML insertion"
+
+  # Markdown innerHTML false positives - App.escHtml() applied to all user values
+  - rule: R-2EB08
+    paths:
+      - pages/documents/documents.js
+    comment: "Not markdown rendering - template literals with App.escHtml() on user values"
+
+  # SSRF false positive - URL comes from Supabase signed URL or admin-set external_url, not end-user input
+  - rule: R-R0385C
+    paths:
+      - mobile/src/screens/document-detail.js

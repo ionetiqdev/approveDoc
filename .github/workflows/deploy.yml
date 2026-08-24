@@ -5,6 +5,9 @@ on:
     branches:
       - '**'
 
+permissions:
+  contents: read
+
 jobs:
   deploy:
     runs-on: ubuntu-latest
@@ -12,7 +15,7 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@a37ce9120846195fa4ece8f58b268e6043cb2f26  # v3
 
       - name: Inject Supabase credentials
         # supabase-client.js is committed with {{SUPABASE_URL}} /
@@ -48,7 +51,7 @@ jobs:
         run: echo "name=$(echo '${{ github.ref_name }}' | tr '/' '-')" >> "$GITHUB_OUTPUT"
 
       - name: Deploy via FTP
-        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
+        uses: SamKirkland/FTP-Deploy-Action@8e83cea8672e3fbcbb9fdafff34debf6ae4c5f65  # v4.3.5
         with:
           server: ${{ secrets.FTP_HOST }}
           username: ${{ secrets.FTP_USERNAME }}
@@ -75,11 +78,12 @@ jobs:
       - name: Notify Slack
         if: success() && vars.SLACK_NOTIFY == 'true'
         continue-on-error: true
+        env:
+          REPO_NAME: ${{ github.event.repository.name }}
+          BRANCH_NAME: ${{ github.ref_name }}
+          COMMIT_MSG: ${{ github.event.head_commit.message }}
         run: |
           TIMESTAMP=$(TZ="Europe/London" date '+%d/%m/%y %H:%M')
-          REPO_NAME="${{ github.event.repository.name }}"
-          BRANCH_NAME="${{ github.ref_name }}"
-          COMMIT_MSG="${{ github.event.head_commit.message }}"
           curl -s -X POST -H 'Content-type: application/json' \
             --connect-timeout 10 \
             --max-time 15 \

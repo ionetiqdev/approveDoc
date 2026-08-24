@@ -1,1 +1,1 @@
-Security: Supabase key migration guide, update .gitignore and project.conf.example
+Security: fix GitHub Actions permissions and pin action SHAs; validate avatarUrl; add .rafter.yml suppressions for false positives

@@ -22,4 +22,4 @@ SUPABASE_URL_DEV=https://YOUR_DEV_PROJECT_ID.supabase.co
 SUPABASE_ANON_KEY_DEV=sb_publishable_YOUR_DEV_KEY
 
 # Legacy JWT anon keys also work during migration period (deprecated end of 2026)
-# SUPABASE_ANON_KEY_MAIN=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+# SUPABASE_ANON_KEY_MAIN=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.YOUR_LEGACY_JWT_KEY_HERE

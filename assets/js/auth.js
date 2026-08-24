@@ -202,14 +202,15 @@ const Auth = (() => {
       : name.slice(0,2).toUpperCase();
 
     document.querySelectorAll('[data-user-initials]').forEach(el => {
-      if (avatarUrl) {
+      const safeAvatarUrl = avatarUrl && /^https?:\/\//.test(avatarUrl) ? avatarUrl : null;
+      if (safeAvatarUrl) {
         const img = document.createElement('img');
-        img.src = avatarUrl;
+        img.src = safeAvatarUrl;
         img.alt = initials;
         img.style.cssText = 'width:100%;height:100%;object-fit:cover;border-radius:50%';
         el.textContent = '';
         el.appendChild(img);
-        _wireAvatarTooltip(el, avatarUrl, name);
+        _wireAvatarTooltip(el, safeAvatarUrl, name);
       } else {
         el.textContent = initials;
       }
