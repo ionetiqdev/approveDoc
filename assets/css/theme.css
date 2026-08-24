@@ -419,3 +419,34 @@ header [data-user-initials] {
 .sidebar-float-menu .float-submenu-trigger:hover {
   background: transparent;
 }
+
+/* ── Sidebar footer v2 ───────────────────────────────────────────────────── */
+.sidebar-footer-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: .25rem .5rem;
+}
+/* In expanded state: hide the collapsed-only logout and version icon */
+#sidebar:not(.collapsed) .sidebar-logout-collapsed { display: none; }
+#sidebar:not(.collapsed) .sidebar-version-icon { display: none; }
+/* In expanded state: keep published message hidden (removed from DOM) */
+/* In collapsed state: hide user row */
+#sidebar.collapsed .sidebar-user-row { display: none; }
+/* Version icon styling */
+.sidebar-version-icon {
+  color: var(--sidebar-fg);
+  opacity: .4;
+  cursor: pointer;
+  padding: .25rem;
+  font-size: 1rem;
+  line-height: 1;
+}
+.sidebar-version-icon:hover { opacity: .8; }
+/* Collapsed logout icon */
+.sidebar-logout-collapsed {
+  padding: .25rem .5rem;
+  color: var(--sidebar-fg);
+  opacity: .6;
+}
+.sidebar-logout-collapsed:hover { opacity: 1; }

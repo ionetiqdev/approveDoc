@@ -185,14 +185,21 @@ const SidebarHtml = (() => {
           <span class="nav-link-text">Preferences</span>
         </a>
         <div class="sidebar-user-row">
-          <span class="avatar avatar-sm rounded-circle bg-primary-lt" data-user-initials>?</span>
+          <span class="avatar avatar-sm rounded-circle bg-primary-lt flex-shrink-0" data-user-initials>?</span>
           <div class="sidebar-user-info">
             <div class="sidebar-user-name" data-user-name>—</div>
             <div class="sidebar-user-role" data-user-role>—</div>
           </div>
-          <a href="#" class="sidebar-logout-btn" data-action="signout" title="Sign out"><i class="ti ti-logout-2"></i></a>
+          <a href="#" class="sidebar-logout-btn ms-auto" data-action="signout" title="Sign out"><i class="ti ti-logout-2"></i></a>
         </div>
-        <div class="published-message" data-published>Published —</div>
+        <div class="sidebar-footer-meta">
+          <a href="#" class="nav-link sidebar-logout-collapsed" data-action="signout" title="Sign out">
+            <i class="ti ti-logout-2"></i>
+          </a>
+          <span class="sidebar-version-icon" id="sidebarVersionBtn" title="">
+            <i class="ti ti-info-circle"></i>
+          </span>
+        </div>
       </div>
     `;
 
@@ -211,6 +218,13 @@ const SidebarHtml = (() => {
         el.textContent = 'Published ' + APP_PUBLISHED;
       }
     });
+
+    // Version icon tooltip
+    const versionBtn = document.getElementById('sidebarVersionBtn');
+    if (versionBtn && typeof APP_PUBLISHED !== 'undefined') {
+      versionBtn.setAttribute('title', 'Published ' + APP_PUBLISHED);
+      new bootstrap.Tooltip(versionBtn, { placement: 'right', trigger: 'hover' });
+    }
   }
 
   function _injectPreferencesModal() {

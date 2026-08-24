@@ -1,1 +1,1 @@
-Sidebar: fix floating submenu for nested submenus - show section header with arrow, items indented below
+Sidebar: clean collapsed footer - logout icon only + version icon with tooltip; expanded shows avatar/name/role/logout
