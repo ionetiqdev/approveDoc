@@ -592,7 +592,7 @@ async function selectDoc(id) {
       if (window._currentDocBlob) URL.revokeObjectURL(window._currentDocBlob);
 
       const downloadName = pdfFile.download_file_name || sanitizeFileName(doc[DOC_CONFIG.colDocDesc] || pdfFile.file_name);
-      const namedFile = new File([blob], downloadName, { type: file?.type || 'application/pdf' });
+      const namedFile = new File([blob], downloadName, { type: pdfFile?.mime_type || 'application/pdf' });
       pdfBlobUrl = URL.createObjectURL(namedFile);
       window._currentDocBlob = pdfBlobUrl;
 
@@ -636,7 +636,7 @@ async function selectDoc(id) {
     if (window._currentDocBlob) URL.revokeObjectURL(window._currentDocBlob);
 
     const downloadName = pdfFile.download_file_name || sanitizeFileName(doc[DOC_CONFIG.colDocDesc] || pdfFile.file_name);
-    const namedFile = new File([blob], downloadName, { type: file?.type || 'application/pdf' });
+    const namedFile = new File([blob], downloadName, { type: pdfFile?.mime_type || 'application/pdf' });
 
     pdfBlobUrl = URL.createObjectURL(namedFile);
     window._currentDocBlob = pdfBlobUrl;

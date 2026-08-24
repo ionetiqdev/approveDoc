@@ -1,1 +1,1 @@
-Security: add _safePath validator in auth.js; fix .rafter.yml suppression rule IDs
+Fix: document viewer - file variable out of scope, use pdfFile.mime_type instead
