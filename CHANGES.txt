@@ -1,1 +1,1 @@
-Audit: add Audit tab to preferences with include-archived toggle and live/archive record counts
+Fix: broken template literal in _populateAuditTab causing sidebar to fail

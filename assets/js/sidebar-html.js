@@ -527,17 +527,16 @@ const SidebarHtml = (() => {
           sb.from('audit_log').select('id', { count: 'exact', head: true }).eq('organisation_id', orgId),
           sb.from('audit_log_archive').select('id', { count: 'exact', head: true }).eq('organisation_id', orgId),
         ]);
-        countsEl.innerHTML = \`
-          <table class="table table-sm">
-            <tr><td>Live audit records</td><td class="fw-semibold">\${(liveRes.count || 0).toLocaleString()}</td></tr>
-            <tr><td>Archived audit records</td><td class="fw-semibold">\${(archiveRes.count || 0).toLocaleString()}</td></tr>
-          </table>\`;
+        countsEl.innerHTML = '<table class="table table-sm">' +
+          '<tr><td>Live audit records</td><td class="fw-semibold">' + (liveRes.count || 0).toLocaleString() + '</td></tr>' +
+          '<tr><td>Archived audit records</td><td class="fw-semibold">' + (archiveRes.count || 0).toLocaleString() + '</td></tr>' +
+          '</table>';
       } catch(e) {
         countsEl.innerHTML = '<span class="text-danger">Could not load counts</span>';
       }
     }
 
-        const openPreferences = e => {
+    const openPreferences = e => {
       e?.preventDefault();
       const modalEl = document.getElementById('preferencesModal');
       if (!modalEl) return;
