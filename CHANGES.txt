@@ -1,1 +1,1 @@
-Security: fix GitHub Actions permissions and pin action SHAs; validate avatarUrl; add .rafter.yml suppressions for false positives
+Security: add _safePath validator in auth.js; fix .rafter.yml suppression rule IDs

@@ -345,12 +345,21 @@ const Auth = (() => {
   }
 
   function _redirectToLogin() {
-    const root = window._appRootUrl || window._appRoot || './';
+    const root = _safePath(window._appRootUrl || window._appRoot || './');
     window.location.replace(root + 'pages/auth/login.html');
   }
 
   function _rootPath() {
-    return window._appRootUrl || window._appRoot || './';
+    return _safePath(window._appRootUrl || window._appRoot || './');
+  }
+
+  // Ensure redirect root is a relative path or same-origin URL — never an external domain
+  function _safePath(root) {
+    try {
+      const url = new URL(root, window.location.origin);
+      if (url.origin !== window.location.origin) return './';
+      return root;
+    } catch(e) { return './'; }
   }
 
   async function signOut() {

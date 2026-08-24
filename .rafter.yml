@@ -50,13 +50,14 @@ suppress:
       - pages/documents/documents.js
     comment: "All user-controlled values escaped via App.escHtml() before innerHTML insertion"
 
-  # Markdown innerHTML false positives - App.escHtml() applied to all user values
+  # Markdown innerHTML false positives - App.escHtml() applied to all user values, not markdown rendering
   - rule: R-2EB08
     paths:
       - pages/documents/documents.js
-    comment: "Not markdown rendering - template literals with App.escHtml() on user values"
+      - mobile/src/screens/documents.js
+    comment: "Template literals with App.escHtml() on all user values - Rafter misidentifies as markdown rendering"
 
   # SSRF false positive - URL comes from Supabase signed URL or admin-set external_url, not end-user input
-  - rule: R-R0385C
+  - rule: R-0385C
     paths:
       - mobile/src/screens/document-detail.js
