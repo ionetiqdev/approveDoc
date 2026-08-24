@@ -193,12 +193,10 @@ const SidebarHtml = (() => {
           <a href="#" class="sidebar-logout-btn ms-auto" data-action="signout" data-bs-toggle="tooltip" data-bs-placement="right" data-bs-title="Sign out"><i class="ti ti-logout-2"></i></a>
         </div>
         <div class="sidebar-published-text" data-published>Published —</div>
-        <div class="sidebar-footer-meta">
+        <div class="sidebar-collapsed-footer">
           <a href="#" class="sidebar-logout-collapsed" data-action="signout" data-bs-toggle="tooltip" data-bs-placement="right" data-bs-title="Sign out">
             <i class="ti ti-logout-2"></i>
           </a>
-        </div>
-        <div class="sidebar-footer-meta">
           <span class="sidebar-version-icon" id="sidebarVersionBtn">
             <i class="ti ti-info-circle"></i>
           </span>

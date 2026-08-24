@@ -1,1 +1,1 @@
-Sidebar: fix expanded version label, version icon on own line, consistent tooltip style on logout
+Sidebar: clean footer - published text pinned to bottom in expanded; collapsed shows logout+version icon stacked
