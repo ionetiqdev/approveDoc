@@ -1,1 +1,1 @@
-Add Plyr video player - MIME type routing, video upload support, loadVideo function
+Security: Supabase key migration guide, update .gitignore and project.conf.example
