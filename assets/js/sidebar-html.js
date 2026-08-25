@@ -291,11 +291,19 @@ const SidebarHtml = (() => {
                         <input type="color" class="form-control form-control-color" id="sidebarColourPicker" value="#182433" style="width:120px;height:30px;padding:3px;border-radius:0" />
                       </div>
                     </div>
-                    <div class="row align-items-center">
+                    <div class="row align-items-center mb-3">
                       <label class="col-3 col-form-label text-end">Dark mode</label>
                       <div class="col-9">
                         <div class="form-check form-switch mt-1">
                           <input class="form-check-input" type="checkbox" role="switch" id="darkModeSwitch" data-theme-toggle />
+                        </div>
+                      </div>
+                    </div>
+                    <div class="row align-items-center">
+                      <label class="col-3 col-form-label text-end">File type icon</label>
+                      <div class="col-9">
+                        <div class="form-check form-switch mt-1">
+                          <input class="form-check-input" type="checkbox" role="switch" id="showFileTypeSwitch" />
                         </div>
                       </div>
                     </div>
@@ -469,11 +477,13 @@ const SidebarHtml = (() => {
 
     const sidebarKey = _scopedKey('app_sidebar_bg');
     const accentKey  = _scopedKey('app_accent');
+    const showFileTypeKey = _scopedKey('app_show_file_type_icon');
 
     function _snapshot() {
       const sidebarInput = document.getElementById('sidebarColourPicker');
       const accentInput  = document.getElementById('accentColourPicker');
-      return (sidebarInput?.value || '') + '|' + (accentInput?.value || '');
+      const showFileTypeInput = document.getElementById('showFileTypeSwitch');
+      return (sidebarInput?.value || '') + '|' + (accentInput?.value || '') + '|' + (showFileTypeInput?.checked ?? '');
     }
 
     function _populateProfile() {
@@ -627,6 +637,9 @@ const SidebarHtml = (() => {
       if (sidebarInput) sidebarInput.value = localStorage.getItem(sidebarKey) || '#182433';
       if (accentInput)  accentInput.value  = localStorage.getItem(accentKey)  || '#206bc4';
 
+      const showFileTypeInput = document.getElementById('showFileTypeSwitch');
+      if (showFileTypeInput) showFileTypeInput.checked = localStorage.getItem(showFileTypeKey) !== 'false';
+
       _populateProfile();
       _populateDocumentTab();
       _populateAuditTab();
@@ -675,6 +688,14 @@ const SidebarHtml = (() => {
       if (accentInput && window.Theme) {
         localStorage.setItem(accentKey, accentInput.value);
         window.Theme.setAccent(accentInput.value);
+      }
+
+      const showFileTypeInput = document.getElementById('showFileTypeSwitch');
+      if (showFileTypeInput) {
+        localStorage.setItem(showFileTypeKey, showFileTypeInput.checked ? 'true' : 'false');
+        if (typeof renderDocList === 'function' && typeof filterDocs === 'function') {
+          renderDocList(filterDocs());
+        }
       }
 
       // Document viewer settings

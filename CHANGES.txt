@@ -1,1 +1,1 @@
-Documents: strip badge background/padding from file-format icon, size to pill height
+Documents: 5px right padding on file-format icon; add Display tab preference to show/hide it
