@@ -15,7 +15,7 @@
 
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/core@1.4.0/dist/css/tabler.min.css" />
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.44.0/dist/tabler-icons.min.css" />
-  <link rel="stylesheet" href="../../assets/css/theme.css?r=9oshcw04" />
+  <link rel="stylesheet" href="../../assets/css/theme.css?r=itlyrmda" />
 
   <script>
     (function() {
@@ -182,15 +182,15 @@
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/plyr@3/dist/plyr.css" />
   <script src="https://cdn.jsdelivr.net/npm/plyr@3/dist/plyr.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="../../assets/js/version.js?r=9oshcw04"></script>
-  <script src="../../assets/js/supabase-client.js?r=9oshcw04"></script>
-  <script src="../../assets/js/auth.js?r=9oshcw04"></script>
-  <script src="../../assets/js/app.js?r=9oshcw04"></script>
-  <script src="../../assets/js/theme.js?r=9oshcw04"></script>
-  <script src="../../assets/js/sidebar-html.js?r=9oshcw04"></script>
-  <script src="../../assets/js/sidebar.js?r=9oshcw04"></script>
-  <script src="../../assets/js/profile-modal.js?r=9oshcw04"></script>
-  <script src="../../assets/js/status-widget.js?r=9oshcw04"></script>
+  <script src="../../assets/js/version.js?r=itlyrmda"></script>
+  <script src="../../assets/js/supabase-client.js?r=itlyrmda"></script>
+  <script src="../../assets/js/auth.js?r=itlyrmda"></script>
+  <script src="../../assets/js/app.js?r=itlyrmda"></script>
+  <script src="../../assets/js/theme.js?r=itlyrmda"></script>
+  <script src="../../assets/js/sidebar-html.js?r=itlyrmda"></script>
+  <script src="../../assets/js/sidebar.js?r=itlyrmda"></script>
+  <script src="../../assets/js/profile-modal.js?r=itlyrmda"></script>
+  <script src="../../assets/js/status-widget.js?r=itlyrmda"></script>
   <script>
 const PDF_BUCKET          = 'documents';
 const PDF_VIEWER_URL      = '../../assets/pdfjs/web/viewer.html';
@@ -198,6 +198,14 @@ const SIGNED_URL_EXPIRY   = 60;
 
 let currentItem = null;
 let rejectModal  = null;
+
+// Video compliance state
+let _videoCompliance   = { watchPct: 100, seekLock: true }; // org settings, loaded once
+let _isVideoDoc         = false;   // is the currently loaded document a video?
+let _videoMaxWatched    = 0;       // furthest point (seconds) watched this session
+let _videoDuration      = 0;
+let _videoCompliant     = true;    // has the watch threshold been met?
+let _videoPersistTimer  = null;
 
 (async () => {
   const session = await Auth.requireAuth();
@@ -208,6 +216,22 @@ let rejectModal  = null;
   StatusWidget.init();
 
   rejectModal = new bootstrap.Modal(document.getElementById('rejectModal'), { keyboard: false, backdrop: 'static' });
+
+  // Load org-wide video compliance settings once
+  try {
+    const { data: orgRow } = await sb.from('organisations')
+      .select('video_watch_threshold_pct, video_seek_lock_enabled')
+      .eq('id', Auth.getOrganisationId())
+      .single();
+    if (orgRow) {
+      _videoCompliance = {
+        watchPct: orgRow.video_watch_threshold_pct ?? 100,
+        seekLock: orgRow.video_seek_lock_enabled !== false,
+      };
+    }
+  } catch (e) {
+    console.warn('[Video] Could not load compliance settings, defaulting to 100% / seek lock on:', e.message);
+  }
 
   document.getElementById('backBtn').addEventListener('click', () => {
     history.length > 1 ? history.back() : window.location.href = 'user-view.html';
@@ -314,9 +338,14 @@ function updateActionButtons() {
   const ackBtn = document.getElementById('acknowledgeBtn');
   const rejBtn = document.getElementById('rejectBtn');
 
-  ackBtn.disabled = isDone;
-  ackBtn.style.opacity = isDone ? '0.5' : '1';
-  ackBtn.title = isApproved ? 'Already acknowledged' : isRejected ? 'Document has been rejected' : '';
+  const videoBlocking = _isVideoDoc && !_videoCompliant && !isDone;
+
+  ackBtn.disabled = isDone || videoBlocking;
+  ackBtn.style.opacity = (isDone || videoBlocking) ? '0.5' : '1';
+  ackBtn.title = isApproved ? 'Already acknowledged'
+    : isRejected ? 'Document has been rejected'
+    : videoBlocking ? `Watch at least ${_videoCompliance.watchPct}% of the video to enable Acknowledge`
+    : '';
 
   rejBtn.disabled = isDone;
   rejBtn.style.opacity = isDone ? '0.5' : '1';
@@ -407,7 +436,16 @@ async function loadItem(itemId) {
   }
 
   const mime = pdfFile.mime_type || '';
-  if (mime.startsWith('video/') || mime.startsWith('audio/')) {
+  _isVideoDoc = mime.startsWith('video/') || mime.startsWith('audio/');
+  _videoMaxWatched = currentItem?.video_watched_seconds || 0;
+  _videoDuration   = currentItem?.video_duration_seconds || 0;
+  _videoCompliant  = !_isVideoDoc; // non-video docs are never blocked by this gate
+  if (_isVideoDoc && _videoDuration > 0 && _videoMaxWatched / _videoDuration * 100 >= _videoCompliance.watchPct) {
+    _videoCompliant = true; // already met threshold in a previous session
+  }
+  updateActionButtons();
+
+  if (_isVideoDoc) {
     await loadVideo(pdfFile, doc?.name || dist.name);
   } else {
     await loadPdf(pdfFile, doc?.name || dist.name);
@@ -467,11 +505,78 @@ async function loadVideo(pdfFile, docName) {
         resetOnEnd: false,
       });
     }
+
+    if (_isVideoDoc) _wireVideoCompliance();
   } catch(e) {
     document.getElementById('viewerLoadingState').style.display = '';
     document.getElementById('viewerLoadingState').innerHTML =
       `<div class="text-danger text-center p-4"><i class="ti ti-alert-circle d-block mb-2" style="font-size:2rem"></i>
       <strong>Could not load video</strong><br><span class="small">${e.message}</span></div>`;
+  }
+}
+
+// ── Video compliance: resume position, watch-% gating, seek lock ──────────
+function _wireVideoCompliance() {
+  if (!_ackPlyr) return;
+
+  _ackPlyr.on('loadedmetadata', () => {
+    _videoDuration = _ackPlyr.duration || _videoDuration || 0;
+    if (_videoMaxWatched > 0 && _videoMaxWatched < _videoDuration) {
+      _ackPlyr.currentTime = _videoMaxWatched; // resume where they left off
+    }
+    _updateVideoCompliance();
+  });
+
+  _ackPlyr.on('timeupdate', () => {
+    const t = _ackPlyr.currentTime || 0;
+    if (t > _videoMaxWatched) {
+      _videoMaxWatched = t;
+      _updateVideoCompliance();
+      _scheduleVideoProgressSave();
+    }
+  });
+
+  _ackPlyr.on('seeking', () => {
+    if (!_videoCompliance.seekLock) return;
+    const tolerance = 2; // seconds - allow for buffering/rounding, not a real skip-ahead
+    if (_ackPlyr.currentTime > _videoMaxWatched + tolerance) {
+      _ackPlyr.currentTime = _videoMaxWatched;
+    }
+  });
+
+  _ackPlyr.on('pause', _saveVideoProgress);
+  _ackPlyr.on('ended', () => {
+    _videoMaxWatched = _ackPlyr.duration || _videoMaxWatched;
+    _updateVideoCompliance();
+    _saveVideoProgress();
+  });
+}
+
+function _updateVideoCompliance() {
+  if (!_isVideoDoc || _videoDuration <= 0) return;
+  const pct = (_videoMaxWatched / _videoDuration) * 100;
+  const wasCompliant = _videoCompliant;
+  _videoCompliant = pct >= _videoCompliance.watchPct;
+  if (_videoCompliant !== wasCompliant) updateActionButtons();
+}
+
+function _scheduleVideoProgressSave() {
+  if (_videoPersistTimer) return;
+  _videoPersistTimer = setTimeout(() => {
+    _videoPersistTimer = null;
+    _saveVideoProgress();
+  }, 5000); // throttle to once per 5s while actively playing
+}
+
+async function _saveVideoProgress() {
+  if (!currentItem?.distrib_item_id || !_isVideoDoc) return;
+  try {
+    await sb.from('ad_distribution_item').update({
+      video_watched_seconds:  _videoMaxWatched,
+      video_duration_seconds: _videoDuration || null,
+    }).eq('distrib_item_id', currentItem.distrib_item_id);
+  } catch (e) {
+    console.warn('[Video] Could not save watch progress:', e.message);
   }
 }
 

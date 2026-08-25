@@ -2451,6 +2451,150 @@ create policy "Admins: manage languages"
   using (_my_role() in ('admin', 'super_admin'));
 
 -- ============================================================================
+-- 25-audit-trail.sql
+-- ============================================================================
+
+alter table public.organisations
+add column if not exists audit_retention_months integer not null default 36;
+
+comment on column public.organisations.audit_retention_months is
+  'How many months to keep audit records. Default 36 (3 years). Set per organisation.';
+
+create table if not exists public.audit_log (
+  id              uuid        primary key default gen_random_uuid(),
+  created_at      timestamptz not null default now(),
+  organisation_id uuid        not null references public.organisations(id) on delete cascade,
+  user_id         uuid,
+  action          text        not null,
+  entity_type     text,
+  entity_id       uuid,
+  details         jsonb
+);
+
+create index if not exists idx_audit_log_org       on public.audit_log(organisation_id);
+create index if not exists idx_audit_log_created_at on public.audit_log(created_at);
+
+alter table public.audit_log enable row level security;
+drop policy if exists "audit_log_org_isolation" on public.audit_log;
+create policy "audit_log_org_isolation"
+  on public.audit_log for all
+  using (organisation_id = public.ad_current_user_org_id())
+  with check (organisation_id = public.ad_current_user_org_id());
+
+create or replace function public.audit_custom(
+  p_action      text,
+  p_entity_type text default null,
+  p_entity_id   uuid default null,
+  p_details     jsonb default null
+)
+returns void language plpgsql security definer as $$
+begin
+  insert into public.audit_log (organisation_id, user_id, action, entity_type, entity_id, details)
+  values (public.ad_current_user_org_id(), auth.uid(), p_action, p_entity_type, p_entity_id, p_details);
+end;
+$$;
+
+create table if not exists public.audit_log_archive (
+  like public.audit_log including all
+);
+
+create or replace function public.archive_audit_log(p_cutoff timestamptz default null)
+returns jsonb language plpgsql security definer as $$
+declare
+  v_org record;
+  v_cutoff timestamptz;
+  v_moved integer;
+  v_total integer := 0;
+  v_summary jsonb := '[]'::jsonb;
+begin
+  for v_org in
+    select id, audit_retention_months
+    from public.organisations
+    where id is not null
+  loop
+    v_cutoff := coalesce(p_cutoff, now() - (v_org.audit_retention_months || ' months')::interval);
+
+    insert into public.audit_log_archive
+    select * from public.audit_log
+    where organisation_id = v_org.id
+    and created_at <= v_cutoff;
+
+    get diagnostics v_moved = row_count;
+
+    if v_moved > 0 then
+      delete from public.audit_log
+      where organisation_id = v_org.id
+      and created_at <= v_cutoff;
+    end if;
+
+    v_total := v_total + v_moved;
+    v_summary := v_summary || jsonb_build_object(
+      'organisation_id', v_org.id,
+      'cutoff', v_cutoff,
+      'records_archived', v_moved
+    );
+  end loop;
+
+  return jsonb_build_object('total_archived', v_total, 'detail', v_summary);
+end;
+$$;
+
+-- ============================================================================
+-- 26-video-compliance.sql
+-- ============================================================================
+
+alter table public.organisations
+add column if not exists video_watch_threshold_pct integer not null default 100;
+
+alter table public.organisations
+add column if not exists video_seek_lock_enabled boolean not null default true;
+
+comment on column public.organisations.video_watch_threshold_pct is
+  'Percentage of a video a user must watch before the Acknowledge button is enabled. 1-100. Default 100 (must watch to the end). Set per organisation, admin+ only.';
+
+comment on column public.organisations.video_seek_lock_enabled is
+  'When true, users cannot seek/skip ahead of the furthest point they have watched. Rewatching earlier sections is always allowed. Set per organisation, admin+ only.';
+
+alter table public.organisations
+drop constraint if exists chk_video_watch_threshold_pct;
+alter table public.organisations
+add constraint chk_video_watch_threshold_pct
+  check (video_watch_threshold_pct between 1 and 100);
+
+alter table public.ad_distribution_item
+add column if not exists video_watched_seconds numeric;
+
+alter table public.ad_distribution_item
+add column if not exists video_duration_seconds numeric;
+
+comment on column public.ad_distribution_item.video_watched_seconds is
+  'Furthest point (seconds) the user has watched into the video. Used to resume playback and to gate Acknowledge against the org''s video_watch_threshold_pct.';
+
+comment on column public.ad_distribution_item.video_duration_seconds is
+  'Total duration (seconds) of the video, captured on first playback. Used alongside video_watched_seconds to compute watched percentage.';
+
+create or replace function public.update_video_compliance_settings(
+  p_watch_pct integer,
+  p_seek_lock boolean
+)
+returns void language plpgsql security definer as $$
+begin
+  if public._my_role() not in ('admin', 'super_admin') then
+    raise exception 'Only admin or super_admin can change video compliance settings';
+  end if;
+
+  if p_watch_pct < 1 or p_watch_pct > 100 then
+    raise exception 'Watch percentage must be between 1 and 100';
+  end if;
+
+  update public.organisations
+  set video_watch_threshold_pct = p_watch_pct,
+      video_seek_lock_enabled   = p_seek_lock
+  where id = public._my_organisation_id();
+end;
+$$;
+
+-- ============================================================================
 -- dev-seed.sql
 -- ============================================================================
 

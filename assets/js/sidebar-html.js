@@ -272,6 +272,11 @@ const SidebarHtml = (() => {
                       <i class="ti ti-shield me-1"></i>Audit
                     </a>
                   </li>
+                  <li class="nav-item" id="prefTabVideoLi" style="display:none">
+                    <a class="nav-link" href="#prefTabVideo" data-bs-toggle="tab">
+                      <i class="ti ti-video me-1"></i>Video
+                    </a>
+                  </li>
                 </ul>
               </div>
               <div class="card-body">
@@ -435,6 +440,29 @@ const SidebarHtml = (() => {
                     </div>
                   </div>
 
+                  <!-- Video tab -->
+                  <div class="tab-pane" id="prefTabVideo" style="min-height:490px;padding:20px">
+                    <h4 class="mb-3">Video Compliance Settings</h4>
+                    <p class="text-secondary small mb-4">Controls how users must watch video documents before they can Acknowledge. Applies to all videos across the organisation.</p>
+
+                    <div class="mb-4">
+                      <label class="form-label">Required watch percentage</label>
+                      <div class="d-flex align-items-center gap-2" style="max-width:220px">
+                        <input type="number" min="1" max="100" step="1" class="form-control" id="prefVideoWatchPct" />
+                        <span class="text-secondary">%</span>
+                      </div>
+                      <p class="text-secondary small mt-1">The Acknowledge button stays disabled until the user has watched this much of the video. 100% means they must reach the end.</p>
+                    </div>
+
+                    <div class="mb-3">
+                      <label class="form-check form-switch">
+                        <input class="form-check-input" type="checkbox" id="prefVideoSeekLock" />
+                        <span class="form-check-label fw-semibold">Lock seeking ahead</span>
+                      </label>
+                      <p class="text-secondary small mt-1">When enabled, users cannot skip forward past the furthest point they've watched. Rewatching earlier sections is always allowed.</p>
+                    </div>
+                  </div>
+
                 </div>
               </div>
             </div>
@@ -540,6 +568,32 @@ const SidebarHtml = (() => {
       document.getElementById('docPrefDeleteEnabled').checked = del.enabled          !== false;
     }
 
+    async function _populateVideoTab() {
+      const videoTabLi = document.getElementById('prefTabVideoLi');
+      if (!videoTabLi) return;
+      if (!Auth.isAdmin()) return;
+      videoTabLi.style.display = '';
+
+      const pctEl  = document.getElementById('prefVideoWatchPct');
+      const lockEl = document.getElementById('prefVideoSeekLock');
+      if (!pctEl || !lockEl) return;
+
+      try {
+        const orgId = Auth.getOrganisationId();
+        const { data, error } = await sb.from('organisations')
+          .select('video_watch_threshold_pct, video_seek_lock_enabled')
+          .eq('id', orgId)
+          .single();
+        if (error) throw error;
+        pctEl.value  = data?.video_watch_threshold_pct ?? 100;
+        lockEl.checked = data?.video_seek_lock_enabled !== false;
+      } catch (e) {
+        console.error('[Prefs] Could not load video compliance settings:', e.message);
+        pctEl.value = 100;
+        lockEl.checked = true;
+      }
+    }
+
     async function _populateAuditTab() {
       const auditTabLi = document.getElementById('prefTabAuditLi');
       if (!auditTabLi) return;
@@ -643,6 +697,7 @@ const SidebarHtml = (() => {
       _populateProfile();
       _populateDocumentTab();
       _populateAuditTab();
+      _populateVideoTab();
 
       // Reset password fields and error
       ['prefNewPassword','prefConfirmPassword','prefCurrentPassword'].forEach(id => {
@@ -720,6 +775,21 @@ const SidebarHtml = (() => {
       const auditToggle = document.getElementById('prefIncludeArchived');
       if (auditToggle !== null) {
         await Auth.setPreference('auditIncludeArchived', auditToggle.checked);
+      }
+
+      // Video compliance settings (admin+ only, org-wide)
+      const videoPctEl  = document.getElementById('prefVideoWatchPct');
+      const videoLockEl = document.getElementById('prefVideoSeekLock');
+      if (videoPctEl && videoLockEl && document.getElementById('prefTabVideoLi')?.style.display !== 'none') {
+        const pct = Math.min(100, Math.max(1, parseInt(videoPctEl.value, 10) || 100));
+        const { error: videoErr } = await sb.rpc('update_video_compliance_settings', {
+          p_watch_pct: pct,
+          p_seek_lock: videoLockEl.checked,
+        });
+        if (videoErr) {
+          console.error('[Prefs] Video compliance save failed:', videoErr.message);
+          if (errEl) { errEl.textContent = 'Video settings save failed: ' + videoErr.message; errEl.classList.remove('d-none'); return; }
+        }
       }
 
       // Profile updates

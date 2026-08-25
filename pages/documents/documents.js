@@ -369,6 +369,15 @@ function _fileFormatIcon(mime) {
   return { icon: 'ti-file', label: 'File' };
 }
 
+function _mimeFromUrl(url) {
+  if (/youtube\.com|youtu\.be/.test(url)) return 'video/youtube';
+  if (/vimeo\.com/.test(url)) return 'video/vimeo';
+  if (/\.mp4(\?|$)/i.test(url)) return 'video/mp4';
+  if (/\.webm(\?|$)/i.test(url)) return 'video/webm';
+  if (/\.mov(\?|$)/i.test(url)) return 'video/quicktime';
+  return 'application/pdf';
+}
+
 function renderDocList(docs) {
   if (!docs.length) {
     docList.innerHTML = `
@@ -903,6 +912,30 @@ function bindUpload() {
     document.getElementById('docModalRestBasicFields').classList.toggle('d-none', !isBasic);
   });
 
+  // Live "detected type" feedback for uploaded file
+  document.getElementById('docModalFile')?.addEventListener('change', function() {
+    const el = document.getElementById('docModalFileDetected');
+    const file = this.files[0];
+    if (!file) { el.style.display = 'none'; return; }
+    const fmt = _fileFormatIcon(file.type);
+    el.style.display = '';
+    el.innerHTML = `<i class="ti ${fmt.icon} me-1"></i>Detected: ${App.escHtml(fmt.label)}`;
+  });
+
+  // Live "detected type" feedback for Direct URL, debounced slightly
+  let _urlDetectTimer = null;
+  document.getElementById('docModalUrl')?.addEventListener('input', function() {
+    clearTimeout(_urlDetectTimer);
+    const el = document.getElementById('docModalUrlDetected');
+    const url = this.value.trim();
+    if (!url) { el.style.display = 'none'; return; }
+    _urlDetectTimer = setTimeout(() => {
+      const fmt = _fileFormatIcon(_mimeFromUrl(url));
+      el.style.display = '';
+      el.innerHTML = `<i class="ti ${fmt.icon} me-1"></i>Detected: ${App.escHtml(fmt.label)}`;
+    }, 250);
+  });
+
   document.getElementById('docModalSaveBtn').addEventListener('click', async () => {
     const desc     = document.getElementById('docModalDescription').value.trim();
     const descText = document.getElementById('docModalDescriptionText').value.trim();
@@ -969,14 +1002,7 @@ function bindUpload() {
           : 'NONE';
 
         // Detect mime type from URL
-        function _mimeFromUrl(url) {
-          if (/youtube\.com|youtu\.be/.test(url)) return 'video/youtube';
-          if (/vimeo\.com/.test(url)) return 'video/vimeo';
-          if (/\.mp4(\?|$)/i.test(url)) return 'video/mp4';
-          if (/\.webm(\?|$)/i.test(url)) return 'video/webm';
-          if (/\.mov(\?|$)/i.test(url)) return 'video/quicktime';
-          return 'application/pdf';
-        }
+        // (uses the shared _mimeFromUrl helper defined near the top of the file)
 
         // Create file record pointing to external source
         const fileName = externalUrl.split('/').pop()?.split('?')[0] || desc + '.pdf';
@@ -1017,6 +1043,8 @@ function bindUpload() {
           document.getElementById('docModalGdriveUrl').value = '';
           document.getElementById('docModalRestUrl').value = '';
           document.getElementById('docModalRestRef').value = '';
+          document.getElementById('docModalFileDetected').style.display = 'none';
+          document.getElementById('docModalUrlDetected').style.display = 'none';
           document.getElementById('docSourceFile').checked = true;
           document.getElementById('docSourceFileField').classList.remove('d-none');
           document.getElementById('docSourceGdriveField').classList.add('d-none');

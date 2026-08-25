@@ -15,7 +15,7 @@
 
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/core@1.4.0/dist/css/tabler.min.css" />
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.44.0/dist/tabler-icons.min.css" />
-  <link rel="stylesheet" href="../../assets/css/theme.css?r=9oshcw04" />
+  <link rel="stylesheet" href="../../assets/css/theme.css?r=itlyrmda" />
 
   <script>
     (function() {
@@ -229,8 +229,10 @@
 
           <!-- Upload file -->
           <div class="mb-3" id="docSourceFileField">
-            <label class="form-label">PDF file</label>
+            <label class="form-label">File</label>
             <input type="file" id="docModalFile" class="form-control" accept="application/pdf,.doc,.docx,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,video/mp4,video/webm,video/ogg,video/*" />
+            <div class="form-text">PDF, Word (converted to PDF automatically), or video (MP4, WebM, OGG).</div>
+            <div id="docModalFileDetected" class="small mt-1" style="display:none"></div>
           </div>
 
           <!-- Google Drive -->
@@ -248,8 +250,9 @@
           <!-- Direct URL -->
           <div class="mb-3 d-none" id="docSourceUrlField">
             <label class="form-label">URL <span class="text-danger">*</span></label>
-            <input type="url" id="docModalUrl" class="form-control" placeholder="https://example.com/document.pdf" />
-            <div class="form-text">Publicly accessible PDF URL. No authentication required.</div>
+            <input type="url" id="docModalUrl" class="form-control" placeholder="https://example.com/document.pdf or a YouTube / Vimeo link" />
+            <div class="form-text">A publicly accessible PDF, video file (MP4/WebM/MOV), or a YouTube/Vimeo link. No authentication required.</div>
+            <div id="docModalUrlDetected" class="small mt-1" style="display:none"></div>
           </div>
 
           <!-- REST API -->
@@ -401,16 +404,16 @@
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/plyr@3/dist/plyr.css" />
   <script src="https://cdn.jsdelivr.net/npm/plyr@3/dist/plyr.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="../../assets/js/version.js?r=9oshcw04"></script>
-  <script src="../../assets/js/supabase-client.js?r=9oshcw04"></script>
-  <script src="../../assets/js/auth.js?r=9oshcw04"></script>
-  <script src="../../assets/js/app.js?r=9oshcw04"></script>
-  <script src="../../assets/js/theme.js?r=9oshcw04"></script>
-  <script src="../../assets/js/sidebar-html.js?r=9oshcw04"></script>
-  <script src="../../assets/js/sidebar.js?r=9oshcw04"></script>
-  <script src="../../assets/js/profile-modal.js?r=9oshcw04"></script>
-  <script src="../../assets/js/status-widget.js?r=9oshcw04"></script>
-  <script src="config.js?r=9oshcw04"></script>
-  <script src="documents.js?r=9oshcw04"></script>
+  <script src="../../assets/js/version.js?r=itlyrmda"></script>
+  <script src="../../assets/js/supabase-client.js?r=itlyrmda"></script>
+  <script src="../../assets/js/auth.js?r=itlyrmda"></script>
+  <script src="../../assets/js/app.js?r=itlyrmda"></script>
+  <script src="../../assets/js/theme.js?r=itlyrmda"></script>
+  <script src="../../assets/js/sidebar-html.js?r=itlyrmda"></script>
+  <script src="../../assets/js/sidebar.js?r=itlyrmda"></script>
+  <script src="../../assets/js/profile-modal.js?r=itlyrmda"></script>
+  <script src="../../assets/js/status-widget.js?r=itlyrmda"></script>
+  <script src="config.js?r=itlyrmda"></script>
+  <script src="documents.js?r=itlyrmda"></script>
 </body>
 </html>
