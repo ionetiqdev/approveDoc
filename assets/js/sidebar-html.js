@@ -28,8 +28,10 @@ function _scopedKey(baseKey) {
   try {
     const root = document.documentElement.dataset.appRoot || './';
     const absoluteRoot = new URL(root, window.location.href).pathname;
-    return baseKey + ':' + window.location.hostname + absoluteRoot;
-  } catch(e) { return baseKey; }
+    return baseKey + ':' + absoluteRoot;
+  } catch (e) {
+    return baseKey;
+  }
 }
 
 // Applies a sidebar background colour and automatically picks the most
@@ -171,8 +173,6 @@ const SidebarHtml = (() => {
               <li class="nav-item"><a href="${root}pages/testing/audience.html" class="nav-link"><span class="nav-link-text">Audience</span></a></li>
               <li class="nav-item"><a href="${root}pages/testing/distribution.html" class="nav-link"><span class="nav-link-text">Distribution</span></a></li>
               <li class="nav-item"><a href="${root}pages/testing/user-view.html" class="nav-link"><span class="nav-link-text">User View</span></a></li>
-              <li class="nav-item"><a href="${root}pages/testing/org-chart.html" class="nav-link"><span class="nav-link-text">Org Chart</span></a></li>
-              <li class="nav-item"><a href="${root}pages/testing/query.html" class="nav-link"><span class="nav-link-text">Query</span></a></li>
             </ul>
           </li>
 

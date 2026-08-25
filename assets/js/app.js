@@ -85,7 +85,7 @@ const App = (() => {
               <div class="modal-body text-center py-4" style="min-height:175px">
                 <i class="ti ti-trash text-danger mb-3" style="font-size:2.2rem"></i>
                 <div id="confirmTitle" style="font-size:16px;font-weight:600;margin-top:20px;margin-bottom:4px">${title}</div>
-                <div id="confirmMessage" style="font-size:14px;color:#d63939;margin-top:10px;white-space:pre-line">${message}</div>
+                <div id="confirmMessage" style="font-size:14px;color:#d63939;margin-top:10px">${message}</div>
               </div>
               <div class="modal-footer">
                 <button type="button" class="btn" id="confirmCancel" data-bs-dismiss="modal">Cancel</button>

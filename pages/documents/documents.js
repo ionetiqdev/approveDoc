@@ -33,7 +33,7 @@ const newDocBtn         = document.getElementById('newDocBtn');
 (async () => {
   const session = await Auth.requireAuth();
   if (!session) return;
-  SidebarHtml.inject(window._appRootUrl || '../../');
+  SidebarHtml.inject('../../');
   Sidebar.init();
   Auth.refreshUI();
 

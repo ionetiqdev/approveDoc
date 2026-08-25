@@ -106,20 +106,6 @@ Deno.serve(async (req) => {
         updated_at:      new Date().toISOString()
       })
 
-      // Also create ad_user row so the user appears in audience/distribution pickers
-      const nameParts = (display_name || '').trim().split(/\s+/)
-      const firstName = nameParts[0] || ''
-      const lastName  = nameParts.slice(1).join(' ') || ''
-      await adminClient.from('ad_user').upsert({
-        user_id:         data.user.id,
-        email,
-        first_name:      firstName,
-        last_name:       lastName,
-        organisation_id: role === 'super_admin' ? null : organisation_id,
-        role_user:       (role || 'user') === 'user',
-        role_admin:      role === 'admin',
-      }, { onConflict: 'user_id' })
-
       return new Response(JSON.stringify({ user_id: data.user.id }), {
         status: 200,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }

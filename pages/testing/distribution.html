@@ -1,28 +1,20 @@
 <!DOCTYPE html>
 <html lang="en" data-bs-theme="light" data-app-root="../../">
 <head>
-  <script>
-    // Compute absolute app root URL for JS navigation
-    (function() {
-      var rel = document.documentElement.getAttribute('data-app-root') || './';
-      window._appRootUrl = new URL(rel, window.location.href).href;
-      if (!window._appRootUrl.endsWith('/')) window._appRootUrl += '/';
-    })();
-  </script>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Testing: Distribution - approveDoc</title>
 
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/core@1.4.0/dist/css/tabler.min.css" />
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.44.0/dist/tabler-icons.min.css" />
-  <link rel="stylesheet" href="../../assets/css/theme.css?r=wvq1ft0s" />
+  <link rel="stylesheet" href="../../assets/css/theme.css?r=ekst3zl7" />
 
   <script>
     (function() {
       try {
         var root = document.documentElement.dataset.appRoot || './';
         var absoluteRoot = new URL(root, window.location.href).pathname;
-        var suffix = ':' + window.location.hostname + absoluteRoot;
+        var suffix = ':' + absoluteRoot;
         var savedTheme = localStorage.getItem('app_theme');
         var theme = savedTheme || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
         document.documentElement.setAttribute('data-bs-theme', theme);
@@ -139,15 +131,15 @@
   <script src="https://cdn.jsdelivr.net/npm/@tabler/core@1.4.0/dist/js/tabler.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="../../assets/js/version.js?r=wvq1ft0s"></script>
-  <script src="../../assets/js/supabase-client.js?r=wvq1ft0s"></script>
-  <script src="../../assets/js/auth.js?r=wvq1ft0s"></script>
-  <script src="../../assets/js/app.js?r=wvq1ft0s"></script>
-  <script src="../../assets/js/theme.js?r=wvq1ft0s"></script>
-  <script src="../../assets/js/sidebar-html.js?r=wvq1ft0s"></script>
-  <script src="../../assets/js/sidebar.js?r=wvq1ft0s"></script>
-  <script src="../../assets/js/profile-modal.js?r=wvq1ft0s"></script>
-  <script src="../../assets/js/status-widget.js?r=wvq1ft0s"></script>
+  <script src="../../assets/js/version.js?r=ekst3zl7"></script>
+  <script src="../../assets/js/supabase-client.js?r=ekst3zl7"></script>
+  <script src="../../assets/js/auth.js?r=ekst3zl7"></script>
+  <script src="../../assets/js/app.js?r=ekst3zl7"></script>
+  <script src="../../assets/js/theme.js?r=ekst3zl7"></script>
+  <script src="../../assets/js/sidebar-html.js?r=ekst3zl7"></script>
+  <script src="../../assets/js/sidebar.js?r=ekst3zl7"></script>
+  <script src="../../assets/js/profile-modal.js?r=ekst3zl7"></script>
+  <script src="../../assets/js/status-widget.js?r=ekst3zl7"></script>
   <script>
 let allItems = [];
 let allUsers = [];
@@ -156,7 +148,7 @@ let selectedItemId = null;
 (async () => {
   const session = await Auth.requireAuth();
   if (!session) return;
-  SidebarHtml.inject(window._appRootUrl || '../../');
+  SidebarHtml.inject('../../');
   Sidebar.init();
   Auth.refreshUI();
 
