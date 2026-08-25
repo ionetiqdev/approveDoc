@@ -1,57 +1,37 @@
 -- 22-admin-execute-sql-function.sql
--- Backs the "Query" admin page (pages/testing/query.html).
+-- Adds an RPC function so the "SQL Test" admin page can run ad-hoc queries
+-- against the database from the browser via supabase.rpc().
 --
--- SECURITY NOTES:
---   1. Both functions are SECURITY DEFINER, restricted to the super admin
---      UID (e11f7567-fe8c-4916-8c1e-1f5e0c054988). Update if that account
---      is ever rotated.
---   2. Enforcement is via FUNCTION OWNERSHIP, not transaction state or
---      SET ROLE. admin_execute_sql() is owned by a dedicated role,
---      admin_sql_readonly, which is granted ONLY select on all tables --
---      no insert/update/delete/ddl privileges at all. Because the
---      function is SECURITY DEFINER, it always runs as its owner, so any
---      write attempt fails on genuine permission-denied, however it's
---      smuggled in (CTE, or a called function with a write side effect --
---      tested against both).
---   3. Two earlier approaches were tried and both hit real Postgres
---      restrictions, which is why this looks the way it does:
---        - transaction_read_only cannot be set at all once ANY query has
---          run earlier in the same transaction. Supabase/PostgREST always
---          runs its own setup queries (JWT claims, role, etc.) before
---          calling your function, so this failed on the very first call,
---          every time, in production -- even though it worked fine in an
---          isolated psql session with no such preamble.
---        - SET ROLE cannot be used inside a SECURITY DEFINER function at
---          all -- Postgres disallows it outright.
---      Owning the function itself sidesteps both restrictions entirely.
---   4. admin_log_sql_call() is a SEPARATE function, deliberately left
---      owned by whichever role runs this migration (needs write access
---      to admin_sql_log). The client calls admin_execute_sql() first,
---      then always calls admin_log_sql_call() afterwards regardless of
---      outcome -- see pages/testing/query.html.
---   5. Recommend dev/staging only.
---   6. Verified against a local Postgres 16 instance, including: a query
---      preceded by other queries in the same transaction (reproducing
---      PostgREST's preamble); a write smuggled via CTE; a write hidden
---      inside a called function with no write keywords in the visible
---      query text; a legitimate WITH...SELECT; and a non-super-admin
---      caller. All behaved as intended.
+-- SECURITY NOTES (read before deploying):
+--   1. This function runs as SECURITY DEFINER, meaning it executes with the
+--      privileges of the function owner, NOT the calling user. That is what
+--      lets it bypass RLS to run arbitrary SQL -- which is exactly why the
+--      guard clause below matters. Do not remove the auth.uid() check.
+--   2. It is hard-restricted to the super admin UID in your notes
+--      (e11f7567-fe8c-4916-8c1e-1f5e0c054988). Anyone else calling it gets
+--      an exception. Update this UID if you rotate the super admin account.
+--   3. Recommend deploying this ONLY on dev/staging. If you ever need it in
+--      production, keep the same restriction and consider adding an
+--      allow-list of verbs (SELECT-only) rather than allowing DDL/DML.
+--   4. Every call is logged to admin_sql_log for audit purposes.
 
-drop function if exists admin_execute_sql(text);
-drop function if exists admin_log_sql_call(text, boolean, integer, text, integer);
+create table if not exists admin_sql_log (
+  id bigint generated always as identity primary key,
+  executed_by uuid not null references auth.users(id),
+  statement text not null,
+  succeeded boolean not null,
+  error_message text,
+  row_count integer,
+  duration_ms integer,
+  executed_at timestamptz not null default now()
+);
 
-do $$
-begin
-  if not exists (select 1 from pg_roles where rolname = 'admin_sql_readonly') then
-    create role admin_sql_readonly nologin bypassrls;
-  end if;
-end
-$$;
+alter table admin_sql_log enable row level security;
 
-grant usage on schema public to admin_sql_readonly;
-grant usage on schema auth to admin_sql_readonly;
-grant select on all tables in schema public to admin_sql_readonly;
-alter default privileges in schema public grant select on tables to admin_sql_readonly;
+drop policy if exists "super admin reads sql log" on admin_sql_log;
+create policy "super admin reads sql log"
+  on admin_sql_log for select
+  using (auth.uid() = 'e11f7567-fe8c-4916-8c1e-1f5e0c054988');
 
 create or replace function admin_execute_sql(query text)
 returns jsonb
@@ -61,14 +41,19 @@ set search_path = public
 as $$
 declare
   result jsonb;
+  started_at timestamptz := clock_timestamp();
+  row_count_out integer;
   trimmed text := btrim(query);
   trimmed_no_semi text := regexp_replace(trimmed, ';\s*$', '');
 begin
+  -- Guard 1: only the super admin may call this function.
   if auth.uid() is distinct from 'e11f7567-fe8c-4916-8c1e-1f5e0c054988'::uuid then
     raise exception 'admin_execute_sql: not authorised';
   end if;
 
-  if trimmed_no_semi !~* '^\s*(select|with)\y' then
+  -- Guard 2: cheap allow-list + blocklist for a fast, clear error message.
+  -- This is defense in depth, NOT the real enforcement -- see Guard 3.
+  if trimmed_no_semi !~* '^\s*(select|with)\b' then
     raise exception 'admin_execute_sql: only SELECT (or WITH ... SELECT) statements are permitted';
   end if;
 
@@ -80,46 +65,37 @@ begin
     raise exception 'admin_execute_sql: statement type not permitted from this console';
   end if;
 
-  -- Real enforcement: this function is OWNED by admin_sql_readonly (see
-  -- ALTER FUNCTION below), which has only SELECT grants -- no INSERT/
-  -- UPDATE/DELETE/DDL privileges on anything. SECURITY DEFINER means the
-  -- function always runs as its owner, so any write attempt -- however
-  -- it's smuggled in -- fails on genuine permission-denied, not on
-  -- transaction state (which PostgREST's own preamble queries rule out
-  -- anyway) or SET ROLE (which Postgres disallows inside SECURITY
-  -- DEFINER functions).
-  execute format(
-    'select coalesce(jsonb_agg(t), ''[]''::jsonb) from (%s) t',
-    trimmed_no_semi
-  ) into result;
+  -- Guard 3: the real enforcement. Postgres itself will refuse any write
+  -- (INSERT/UPDATE/DELETE/DDL) for the rest of this transaction, even if
+  -- it's hidden inside a data-modifying CTE or a volatile function call
+  -- that Guard 2's keyword check didn't catch.
+  set local transaction_read_only = on;
+
+  begin
+    execute format(
+      'select coalesce(jsonb_agg(t), ''[]''::jsonb) from (%s) t',
+      trimmed_no_semi
+    ) into result;
+  exception when others then
+    insert into admin_sql_log (executed_by, statement, succeeded, error_message, duration_ms)
+    values (
+      auth.uid(), query, false, sqlerrm,
+      extract(milliseconds from clock_timestamp() - started_at)::integer
+    );
+    raise;
+  end;
+
+  row_count_out := jsonb_array_length(result);
+
+  insert into admin_sql_log (executed_by, statement, succeeded, row_count, duration_ms)
+  values (
+    auth.uid(), query, true, row_count_out,
+    extract(milliseconds from clock_timestamp() - started_at)::integer
+  );
 
   return result;
 end;
 $$;
 
--- This is the actual enforcement mechanism.
-alter function admin_execute_sql(text) owner to admin_sql_readonly;
-
--- admin_log_sql_call stays owned by whoever ran this script (needs write
--- access to admin_sql_log) -- do NOT alter its owner.
-create or replace function admin_log_sql_call(
-  p_statement text,
-  p_succeeded boolean,
-  p_row_count integer default null,
-  p_error_message text default null,
-  p_duration_ms integer default null
-)
-returns void
-language plpgsql
-security definer
-set search_path = public
-as $$
-begin
-  if auth.uid() is distinct from 'e11f7567-fe8c-4916-8c1e-1f5e0c054988'::uuid then
-    raise exception 'admin_log_sql_call: not authorised';
-  end if;
-
-  insert into admin_sql_log (executed_by, statement, succeeded, row_count, error_message, duration_ms)
-  values (auth.uid(), p_statement, p_succeeded, p_row_count, p_error_message, p_duration_ms);
-end;
-$$;
+comment on function admin_execute_sql(text) is
+  'Runs an arbitrary query and returns results as JSONB. Restricted to the super admin UID. Used by pages/testing/sql-runner.html.';

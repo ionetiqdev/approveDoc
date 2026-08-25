@@ -202,15 +202,14 @@ const Auth = (() => {
       : name.slice(0,2).toUpperCase();
 
     document.querySelectorAll('[data-user-initials]').forEach(el => {
-      const safeAvatarUrl = avatarUrl && /^https?:\/\//.test(avatarUrl) ? avatarUrl : null;
-      if (safeAvatarUrl) {
+      if (avatarUrl) {
         const img = document.createElement('img');
-        img.src = safeAvatarUrl;
+        img.src = avatarUrl;
         img.alt = initials;
         img.style.cssText = 'width:100%;height:100%;object-fit:cover;border-radius:50%';
         el.textContent = '';
         el.appendChild(img);
-        _wireAvatarTooltip(el, safeAvatarUrl, name);
+        _wireAvatarTooltip(el, avatarUrl, name);
       } else {
         el.textContent = initials;
       }
@@ -345,21 +344,12 @@ const Auth = (() => {
   }
 
   function _redirectToLogin() {
-    const root = _safePath(window._appRootUrl || window._appRoot || './');
+    const root = window._appRootUrl || window._appRoot || './';
     window.location.replace(root + 'pages/auth/login.html');
   }
 
   function _rootPath() {
-    return _safePath(window._appRootUrl || window._appRoot || './');
-  }
-
-  // Ensure redirect root is a relative path or same-origin URL — never an external domain
-  function _safePath(root) {
-    try {
-      const url = new URL(root, window.location.origin);
-      if (url.origin !== window.location.origin) return './';
-      return root;
-    } catch(e) { return './'; }
+    return window._appRootUrl || window._appRoot || './';
   }
 
   async function signOut() {

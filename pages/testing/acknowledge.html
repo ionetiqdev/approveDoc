@@ -15,7 +15,7 @@
 
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/core@1.4.0/dist/css/tabler.min.css" />
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.44.0/dist/tabler-icons.min.css" />
-  <link rel="stylesheet" href="../../assets/css/theme.css?r=gyx75z6f" />
+  <link rel="stylesheet" href="../../assets/css/theme.css?r=wu15oeiz" />
 
   <script>
     (function() {
@@ -102,10 +102,6 @@
               <span class="spinner-border spinner-border-sm me-2"></span>Loading document…
             </div>
             <iframe id="pdfFrame" style="display:none"></iframe>
-            <div id="ackVideoWrap" style="display:none;width:100%;height:100%;background:#000">
-              <video id="ackVideoPlayer" playsinline controls style="width:100%;height:100%;object-fit:contain"></video>
-              <div id="ackYoutubePlayer" style="width:100%;height:100%"></div>
-            </div>
           </div>
         </div>
 
@@ -138,13 +134,10 @@
                 <span style="vertical-align:middle;padding-left:10px"> Reject</span>
               </button>
 
-              <span id="referenceBtnWrap" data-bs-toggle="tooltip" data-bs-placement="top"
-                title="Only acknowledged documents can be saved for reference">
-                <button class="btn w-100" id="referenceBtn" style="font-size:18px;padding:.6rem 1rem;background:#e0e0e0;color:#1a237e;pointer-events:none" disabled>
-                  <i class="ti ti-book" style="font-size:28px;vertical-align:middle"></i>
-                  <span style="vertical-align:middle;padding-left:10px"> Add to reference</span>
-                </button>
-              </span>
+              <button class="btn w-100" id="referenceBtn" style="font-size:18px;padding:.6rem 1rem;background:#e0e0e0;color:#1a237e">
+                <i class="ti ti-book" style="font-size:28px;vertical-align:middle"></i>
+                <span style="vertical-align:middle;padding-left:10px"> Add to reference</span>
+              </button>
 
             </div>
           </div>
@@ -179,21 +172,19 @@
 
   <script src="https://cdn.jsdelivr.net/npm/@tabler/core@1.4.0/dist/js/tabler.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/plyr@3/dist/plyr.css" />
-  <script src="https://cdn.jsdelivr.net/npm/plyr@3/dist/plyr.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="../../assets/js/version.js?r=gyx75z6f"></script>
-  <script src="../../assets/js/supabase-client.js?r=gyx75z6f"></script>
-  <script src="../../assets/js/auth.js?r=gyx75z6f"></script>
-  <script src="../../assets/js/app.js?r=gyx75z6f"></script>
-  <script src="../../assets/js/theme.js?r=gyx75z6f"></script>
-  <script src="../../assets/js/sidebar-html.js?r=gyx75z6f"></script>
-  <script src="../../assets/js/sidebar.js?r=gyx75z6f"></script>
-  <script src="../../assets/js/profile-modal.js?r=gyx75z6f"></script>
-  <script src="../../assets/js/status-widget.js?r=gyx75z6f"></script>
+  <script src="../../assets/js/version.js?r=wu15oeiz"></script>
+  <script src="../../assets/js/supabase-client.js?r=wu15oeiz"></script>
+  <script src="../../assets/js/auth.js?r=wu15oeiz"></script>
+  <script src="../../assets/js/app.js?r=wu15oeiz"></script>
+  <script src="../../assets/js/theme.js?r=wu15oeiz"></script>
+  <script src="../../assets/js/sidebar-html.js?r=wu15oeiz"></script>
+  <script src="../../assets/js/sidebar.js?r=wu15oeiz"></script>
+  <script src="../../assets/js/profile-modal.js?r=wu15oeiz"></script>
+  <script src="../../assets/js/status-widget.js?r=wu15oeiz"></script>
   <script>
 const PDF_BUCKET          = 'documents';
-const PDF_VIEWER_URL      = '../../assets/pdfjs/web/viewer.html';
+const PDF_VIEWER_URL      = 'assets/pdfjs/web/viewer.html';
 const SIGNED_URL_EXPIRY   = 60;
 
 let currentItem = null;
@@ -257,92 +248,8 @@ let rejectModal  = null;
     }
   });
 
-  document.getElementById('referenceBtn').addEventListener('click', async () => {
-    if (!currentItem) return;
-    const session = Auth.getSession();
-    const userId  = session?.user?.id;
-    if (!userId) return;
-
-    // Get doc_id from the distribution
-    const { data: dist } = await sb.from('ad_distribution')
-      .select('doc_id').eq('distribution_id', currentItem.distribution_id).single();
-    if (!dist?.doc_id) return;
-
-    // Insert reference (ignore if already exists)
-    await sb.from('ad_document_reference').upsert({
-      organisation_id: Auth.getOrganisationId(),
-      user_id:         userId,
-      doc_id:          dist.doc_id,
-      date_added:      new Date().toISOString().slice(0, 10),
-    }, { onConflict: 'user_id,doc_id', ignoreDuplicates: true });
-
-    // Update distribution item status to REFERENCE
-    await sb.from('ad_distribution_item').update({
-      status:     'REFERENCE',
-      updated_at: new Date().toISOString(),
-    }).eq('distrib_item_id', currentItem.distrib_item_id);
-
-    currentItem.status = 'REFERENCE';
-    renderStatusBadge(currentItem);
-    updateReferenceBtn(); updateActionButtons();
-    App.toast('Document saved to reference library');
-    await StatusWidget.refresh();
-
-    // Audit custom event
-    try {
-      await sb.rpc('audit_custom', {
-        p_action:     'DOCUMENT_REFERENCE',
-        p_table_name: 'ad_distribution_item',
-        p_record_id:  currentItem.distrib_item_id,
-        p_comment:    'Document saved to reference library',
-        p_user_id:    Auth.getProfile()?.id || null,
-        p_org_id:     Auth.getOrganisationId()
-      });
-    } catch(e) { console.warn('[Audit] audit_custom failed:', e.message); }
-
-    returnToList();
-  });
+  document.getElementById('referenceBtn').addEventListener('click', () => { /* TODO: add to reference */ });
 })();
-
-function updateActionButtons() {
-  const status     = currentItem?.status;
-  const isApproved = status === 'APPROVED';
-  const isRejected = status === 'REJECTED';
-  const isRef      = status === 'REFERENCE';
-  const isDone     = isApproved || isRejected || isRef;
-
-  const ackBtn = document.getElementById('acknowledgeBtn');
-  const rejBtn = document.getElementById('rejectBtn');
-
-  ackBtn.disabled = isDone;
-  ackBtn.style.opacity = isDone ? '0.5' : '1';
-  ackBtn.title = isApproved ? 'Already acknowledged' : isRejected ? 'Document has been rejected' : '';
-
-  rejBtn.disabled = isDone;
-  rejBtn.style.opacity = isDone ? '0.5' : '1';
-  rejBtn.title = isRejected ? 'Already rejected' : isApproved ? 'Document has been acknowledged' : '';
-}
-
-function updateReferenceBtn() {
-  const btn     = document.getElementById('referenceBtn');
-  const wrap    = document.getElementById('referenceBtnWrap');
-  const isApproved = currentItem?.status === 'APPROVED' || currentItem?.acknowledged === true;
-  const isRef      = currentItem?.status === 'REFERENCE';
-  const canAdd     = isApproved && !isRef;
-
-  btn.disabled = !canAdd;
-  btn.style.pointerEvents = canAdd ? '' : 'none';
-  btn.style.opacity = canAdd ? '1' : '0.6';
-
-  // Tooltip on the wrapper
-  if (wrap._tt) { wrap._tt.dispose(); wrap._tt = null; }
-  if (!canAdd) {
-    wrap.setAttribute('title', isRef ? 'Already saved to reference' : 'Only acknowledged documents can be saved for reference');
-    wrap._tt = new bootstrap.Tooltip(wrap);
-  } else {
-    wrap.removeAttribute('title');
-  }
-}
 
 async function loadItem(itemId) {
   // Load the distribution item
@@ -358,9 +265,8 @@ async function loadItem(itemId) {
   }
   currentItem = item;
 
-  // Update status badge and reference button state
+  // Update status badge
   renderStatusBadge(item);
-  updateReferenceBtn(); updateActionButtons();
 
   // Load the distribution (to get doc_id)
   const { data: dist } = await sb
@@ -394,7 +300,7 @@ async function loadItem(itemId) {
   // Load the file record
   const { data: files } = await sb
     .from('ad_document_file')
-    .select('id, storage_path, source_type, external_url, external_ref, file_name, download_file_name, mime_type')
+    .select('storage_path, file_name, download_file_name')
     .eq('doc_id', dist.doc_id)
     .order('created_at', { ascending: false })
     .limit(1);
@@ -406,110 +312,48 @@ async function loadItem(itemId) {
     return;
   }
 
-  const mime = pdfFile.mime_type || '';
-  if (mime.startsWith('video/') || mime.startsWith('audio/')) {
-    await loadVideo(pdfFile, doc?.name || dist.name);
-  } else {
-    await loadPdf(pdfFile, doc?.name || dist.name);
-  }
-}
-
-let _ackPlyr = null;
-
-function _youtubeId(url) {
-  if (!url) return null;
-  const m = url.match(/(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|embed\/|v\/))([a-zA-Z0-9_-]{11})/);
-  return m ? m[1] : null;
-}
-
-async function loadVideo(pdfFile, docName) {
-  const videoWrap  = document.getElementById('ackVideoWrap');
-  const videoEl    = document.getElementById('ackVideoPlayer');
-  const youtubeEl  = document.getElementById('ackYoutubePlayer');
-  const pdfFrame   = document.getElementById('pdfFrame');
-
-  pdfFrame.style.display = 'none';
-  videoWrap.style.display = 'block';
-  document.getElementById('viewerLoadingState').style.display = 'none';
-
-  if (_ackPlyr) { _ackPlyr.destroy(); _ackPlyr = null; }
-
-  const sourceType = pdfFile.source_type || 'SUPABASE';
-  let src = '';
-
-  try {
-    if (sourceType === 'SUPABASE') {
-      const { data: signed } = await sb.storage.from(PDF_BUCKET).createSignedUrl(pdfFile.storage_path, 3600);
-      if (!signed?.signedUrl) throw new Error('Could not get signed URL');
-      src = signed.signedUrl;
-    } else {
-      src = pdfFile.external_url || '';
-    }
-
-    const youtubeId = _youtubeId(src);
-    if (youtubeId) {
-      videoEl.style.display = 'none';
-      youtubeEl.style.display = 'block';
-      youtubeEl.innerHTML = `<div class="plyr__video-embed" id="ackYoutubeInner" style="width:100%;height:100%">
-        <iframe src="https://www.youtube.com/embed/${youtubeId}?origin=${encodeURIComponent(window.location.origin)}&iv_load_policy=3&modestbranding=1&playsinline=1&showinfo=0&rel=0&enablejsapi=1"
-          allowfullscreen allowtransparency allow="autoplay" style="width:100%;height:100%;border:none"></iframe>
-      </div>`;
-      _ackPlyr = new Plyr('#ackYoutubeInner', {
-        controls: ['play-large','play','progress','current-time','mute','volume','fullscreen'],
-      });
-    } else {
-      youtubeEl.style.display = 'none';
-      videoEl.style.display = 'block';
-      videoEl.src = src;
-      videoEl.type = pdfFile.mime_type || 'video/mp4';
-      _ackPlyr = new Plyr(videoEl, {
-        controls: ['play-large','play','rewind','fast-forward','progress','current-time','duration','mute','volume','fullscreen'],
-        resetOnEnd: false,
-      });
-    }
-  } catch(e) {
-    document.getElementById('viewerLoadingState').style.display = '';
-    document.getElementById('viewerLoadingState').innerHTML =
-      `<div class="text-danger text-center p-4"><i class="ti ti-alert-circle d-block mb-2" style="font-size:2rem"></i>
-      <strong>Could not load video</strong><br><span class="small">${e.message}</span></div>`;
-  }
+  await loadPdf(pdfFile, doc?.name || dist.name);
 }
 
 async function loadPdf(pdfFile, docName) {
-  const sourceType = pdfFile.source_type || 'SUPABASE';
-  const fileName   = pdfFile.download_file_name || docName.replace(/[^a-z0-9._-]/gi, '_') + '.pdf';
-  let blobUrl;
+  console.log('[Acknowledge] loadPdf: storage_path =', pdfFile.storage_path);
 
+  const { data: signedData, error: signErr } = await sb.storage
+    .from(PDF_BUCKET)
+    .createSignedUrl(pdfFile.storage_path, SIGNED_URL_EXPIRY);
+
+  if (signErr || !signedData) {
+    const msg = signErr?.message || 'Unknown error';
+    console.error('[Acknowledge] createSignedUrl failed:', msg);
+    document.getElementById('viewerLoadingState').innerHTML =
+      `<div class="text-danger text-center p-4"><i class="ti ti-alert-circle d-block mb-2" style="font-size:2rem"></i>
+      <strong>Could not get file URL</strong><br><span class="small">${msg}</span></div>`;
+    return;
+  }
+
+  console.log('[Acknowledge] Signed URL obtained, fetching blob…');
+
+  // Fetch as blob so pdf.js's validateFileURL never blocks it
   try {
-    if (sourceType === 'SUPABASE') {
-      const { data: signedData, error: signErr } = await sb.storage
-        .from(PDF_BUCKET).createSignedUrl(pdfFile.storage_path, SIGNED_URL_EXPIRY);
-      if (signErr || !signedData) throw new Error(signErr?.message || 'Could not get file URL');
-      const resp = await fetch(signedData.signedUrl);
-      if (!resp.ok) throw new Error('HTTP ' + resp.status);
-      blobUrl = URL.createObjectURL(new File([await resp.blob()], fileName, { type: 'application/pdf' }));
-    } else {
-      const saved = AppSession.load();
-      const resp  = await fetch(`${SUPABASE_URL}/functions/v1/fetch-document`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + saved?.access_token, 'apikey': SUPABASE_ANON_KEY },
-        body: JSON.stringify({ file_id: pdfFile.id }),
-      });
-      if (!resp.ok) throw new Error('HTTP ' + resp.status);
-      blobUrl = URL.createObjectURL(new File([await resp.blob()], fileName, { type: 'application/pdf' }));
-    }
+    const resp = await fetch(signedData.signedUrl);
+    if (!resp.ok) throw new Error('HTTP ' + resp.status);
+    const blob     = await resp.blob();
+    const fileName = pdfFile.download_file_name || docName.replace(/[^a-z0-9._-]/gi, '_') + '.pdf';
+    const named    = new File([blob], fileName, { type: 'application/pdf' });
+    const blobUrl  = URL.createObjectURL(named);
 
     const frame = document.getElementById('pdfFrame');
-    const hash  = 'page=1&zoom=page-fit&pagemode=thumbs&toolbar=1&navpanes=1&locale=en-US';
-    frame.style.visibility = 'hidden';
-    frame.onload = () => { injectPdfStyles(frame); setTimeout(() => { frame.style.visibility = ''; }, 150); };
-    frame.src = `${PDF_VIEWER_URL}?file=${encodeURIComponent(blobUrl)}#${hash}`;
+    const hash  = 'page=1&zoom=page-fit&pagemode=none&toolbar=0&navpanes=1&locale=en-US';
+    frame.src   = `${PDF_VIEWER_URL}?file=${encodeURIComponent(blobUrl)}#${hash}`;
     frame.removeAttribute('style');
+    frame.onload = () => injectPdfStyles(frame);
     document.getElementById('viewerLoadingState').style.display = 'none';
   } catch (e) {
     document.getElementById('viewerLoadingState').innerHTML =
       `<div class="text-danger text-center p-4"><i class="ti ti-alert-circle d-block mb-2" style="font-size:2rem"></i>
-      <strong>Could not load document</strong><br><span class="small">${e.message}</span></div>`;
+      <strong>Could not load PDF</strong><br><span class="small">${e.message}</span><br>
+      <span class="small text-secondary mt-1 d-block">Check browser console for CSP or network errors</span></div>`;
+    App.toast('Could not load PDF: ' + e.message, 'danger');
   }
 }
 
@@ -523,41 +367,27 @@ function injectPdfStyles(frame) {
       #scaleSelect, #scaleSelect option,
       .dropdownToolbarButton > select,
       .dropdownToolbarButton > select option {
-        color: #000 !important;
-        background-color: #fff !important;
+        background-color: #3d3d3d !important;
+        color: #fff !important;
       }
-      /* Always hidden: overflow menu, print, download, separators, annotation editors */
+      /* Hide entire toolbar and secondary menu */
+      #toolbarContainer,
       #secondaryToolbarToggle,
-      #printButton, #secondaryPrintButton,
-      #downloadButton, #secondaryDownloadButton,
-      #editorFreeTextButton, #editorInkButton, #editorStampButton, #editorHighlightButton,
-      #rotateCcwButton, #rotateCwButton,
-      #openFileButton, #viewBookmarkButton, #documentPropertiesButton, #presentationModeButton,
-      .verticalToolbarSeparator, .horizontalToolbarSeparator,
-      .splitToolbarButtonSeparator,
-      #editorModeSeparator,
-      .verticalToolbarSeparator.hiddenMediumView {
+      #secondaryToolbar {
         display: none !important;
-      }
-      #secondaryToolbar, .secondaryToolbar {
-        background: #fff !important;
-      }
-      #findbar { background: #f9f9f9 !important; color: #000 !important; }
-      #findInput { color: #000 !important; background: #fff !important; }`;
+      }`;
     doc.head.appendChild(style);
   } catch(e) {}
 }
 
 function renderStatusBadge(item) {
   const colours = {
-    'APPROVED':  '#8BC34A', 'REJECTED': '#B33771',
-    'OVERDUE':   '#EA2027', 'PENDING':  '#009432',
-    'REFERENCE': '#0070C0',
+    'APPROVED': '#8BC34A', 'REJECTED': '#B33771',
+    'OVERDUE': '#EA2027', 'PENDING': '#009432',
   };
   const labels  = {
-    'APPROVED':  'Acknowledged', 'REJECTED':  'Rejected',
-    'OVERDUE':   'Overdue',      'PENDING':   'Pending',
-    'REFERENCE': 'Reference',
+    'APPROVED': 'Acknowledged', 'REJECTED': 'Rejected',
+    'OVERDUE': 'Overdue', 'PENDING': 'Pending',
   };
   const s   = (item.status || 'PENDING').toUpperCase();
   const col = colours[s] || '#0070C0';
@@ -603,23 +433,9 @@ async function saveAction(newStatus, reason) {
   currentItem.rejected_date     = isRejected ? today : null;
   currentItem.rejected_reason   = isRejected ? reason : null;
   renderStatusBadge(currentItem);
-  updateReferenceBtn(); updateActionButtons();
 
   App.toast(isApproved ? 'Document acknowledged' : 'Document rejected');
   await StatusWidget.refresh();
-
-  // Audit custom event
-  try {
-    await sb.rpc('audit_custom', {
-      p_action:     isApproved ? 'DOCUMENT_ACKNOWLEDGED' : 'DOCUMENT_REJECTED',
-      p_table_name: 'ad_distribution_item',
-      p_record_id:  currentItem.distrib_item_id,
-      p_comment:    isRejected ? `Rejected: ${reason || 'No reason given'}` : 'Document acknowledged by user',
-      p_user_id:    Auth.getProfile()?.id || null,
-      p_org_id:     Auth.getOrganisationId()
-    });
-  } catch(e) { console.warn('[Audit] audit_custom failed:', e.message); }
-
   return true;
 }
   </script>

@@ -15,7 +15,7 @@
 
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/core@1.4.0/dist/css/tabler.min.css" />
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.44.0/dist/tabler-icons.min.css" />
-  <link rel="stylesheet" href="../../assets/css/theme.css?r=gyx75z6f" />
+  <link rel="stylesheet" href="../../assets/css/theme.css?r=wu15oeiz" />
 
   <script>
     (function() {
@@ -155,7 +155,7 @@
                 <div class="doc-drop-zone" id="docDropZone">
                   <i class="ti ti-cloud-upload"></i>
                   Drop a PDF here or <strong>browse</strong>
-                  <input type="file" id="docFileInput" accept="application/pdf,.doc,.docx,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,video/mp4,video/webm,video/ogg,video/*" style="display:none" />
+                  <input type="file" id="docFileInput" accept="application/pdf" style="display:none" />
                 </div>
               </div>
             </div>
@@ -177,10 +177,6 @@
                   <p class="small mb-0">Choose a document from the list or upload a new PDF.</p>
                 </div>
                 <iframe id="docPdfFrame" style="display:none;width:100%;height:100%;border:none"></iframe>
-                <div id="docVideoWrap" style="display:none;width:100%;height:100%;background:#000">
-                  <video id="docVideoPlayer" playsinline controls style="width:100%;height:100%;object-fit:contain"></video>
-                  <div id="docYoutubePlayer" style="width:100%;height:100%"></div>
-                </div>
               </div>
             </div>
           </div>
@@ -214,77 +210,8 @@
             </select>
           </div>
           <div class="mb-3">
-            <label class="form-label">Source</label>
-            <div class="btn-group w-100" role="group" id="docSourceGroup">
-              <input type="radio" class="btn-check" name="docSource" id="docSourceFile" value="file" checked autocomplete="off">
-              <label class="btn btn-sm btn-outline-secondary" for="docSourceFile"><i class="ti ti-upload me-1"></i>Upload file</label>
-              <input type="radio" class="btn-check" name="docSource" id="docSourceGdrive" value="gdrive" autocomplete="off">
-              <label class="btn btn-sm btn-outline-secondary" for="docSourceGdrive"><i class="ti ti-brand-google-drive me-1"></i>Google Drive</label>
-              <input type="radio" class="btn-check" name="docSource" id="docSourceUrl" value="url" autocomplete="off">
-              <label class="btn btn-sm btn-outline-secondary" for="docSourceUrl"><i class="ti ti-link me-1"></i>Direct URL</label>
-              <input type="radio" class="btn-check" name="docSource" id="docSourceRest" value="rest" autocomplete="off">
-              <label class="btn btn-sm btn-outline-secondary" for="docSourceRest"><i class="ti ti-api me-1"></i>REST API</label>
-            </div>
-          </div>
-
-          <!-- Upload file -->
-          <div class="mb-3" id="docSourceFileField">
             <label class="form-label">PDF file</label>
-            <input type="file" id="docModalFile" class="form-control" accept="application/pdf,.doc,.docx,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,video/mp4,video/webm,video/ogg,video/*" />
-          </div>
-
-          <!-- Google Drive -->
-          <div class="mb-3 d-none" id="docSourceGdriveField">
-            <div class="alert alert-info py-2 small mb-3">
-              <i class="ti ti-info-circle me-1"></i>
-              Google Drive integration requires setup — see <code>docs/GOOGLE-DRIVE-SETUP.md</code>.
-              Once configured, users will be able to browse and select files directly.
-            </div>
-            <label class="form-label">Google Drive file URL</label>
-            <input type="url" id="docModalGdriveUrl" class="form-control" placeholder="https://drive.google.com/file/d/…/view" />
-            <div class="form-text">Paste a Google Drive sharing URL. The file must be shared with "Anyone with the link can view".</div>
-          </div>
-
-          <!-- Direct URL -->
-          <div class="mb-3 d-none" id="docSourceUrlField">
-            <label class="form-label">URL <span class="text-danger">*</span></label>
-            <input type="url" id="docModalUrl" class="form-control" placeholder="https://example.com/document.pdf" />
-            <div class="form-text">Publicly accessible PDF URL. No authentication required.</div>
-          </div>
-
-          <!-- REST API -->
-          <div class="d-none" id="docSourceRestField">
-            <div class="mb-3">
-              <label class="form-label">API endpoint <span class="text-danger">*</span></label>
-              <input type="url" id="docModalRestUrl" class="form-control" placeholder="https://api.example.com/documents/123/content" />
-            </div>
-            <div class="mb-3">
-              <label class="form-label">Auth type</label>
-              <select id="docModalRestAuth" class="form-select">
-                <option value="NONE">None</option>
-                <option value="BEARER">Bearer token</option>
-                <option value="API_KEY">API key</option>
-                <option value="BASIC">Basic (username / password)</option>
-              </select>
-            </div>
-            <div class="mb-3 d-none" id="docModalRestTokenField">
-              <label class="form-label">Token / API key</label>
-              <input type="password" id="docModalRestToken" class="form-control" placeholder="Stored securely in vault" />
-            </div>
-            <div class="d-none" id="docModalRestBasicFields">
-              <div class="mb-3">
-                <label class="form-label">Username</label>
-                <input type="text" id="docModalRestUsername" class="form-control" />
-              </div>
-              <div class="mb-3">
-                <label class="form-label">Password</label>
-                <input type="password" id="docModalRestPassword" class="form-control" />
-              </div>
-            </div>
-            <div class="mb-3">
-              <label class="form-label">Reference / Document ID</label>
-              <input type="text" id="docModalRestRef" class="form-control" placeholder="System-specific document identifier (optional)" />
-            </div>
+            <input type="file" id="docModalFile" class="form-control" accept="application/pdf" />
           </div>
           <div id="docModalProgress" style="display:none">
             <div class="progress mb-1" style="height:6px">
@@ -398,19 +325,17 @@
 
   <script src="https://cdn.jsdelivr.net/npm/@tabler/core@1.4.0/dist/js/tabler.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/plyr@3/dist/plyr.css" />
-  <script src="https://cdn.jsdelivr.net/npm/plyr@3/dist/plyr.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="../../assets/js/version.js?r=gyx75z6f"></script>
-  <script src="../../assets/js/supabase-client.js?r=gyx75z6f"></script>
-  <script src="../../assets/js/auth.js?r=gyx75z6f"></script>
-  <script src="../../assets/js/app.js?r=gyx75z6f"></script>
-  <script src="../../assets/js/theme.js?r=gyx75z6f"></script>
-  <script src="../../assets/js/sidebar-html.js?r=gyx75z6f"></script>
-  <script src="../../assets/js/sidebar.js?r=gyx75z6f"></script>
-  <script src="../../assets/js/profile-modal.js?r=gyx75z6f"></script>
-  <script src="../../assets/js/status-widget.js?r=gyx75z6f"></script>
-  <script src="config.js?r=gyx75z6f"></script>
-  <script src="documents.js?r=gyx75z6f"></script>
+  <script src="../../assets/js/version.js?r=wu15oeiz"></script>
+  <script src="../../assets/js/supabase-client.js?r=wu15oeiz"></script>
+  <script src="../../assets/js/auth.js?r=wu15oeiz"></script>
+  <script src="../../assets/js/app.js?r=wu15oeiz"></script>
+  <script src="../../assets/js/theme.js?r=wu15oeiz"></script>
+  <script src="../../assets/js/sidebar-html.js?r=wu15oeiz"></script>
+  <script src="../../assets/js/sidebar.js?r=wu15oeiz"></script>
+  <script src="../../assets/js/profile-modal.js?r=wu15oeiz"></script>
+  <script src="../../assets/js/status-widget.js?r=wu15oeiz"></script>
+  <script src="config.js?r=wu15oeiz"></script>
+  <script src="documents.js?r=wu15oeiz"></script>
 </body>
 </html>

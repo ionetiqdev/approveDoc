@@ -1,25 +1,8 @@
-# ============================================================
-# project.conf — local configuration for deploy.bat / deploy.sh
-# NEVER commit this file. It is gitignored.
-# Copy to project.conf and fill in real values.
-# ============================================================
-
-APP_NAME=approveDoc
-PROJECT_CODE=approvedoc
-TEMPLATE_VERSION_AT_CREATION=1.1.2
+APP_NAME=ionetiq Template
+PROJECT_CODE=template
+TEMPLATE_VERSION_AT_CREATION=1.1.1
 COMPANY_NAME=ionetiq
-DOWNLOADS_DIR=C:\Users\yourname\My Drive\Downloads
-WORKING_DIR=C:\inetpub\wwwroot\approveDoc
-GITHUB_REPO_URL=https://github.com/ionetiqdev/approveDoc.git
-SUPABASE_PROJECT_NAME=approvedoc
-
-# New-style publishable keys (sb_publishable_...) — preferred
-# Get from Supabase dashboard → Settings → API Keys → Create new API Keys
-SUPABASE_URL_MAIN=https://YOUR_PROD_PROJECT_ID.supabase.co
-SUPABASE_ANON_KEY_MAIN=sb_publishable_YOUR_PROD_KEY
-
-SUPABASE_URL_DEV=https://YOUR_DEV_PROJECT_ID.supabase.co
-SUPABASE_ANON_KEY_DEV=sb_publishable_YOUR_DEV_KEY
-
-# Legacy JWT anon keys also work during migration period (deprecated end of 2026)
-# SUPABASE_ANON_KEY_MAIN=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.YOUR_LEGACY_JWT_KEY_HERE
+DOWNLOADS_DIR=C:\Users\mikeb\My Drive\Downloads
+WORKING_DIR=C:\inetpub\wwwroot\Template
+GITHUB_REPO_URL=https://github.com/ionetiqdev/ionetiq-template.git
+SUPABASE_PROJECT_NAME=template

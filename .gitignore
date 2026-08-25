@@ -9,13 +9,3 @@ debug.html
 node_modules/
 package.json
 package-lock.json
-
-# Secrets — never commit
-project.conf
-mobile/.env.local
-mobile/dist/
-mobile/android/app/build/
-mobile/android/app/src/main/assets/
-supabase/create-real-users.js
-*.env
-*.env.local
