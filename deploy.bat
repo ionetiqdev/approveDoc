@@ -101,7 +101,7 @@ if not "%GITHUB_REPO_URL%"=="" (
 echo Looking for %PROJECT_CODE%_*.zip in %DOWNLOADS_DIR% ...
 
 set LATEST_ZIP=
-set LATEST_EPOCH=-1
+set LATEST_EPOCH=00000000_0000
 for %%F in ("%DOWNLOADS_DIR%\%PROJECT_CODE%_*.zip") do (
   call :ParseZipTimestamp "%%~nF" EPOCH
   if !EPOCH! GTR !LATEST_EPOCH! (
@@ -176,12 +176,22 @@ if errorlevel 1 (
 
 del "BUILD_TIMESTAMP.txt" 2>nul
 
-:: ── Step 5: switch to the right branch, commit, push ──
+:: ── Step 4b: select Supabase credentials based on branch ──
+if "%BRANCH%"=="main" (
+  set "SUPABASE_URL=%SUPABASE_URL_MAIN%"
+  set "SUPABASE_ANON_KEY=%SUPABASE_ANON_KEY_MAIN%"
+) else (
+  set "SUPABASE_URL=%SUPABASE_URL_DEV%"
+  set "SUPABASE_ANON_KEY=%SUPABASE_ANON_KEY_DEV%"
+)
 
 :: Find out what branch we're actually on right now
 for /f "delims=" %%C in ('git rev-parse --abbrev-ref HEAD 2^>nul') do set CURRENT_BRANCH=%%C
 
 if not "%CURRENT_BRANCH%"=="%BRANCH%" (
+  :: Stash any local changes (including the just-extracted files) so we can switch branches cleanly
+  git stash push -m "pre-deploy-switch" --include-untracked >nul 2>&1
+
   git rev-parse --verify %BRANCH% >nul 2>&1
   if errorlevel 1 (
     echo Branch "%BRANCH%" doesn't exist yet locally - creating it from the current branch.
@@ -191,8 +201,12 @@ if not "%CURRENT_BRANCH%"=="%BRANCH%" (
   )
   if errorlevel 1 (
     echo ERROR: Could not switch to branch "%BRANCH%".
+    git stash pop >nul 2>&1
     exit /b 1
   )
+
+  :: Re-apply the extracted files on top of the target branch
+  git stash pop >nul 2>&1
 )
 
 if not exist "CHANGES.txt" (
@@ -215,8 +229,20 @@ if errorlevel 1 (
 )
 
 echo.
-echo Done. Pushed to %BRANCH% - GitHub Actions will build supabase-client.js
-echo from your repo secrets and deploy it shortly.
+echo Done. Pushed to %BRANCH%.
+
+:: ── Step 6: substitute Supabase credentials on the server ──
+:: Do this AFTER git push so the placeholder version stays in git
+:: but the live server file gets the real credentials.
+if not "%SUPABASE_URL%"=="" (
+  echo Substituting Supabase credentials on server...
+  powershell -NoProfile -ExecutionPolicy Bypass -File "%~dp0substitute-credentials.ps1" -Url "%SUPABASE_URL%" -AnonKey "%SUPABASE_ANON_KEY%"
+  echo Credentials substituted. Server is live.
+) else (
+  echo WARNING: SUPABASE_URL not found in project.conf - server credentials NOT substituted.
+  echo          Add SUPABASE_URL_MAIN and SUPABASE_URL_DEV to project.conf
+)
+
 echo.
 echo Published version: %APP_NAME% - %PUBLISHED_TIMESTAMP%
 exit /b 0
@@ -240,6 +266,10 @@ set DOWNLOADS_DIR=
 set WORKING_DIR=
 set GITHUB_REPO_URL=
 set SUPABASE_PROJECT_NAME=
+set SUPABASE_URL_MAIN=
+set SUPABASE_ANON_KEY_MAIN=
+set SUPABASE_URL_DEV=
+set SUPABASE_ANON_KEY_DEV=
 
 if exist "project.conf" (
   for /f "usebackq tokens=1,* delims==" %%A in ("project.conf") do (
@@ -250,6 +280,10 @@ if exist "project.conf" (
     if "%%A"=="WORKING_DIR"            set "WORKING_DIR=%%B"
     if "%%A"=="GITHUB_REPO_URL"        set "GITHUB_REPO_URL=%%B"
     if "%%A"=="SUPABASE_PROJECT_NAME"  set "SUPABASE_PROJECT_NAME=%%B"
+    if "%%A"=="SUPABASE_URL_MAIN"      set "SUPABASE_URL_MAIN=%%B"
+    if "%%A"=="SUPABASE_ANON_KEY_MAIN" set "SUPABASE_ANON_KEY_MAIN=%%B"
+    if "%%A"=="SUPABASE_URL_DEV"       set "SUPABASE_URL_DEV=%%B"
+    if "%%A"=="SUPABASE_ANON_KEY_DEV"  set "SUPABASE_ANON_KEY_DEV=%%B"
   )
 )
 
@@ -322,26 +356,24 @@ exit /b 0
 
 
 :: ============================================================
-:: Parses a zip's base filename (no extension) of the form
-:: {code}_DDMMYYYY_HHmm into a single comparable integer
-:: (YYYYMMDDHHmm, so plain integer comparison sorts correctly
-:: across month/year boundaries even though the filename itself
-:: stays in DDMMYYYY order for human readability).
+:: Parses a zip base filename into a comparable integer
 :: %1 = base filename (e.g. "acme_25062026_1501")
 :: %2 = variable name to receive the result
 :: ============================================================
 :ParseZipTimestamp
 setlocal
 set "NAME=%~1"
+set "DATEPART="
+set "TIMEPART="
 for /f "tokens=2,3 delims=_" %%a in ("%NAME%") do (
   set "DATEPART=%%a"
   set "TIMEPART=%%b"
 )
-if "%DATEPART%"=="" (endlocal & set "%~2=-1" & exit /b)
-if "%TIMEPART%"=="" (endlocal & set "%~2=-1" & exit /b)
+if "%DATEPART%"=="" (endlocal & set "%~2=00000000000000" & exit /b)
+if "%TIMEPART%"=="" (endlocal & set "%~2=00000000000000" & exit /b)
+:: Reorder DDMMYYYY_HHmm -> YYYYMMDD_HHmm for correct string sort
 set "DD=%DATEPART:~0,2%"
 set "MM=%DATEPART:~2,2%"
 set "YYYY=%DATEPART:~4,4%"
-set /a RESULT=(%YYYY%*100000000) + (%MM%*1000000) + (%DD%*10000) + %TIMEPART%
-endlocal & set "%~2=%RESULT%"
+endlocal & set "%~2=%YYYY%%MM%%DD%_%TIMEPART%"
 exit /b

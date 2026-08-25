@@ -33,7 +33,7 @@ const newDocBtn         = document.getElementById('newDocBtn');
 (async () => {
   const session = await Auth.requireAuth();
   if (!session) return;
-  SidebarHtml.inject('../../');
+  SidebarHtml.inject(window._appRootUrl || '../../');
   Sidebar.init();
   Auth.refreshUI();
 
@@ -50,12 +50,11 @@ function loadDocFeatures() {
   const override = Auth.getPreference('docViewerPrefs', null);
   DOC_FEATURES = JSON.parse(JSON.stringify(DOC_DEFAULT_FEATURES));
 
+  // Only allow user prefs to override upload and delete — never pdfViewer or pdfButtons
+  // (viewer appearance is an app-level config decision, not a user preference)
   if (override) {
-    Object.keys(override).forEach(section => {
-      if (DOC_FEATURES[section]) {
-        Object.assign(DOC_FEATURES[section], override[section]);
-      }
-    });
+    if (override.upload) Object.assign(DOC_FEATURES.upload, override.upload);
+    if (override.delete) Object.assign(DOC_FEATURES.delete, override.delete);
   }
   applyDocFeatures();
 }
@@ -338,7 +337,7 @@ async function loadDocuments() {
 
   const { data, error } = await sb
     .from(DOC_CONFIG.tableDocs)
-    .select(`${DOC_CONFIG.colDocId}, ${DOC_CONFIG.colDocDesc}, description, ${DOC_CONFIG.colDocCatId}, ${DOC_CONFIG.tableFiles}(id, file_name, storage_path, download_file_name, mime_type, created_at)`)
+    .select(`${DOC_CONFIG.colDocId}, ${DOC_CONFIG.colDocDesc}, description, ${DOC_CONFIG.colDocCatId}, ${DOC_CONFIG.tableFiles}(id, file_name, storage_path, source_type, external_url, external_ref, download_file_name, mime_type, created_at)`)
     .eq(DOC_CONFIG.colOrgId, orgId)
     .order(DOC_CONFIG.colDocId);
 
@@ -357,6 +356,19 @@ function filterDocs() {
   });
 }
 
+function _fileFormatIcon(mime) {
+  mime = (mime || '').toLowerCase();
+  if (mime === 'application/pdf') return { icon: 'ti-file-type-pdf', label: 'PDF' };
+  if (mime === 'application/msword') return { icon: 'ti-file-type-doc', label: 'DOC' };
+  if (mime === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document') return { icon: 'ti-file-type-docx', label: 'DOCX' };
+  if (mime === 'video/youtube') return { icon: 'ti-brand-youtube', label: 'YouTube' };
+  if (mime === 'video/vimeo') return { icon: 'ti-brand-vimeo', label: 'Vimeo' };
+  if (mime.startsWith('video/')) return { icon: 'ti-video', label: 'Video' };
+  if (mime.startsWith('audio/')) return { icon: 'ti-file-music', label: 'Audio' };
+  if (mime.startsWith('image/')) return { icon: 'ti-photo', label: 'Image' };
+  return { icon: 'ti-file', label: 'File' };
+}
+
 function renderDocList(docs) {
   if (!docs.length) {
     docList.innerHTML = `
@@ -368,15 +380,19 @@ function renderDocList(docs) {
   }
   const showDelete = DOC_FEATURES.delete?.enabled !== false && Auth.canEdit();
   docList.innerHTML = docs.map(d => {
-    const catName = categoryName(d[DOC_CONFIG.colDocCatId]);
-    const desc    = d.description || '';
+    const catName  = categoryName(d[DOC_CONFIG.colDocCatId]);
+    const desc     = d.description || '';
+    const fmt      = _fileFormatIcon((d[DOC_CONFIG.tableFiles] || [])[0]?.mime_type);
     return `
     <div class="doc-list-item ${d[DOC_CONFIG.colDocId] === currentDocId ? 'active' : ''}" data-id="${d[DOC_CONFIG.colDocId]}">
       <div class="d-flex align-items-start gap-2">
         <div class="select-doc-trigger flex-grow-1" data-id="${d[DOC_CONFIG.colDocId]}" style="cursor:pointer;min-width:0">
           <div class="d-flex align-items-center justify-content-between gap-2">
             <div class="doc-list-title" style="min-width:0">${App.escHtml(d[DOC_CONFIG.colDocDesc] || 'Untitled document')}</div>
-            ${catName ? `<span class="badge bg-blue-lt text-nowrap flex-shrink-0">${App.escHtml(catName)}</span>` : ''}
+            <div class="d-flex align-items-center gap-1 flex-shrink-0">
+              <span class="badge bg-secondary-lt text-nowrap" title="${App.escHtml(fmt.label)}"><i class="ti ${fmt.icon}"></i></span>
+              ${catName ? `<span class="badge bg-blue-lt text-nowrap">${App.escHtml(catName)}</span>` : ''}
+            </div>
           </div>
           ${desc ? `<div class="text-secondary" style="font-size:.72rem;margin-top:20px">${App.escHtml(desc)}</div>` : ''}
         </div>
@@ -400,6 +416,66 @@ function renderDocList(docs) {
 
 if (docSearch) {
   docSearch.addEventListener('input', () => renderDocList(filterDocs()));
+}
+
+
+// ── Video viewer (Plyr) ───────────────────────────────────────────────────
+let _plyrInstance = null;
+
+function _youtubeId(url) {
+  if (!url) return null;
+  const m = url.match(/(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|embed\/|v\/))([a-zA-Z0-9_-]{11})/);
+  return m ? m[1] : null;
+}
+
+async function loadVideo(file, docName) {
+  docPdfFrame.style.display = 'none';
+  docEmptyState.style.display = 'none';
+
+  const videoWrap  = document.getElementById('docVideoWrap');
+  const videoEl    = document.getElementById('docVideoPlayer');
+  const youtubeEl  = document.getElementById('docYoutubePlayer');
+  videoWrap.style.display = 'block';
+
+  if (_plyrInstance) { _plyrInstance.destroy(); _plyrInstance = null; }
+
+  const sourceType = file.source_type || 'SUPABASE';
+  let src = '';
+
+  if (sourceType === 'SUPABASE') {
+    const { data: signed } = await sb.storage
+      .from(DOC_CONFIG.bucket)
+      .createSignedUrl(file.storage_path, 3600);
+    if (!signed?.signedUrl) { App.toast('Could not access video file', 'danger'); return; }
+    src = signed.signedUrl;
+  } else if (file.external_url) {
+    src = file.external_url;
+  }
+
+  const youtubeId = _youtubeId(src);
+
+  if (youtubeId) {
+    // YouTube — use Plyr embed div
+    videoEl.style.display = 'none';
+    youtubeEl.style.display = 'block';
+    youtubeEl.innerHTML = `<div class="plyr__video-embed" id="plyrYoutubeInner" style="width:100%;height:100%">
+      <iframe src="https://www.youtube.com/embed/${youtubeId}?origin=${encodeURIComponent(window.location.origin)}&iv_load_policy=3&modestbranding=1&playsinline=1&showinfo=0&rel=0&enablejsapi=1"
+        allowfullscreen allowtransparency allow="autoplay" style="width:100%;height:100%;border:none"></iframe>
+    </div>`;
+    _plyrInstance = new Plyr('#plyrYoutubeInner', {
+      controls: ['play-large','play','progress','current-time','mute','volume','fullscreen'],
+    });
+  } else {
+    // Native video
+    youtubeEl.style.display = 'none';
+    videoEl.style.display = 'block';
+    videoEl.src = src;
+    videoEl.type = file.mime_type || 'video/mp4';
+    _plyrInstance = new Plyr(videoEl, {
+      controls: ['play-large','play','rewind','fast-forward','progress','current-time','duration','mute','volume','fullscreen'],
+      resetOnEnd: false,
+    });
+  }
 }
 
 // ── Inject CSS into pdf.js iframe ────────────────────────────────────
@@ -494,31 +570,112 @@ async function selectDoc(id) {
   docViewerName.textContent = doc[DOC_CONFIG.colDocDesc] || pdfFile.file_name;
   docViewerToolbar.style.display = 'flex';
 
-  // PRIVATE bucket - createSignedUrl, not getPublicUrl (see config.js
-  // header comment). The signed URL is short-lived and only used to
-  // fetch the file once into a blob immediately below - it's never
-  // stored or displayed anywhere.
-  const { data: signedData, error: signError } = await sb.storage
-    .from(DOC_CONFIG.bucket)
-    .createSignedUrl(pdfFile.storage_path, DOC_CONFIG.signedUrlExpirySeconds);
+  // Hide video wrap when switching docs
+  const videoWrap = document.getElementById('docVideoWrap');
+  if (videoWrap) videoWrap.style.display = 'none';
+  if (_plyrInstance) { _plyrInstance.destroy(); _plyrInstance = null; }
 
-  if (signError || !signedData) {
-    App.toast('Could not access file: ' + (signError?.message || 'Unknown error'), 'danger');
+  // Route to video or PDF viewer based on MIME type
+  const mime = pdfFile.mime_type || '';
+  if (mime.startsWith('video/') || mime.startsWith('audio/') || mime === 'video/youtube' || mime === 'video/vimeo') {
+    await loadVideo(pdfFile, doc[DOC_CONFIG.colDocDesc] || pdfFile.file_name);
     return;
   }
 
-  currentFileUrl = signedData.signedUrl;
+  // Fetch the PDF — route depends on source type
+  let fetchUrl;
+  const sourceType = pdfFile.source_type || 'SUPABASE';
+
+  if (sourceType === 'SUPABASE') {
+    // Private bucket — get a short-lived signed URL then fetch to blob
+    const { data: signedData, error: signError } = await sb.storage
+      .from(DOC_CONFIG.bucket)
+      .createSignedUrl(pdfFile.storage_path, DOC_CONFIG.signedUrlExpirySeconds);
+
+    if (signError || !signedData) {
+      App.toast('Could not access file: ' + (signError?.message || 'Unknown error'), 'danger');
+      return;
+    }
+    fetchUrl = signedData.signedUrl;
+    currentFileUrl = fetchUrl;
+
+  } else {
+    // External source — proxy through edge function with auth token
+    const saved = AppSession.load();
+    const token = saved?.access_token;
+    fetchUrl = `${SUPABASE_URL}/functions/v1/fetch-document`;
+    currentFileUrl = fetchUrl;
+
+    // Show loading spinner while the edge function fetches the external doc
+    const emptyStateOriginal = docEmptyState.innerHTML;
+    docEmptyState.innerHTML = `
+      <div class="spinner-border text-secondary mb-3" style="width:2rem;height:2rem"></div>
+      <div class="text-secondary small">Fetching document…</div>`;
+    docEmptyState.style.display = 'flex';
+    docPdfFrame.style.display = 'none';
+
+    // We'll use a special fetch below for the edge function
+    let pdfBlobUrl;
+    try {
+      const resp = await fetch(fetchUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer ' + token,
+          'apikey': SUPABASE_ANON_KEY,
+        },
+        body: JSON.stringify({ file_id: pdfFile.id }),
+      });
+      if (!resp.ok) throw new Error('HTTP ' + resp.status);
+      const blob = await resp.blob();
+      if (window._currentDocBlob) URL.revokeObjectURL(window._currentDocBlob);
+
+      const downloadName = pdfFile.download_file_name || sanitizeFileName(doc[DOC_CONFIG.colDocDesc] || pdfFile.file_name);
+      const namedFile = new File([blob], downloadName, { type: pdfFile?.mime_type || 'application/pdf' });
+      pdfBlobUrl = URL.createObjectURL(namedFile);
+      window._currentDocBlob = pdfBlobUrl;
+
+      const downloadBtn = document.getElementById('docDownloadBtn');
+      if (downloadBtn) {
+        downloadBtn.onclick = () => {
+          const a = document.createElement('a');
+          a.href = pdfBlobUrl;
+          a.download = downloadName;
+          document.body.appendChild(a);
+          a.click();
+          a.remove();
+        };
+      }
+    } catch(e) {
+      docEmptyState.innerHTML = emptyStateOriginal;
+      App.toast('Could not fetch external document: ' + e.message, 'danger');
+      return;
+    }
+
+    const hash = buildPdfHash();
+    docEmptyState.style.display = 'none';
+    docPdfFrame.style.visibility = 'hidden';
+    docPdfFrame.style.display = 'block';
+    docPdfFrame.onload = () => {
+      injectPdfStyles();
+      setTimeout(() => { docPdfFrame.style.visibility = ''; }, 150);
+    };
+    docPdfFrame.src = `${DOC_CONFIG.pdfViewerUrl}?file=${encodeURIComponent(pdfBlobUrl)}#${hash}`;
+    return; // early return — frame is already set
+  }
+
+  currentFileUrl = fetchUrl;
 
   // Fetch as blob so pdf.js's validateFileURL never blocks it
   let pdfBlobUrl;
   try {
-    const resp = await fetch(currentFileUrl);
+    const resp = await fetch(fetchUrl);
     if (!resp.ok) throw new Error('HTTP ' + resp.status);
     const blob = await resp.blob();
     if (window._currentDocBlob) URL.revokeObjectURL(window._currentDocBlob);
 
     const downloadName = pdfFile.download_file_name || sanitizeFileName(doc[DOC_CONFIG.colDocDesc] || pdfFile.file_name);
-    const namedFile = new File([blob], downloadName, { type: 'application/pdf' });
+    const namedFile = new File([blob], downloadName, { type: pdfFile?.mime_type || 'application/pdf' });
 
     pdfBlobUrl = URL.createObjectURL(namedFile);
     window._currentDocBlob = pdfBlobUrl;
@@ -635,7 +792,11 @@ async function deleteDoc(id, e) {
 
 // ── Upload ────────────────────────────────────────────────────────────
 async function uploadAndSave(description, file, progressBar, statusEl, categoryId, descriptionText) {
-  if (!file) { App.toast('Please select a PDF file', 'warning'); return false; }
+  if (!file) { App.toast('Please select a file', 'warning'); return false; }
+
+  const isWord = /\.(docx?|doc)$/i.test(file.name) ||
+    file.type === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' ||
+    file.type === 'application/msword';
 
   const orgId = Auth.getOrganisationId();
   if (!orgId) { App.toast('No organisation assigned to your account', 'danger'); return false; }
@@ -643,7 +804,7 @@ async function uploadAndSave(description, file, progressBar, statusEl, categoryI
   const safeName = `${orgId}/${Date.now()}_${file.name.replace(/[^a-z0-9._-]/gi, '_')}`;
 
   if (statusEl) statusEl.textContent = 'Creating document record…';
-  if (progressBar) progressBar.style.width = '15%';
+  if (progressBar) progressBar.style.width = '10%';
 
   const docPayload = { [DOC_CONFIG.colDocDesc]: description || file.name, [DOC_CONFIG.colOrgId]: orgId };
   if (categoryId) docPayload[DOC_CONFIG.colDocCatId] = categoryId;
@@ -656,30 +817,57 @@ async function uploadAndSave(description, file, progressBar, statusEl, categoryI
     .single();
 
   if (docErr) { App.toast('Failed to create record: ' + (docErr.message || docErr.code), 'danger'); return false; }
-  if (progressBar) progressBar.style.width = '35%';
+  if (progressBar) progressBar.style.width = '25%';
 
   if (statusEl) statusEl.textContent = 'Uploading file…';
   const { error: upErr } = await sb.storage
     .from(DOC_CONFIG.bucket)
-    .upload(safeName, file, { contentType: 'application/pdf', upsert: false });
+    .upload(safeName, file, { contentType: file.type || 'application/pdf', upsert: false });
 
   if (upErr) {
     App.toast('Upload failed: ' + upErr.message, 'danger');
     await sb.from(DOC_CONFIG.tableDocs).delete().eq(DOC_CONFIG.colDocId, docData[DOC_CONFIG.colDocId]);
     return false;
   }
-  if (progressBar) progressBar.style.width = '70%';
+  if (progressBar) progressBar.style.width = '50%';
 
+  let finalPath = safeName;
+  let finalMime = file.type || 'application/pdf';
+
+  if (isWord) {
+    if (statusEl) statusEl.textContent = 'Converting to PDF…';
+    try {
+      const saved = AppSession.load();
+      const convRes = await fetch(`${SUPABASE_URL}/functions/v1/convert-document`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer ' + saved?.access_token,
+          'apikey': SUPABASE_ANON_KEY,
+        },
+        body: JSON.stringify({ storage_path: safeName, bucket: DOC_CONFIG.bucket }),
+      });
+      const convData = await convRes.json();
+      if (!convRes.ok || convData.error) throw new Error(convData.error || 'Conversion failed');
+      finalPath = convData.pdf_path;
+      finalMime = 'application/pdf';
+      if (progressBar) progressBar.style.width = '80%';
+    } catch(e) {
+      App.toast('Word conversion failed: ' + e.message + '. Original file saved.', 'warning');
+    }
+  }
+
+  if (progressBar) progressBar.style.width = '90%';
   if (statusEl) statusEl.textContent = 'Saving file reference…';
-  const downloadFileName = sanitizeFileName(description || file.name);
+  const downloadFileName = sanitizeFileName(description || file.name).replace(/\.(docx?|doc)$/i, '.pdf');
   const { error: fileErr } = await sb.from(DOC_CONFIG.tableFiles).insert({
     [DOC_CONFIG.colDocId]: docData[DOC_CONFIG.colDocId],
     [DOC_CONFIG.colOrgId]: orgId,
     file_name: file.name,
-    storage_path: safeName,
+    storage_path: finalPath,
     download_file_name: downloadFileName,
     file_size_bytes: file.size,
-    mime_type: 'application/pdf'
+    mime_type: finalMime
   });
 
   if (fileErr) { App.toast('File reference failed: ' + fileErr.message, 'danger'); return false; }
@@ -694,23 +882,125 @@ async function uploadAndSave(description, file, progressBar, statusEl, categoryI
 }
 
 function bindUpload() {
+  // Source type toggle
+  document.querySelectorAll('input[name="docSource"]').forEach(radio => {
+    radio.addEventListener('change', () => {
+      const v = radio.value;
+      document.getElementById('docSourceFileField').classList.toggle('d-none', v !== 'file');
+      document.getElementById('docSourceGdriveField').classList.toggle('d-none', v !== 'gdrive');
+      document.getElementById('docSourceUrlField').classList.toggle('d-none', v !== 'url');
+      document.getElementById('docSourceRestField').classList.toggle('d-none', v !== 'rest');
+      document.getElementById('docModalSaveBtn').textContent = v === 'file' ? 'Upload' : 'Save';
+    });
+  });
+
+  // REST auth type shows/hides credential fields
+  document.getElementById('docModalRestAuth')?.addEventListener('change', function() {
+    const isToken = ['BEARER','API_KEY'].includes(this.value);
+    const isBasic = this.value === 'BASIC';
+    document.getElementById('docModalRestTokenField').classList.toggle('d-none', !isToken);
+    document.getElementById('docModalRestBasicFields').classList.toggle('d-none', !isBasic);
+  });
+
   document.getElementById('docModalSaveBtn').addEventListener('click', async () => {
     const desc     = document.getElementById('docModalDescription').value.trim();
     const descText = document.getElementById('docModalDescriptionText').value.trim();
     const catId    = document.getElementById('docModalCategory').value || null;
-    const file     = document.getElementById('docModalFile').files[0];
+    const source   = document.querySelector('input[name="docSource"]:checked')?.value || 'file';
     const progWrap = document.getElementById('docModalProgress');
     const progBar  = document.getElementById('docUploadProgressBar');
     const status   = document.getElementById('docUploadStatus');
     const saveBtn  = document.getElementById('docModalSaveBtn');
 
-    progWrap.style.display = 'block';
-    progBar.style.width = '0%';
+    if (!desc) { App.toast('Name is required', 'warning'); return; }
+
     saveBtn.disabled = true;
 
-    const success = await uploadAndSave(desc, file, progBar, status, catId, descText);
+    let success = false;
 
-    saveBtn.disabled = false;
+    if (source === 'file') {
+      const file = document.getElementById('docModalFile').files[0];
+      progWrap.style.display = 'block';
+      progBar.style.width = '0%';
+      success = await uploadAndSave(desc, file, progBar, status, catId, descText);
+      saveBtn.disabled = false;
+
+    } else {
+      // External source — create doc record + file record, no upload
+      const orgId = Auth.getOrganisationId();
+
+      let externalUrl = '';
+      let sourceTypeVal = '';
+
+      if (source === 'gdrive') {
+        const raw = document.getElementById('docModalGdriveUrl').value.trim();
+        if (!raw) { App.toast('Google Drive URL is required', 'warning'); saveBtn.disabled = false; return; }
+        // Convert share URL to direct download URL
+        const idMatch = raw.match(/\/d\/([a-zA-Z0-9_-]+)/);
+        const fileId = idMatch ? idMatch[1] : null;
+        if (!fileId) { App.toast('Could not extract file ID from Google Drive URL', 'warning'); saveBtn.disabled = false; return; }
+        externalUrl = `https://drive.google.com/uc?export=download&id=${fileId}`;
+        sourceTypeVal = 'URL';
+
+      } else if (source === 'url') {
+        externalUrl = document.getElementById('docModalUrl').value.trim();
+        sourceTypeVal = 'URL';
+        if (!externalUrl) { App.toast('URL is required', 'warning'); saveBtn.disabled = false; return; }
+
+      } else if (source === 'rest') {
+        externalUrl = document.getElementById('docModalRestUrl').value.trim();
+        sourceTypeVal = 'REST';
+        if (!externalUrl) { App.toast('API endpoint is required', 'warning'); saveBtn.disabled = false; return; }
+      }
+
+      const externalRef = document.getElementById('docModalRestRef')?.value.trim() || null;
+
+      try {
+        // Create document
+        const { data: docData, error: docErr } = await sb.from('ad_document').insert({
+          name: desc, description: descText || null, category_id: catId, organisation_id: orgId
+        }).select('doc_id').single();
+        if (docErr) throw docErr;
+
+        // For REST with auth, we'd store credentials in vault — for now store source config inline
+        const authType = source === 'rest'
+          ? document.getElementById('docModalRestAuth').value
+          : 'NONE';
+
+        // Detect mime type from URL
+        function _mimeFromUrl(url) {
+          if (/youtube\.com|youtu\.be/.test(url)) return 'video/youtube';
+          if (/vimeo\.com/.test(url)) return 'video/vimeo';
+          if (/\.mp4(\?|$)/i.test(url)) return 'video/mp4';
+          if (/\.webm(\?|$)/i.test(url)) return 'video/webm';
+          if (/\.mov(\?|$)/i.test(url)) return 'video/quicktime';
+          return 'application/pdf';
+        }
+
+        // Create file record pointing to external source
+        const fileName = externalUrl.split('/').pop()?.split('?')[0] || desc + '.pdf';
+        const { error: fileErr } = await sb.from('ad_document_file').insert({
+          doc_id:        docData.doc_id,
+          organisation_id: orgId,
+          file_name:     fileName,
+          storage_path:  'external', // satisfies NOT NULL — not used for external sources
+          download_file_name: fileName,
+          mime_type:     _mimeFromUrl(externalUrl),
+          source_type:   sourceTypeVal,
+          external_url:  externalUrl,
+          external_ref:  externalRef,
+        });
+        if (fileErr) throw fileErr;
+
+        App.toast('Document saved');
+        success = true;
+      } catch(e) {
+        App.toast('Save failed: ' + e.message, 'danger');
+        saveBtn.disabled = false;
+        return;
+      }
+      saveBtn.disabled = false;
+    }
 
     if (success) {
       setTimeout(() => {
@@ -722,17 +1012,25 @@ function bindUpload() {
           document.getElementById('docModalDescriptionText').value = '';
           document.getElementById('docModalCategory').value = '';
           document.getElementById('docModalFile').value = '';
+          document.getElementById('docModalUrl').value = '';
+          document.getElementById('docModalGdriveUrl').value = '';
+          document.getElementById('docModalRestUrl').value = '';
+          document.getElementById('docModalRestRef').value = '';
+          document.getElementById('docSourceFile').checked = true;
+          document.getElementById('docSourceFileField').classList.remove('d-none');
+          document.getElementById('docSourceGdriveField').classList.add('d-none');
+          document.getElementById('docSourceUrlField').classList.add('d-none');
+          document.getElementById('docSourceRestField').classList.add('d-none');
+          document.getElementById('docModalSaveBtn').textContent = 'Upload';
           progWrap.style.display = 'none';
-          // Force-remove any stuck backdrop
           document.querySelectorAll('.modal-backdrop').forEach(el => el.remove());
           document.body.classList.remove('modal-open');
           document.body.style.removeProperty('overflow');
           document.body.style.removeProperty('padding-right');
+          loadDocuments();
         }, { once: true });
       }, 600);
     } else {
-      // Upload failed - reset the progress bar and re-enable the form
-      // so the user can try again without the modal getting stuck.
       progWrap.style.display = 'none';
       progBar.style.width = '0%';
     }

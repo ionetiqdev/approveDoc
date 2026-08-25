@@ -28,10 +28,8 @@ function _scopedKey(baseKey) {
   try {
     const root = document.documentElement.dataset.appRoot || './';
     const absoluteRoot = new URL(root, window.location.href).pathname;
-    return baseKey + ':' + absoluteRoot;
-  } catch (e) {
-    return baseKey;
-  }
+    return baseKey + ':' + window.location.hostname + absoluteRoot;
+  } catch(e) { return baseKey; }
 }
 
 // Applies a sidebar background colour and automatically picks the most
@@ -135,6 +133,7 @@ const SidebarHtml = (() => {
             <ul class="nav-submenu list-unstyled" id="adminSubmenu">
               <li class="nav-item role-hidden" data-require-role="super_admin"><a href="${root}pages/admin/organisations.html" class="nav-link"><span class="nav-link-text">Organisations</span></a></li>
               <li class="nav-item"><a href="${root}pages/admin/users.html" class="nav-link"><span class="nav-link-text">Users</span></a></li>
+              <li class="nav-item"><a href="${root}pages/admin/audit.html" class="nav-link"><span class="nav-link-text">Audit Trail</span></a></li>
               <li class="nav-item">
                 <a href="#" class="nav-link" data-submenu="lookupsSubmenu">
                   <span class="nav-link-text">Lookups</span>
@@ -173,6 +172,7 @@ const SidebarHtml = (() => {
               <li class="nav-item"><a href="${root}pages/testing/audience.html" class="nav-link"><span class="nav-link-text">Audience</span></a></li>
               <li class="nav-item"><a href="${root}pages/testing/distribution.html" class="nav-link"><span class="nav-link-text">Distribution</span></a></li>
               <li class="nav-item"><a href="${root}pages/testing/user-view.html" class="nav-link"><span class="nav-link-text">User View</span></a></li>
+              <li class="nav-item"><a href="${root}pages/testing/org-chart.html" class="nav-link"><span class="nav-link-text">Org Chart</span></a></li>
             </ul>
           </li>
 
@@ -185,14 +185,22 @@ const SidebarHtml = (() => {
           <span class="nav-link-text">Preferences</span>
         </a>
         <div class="sidebar-user-row">
-          <span class="avatar avatar-sm rounded-circle bg-primary-lt" data-user-initials>?</span>
+          <span class="avatar avatar-sm rounded-circle bg-primary-lt flex-shrink-0" data-user-initials>?</span>
           <div class="sidebar-user-info">
             <div class="sidebar-user-name" data-user-name>—</div>
             <div class="sidebar-user-role" data-user-role>—</div>
           </div>
-          <a href="#" class="sidebar-logout-btn" data-action="signout" title="Sign out"><i class="ti ti-logout-2"></i></a>
+          <a href="#" class="sidebar-logout-btn ms-auto" data-action="signout" data-bs-toggle="tooltip" data-bs-placement="right" data-bs-title="Sign out"><i class="ti ti-logout-2"></i></a>
         </div>
-        <div class="published-message" data-published>Published —</div>
+        <div class="sidebar-published-text" data-published>Published —</div>
+        <div class="sidebar-collapsed-footer">
+          <a href="#" class="sidebar-logout-collapsed" data-action="signout" data-bs-toggle="tooltip" data-bs-placement="right" data-bs-title="Sign out">
+            <i class="ti ti-logout-2"></i>
+          </a>
+          <span class="sidebar-version-icon" id="sidebarVersionBtn">
+            <i class="ti ti-info-circle"></i>
+          </span>
+        </div>
       </div>
     `;
 
@@ -210,6 +218,20 @@ const SidebarHtml = (() => {
       if (typeof APP_PUBLISHED !== 'undefined') {
         el.textContent = 'Published ' + APP_PUBLISHED;
       }
+    });
+
+    // Version icon tooltip
+    const versionBtn = document.getElementById('sidebarVersionBtn');
+    if (versionBtn && typeof APP_PUBLISHED !== 'undefined') {
+      versionBtn.setAttribute('data-bs-toggle', 'tooltip');
+      versionBtn.setAttribute('data-bs-placement', 'right');
+      versionBtn.setAttribute('data-bs-title', 'Published ' + APP_PUBLISHED);
+      new bootstrap.Tooltip(versionBtn, { placement: 'right', trigger: 'hover' });
+    }
+
+    // Init Bootstrap tooltips on logout buttons
+    document.querySelectorAll('[data-bs-toggle="tooltip"]').forEach(function(el) {
+      if (!bootstrap.Tooltip.getInstance(el)) new bootstrap.Tooltip(el);
     });
   }
 
@@ -243,6 +265,11 @@ const SidebarHtml = (() => {
                   <li class="nav-item">
                     <a class="nav-link" href="#prefTabProfile" data-bs-toggle="tab">
                       <i class="ti ti-user me-1"></i>Current User
+                    </a>
+                  </li>
+                  <li class="nav-item" id="prefTabAuditLi" style="display:none">
+                    <a class="nav-link" href="#prefTabAudit" data-bs-toggle="tab">
+                      <i class="ti ti-shield me-1"></i>Audit
                     </a>
                   </li>
                 </ul>
@@ -291,10 +318,6 @@ const SidebarHtml = (() => {
                     <div class="form-check form-switch" style="padding-bottom:12px">
                       <input class="form-check-input" type="checkbox" id="docPrefDeleteEnabled">
                       <label class="form-check-label" for="docPrefDeleteEnabled">Delete button on documents</label>
-                    </div>
-                    <div class="form-check form-switch" style="padding-bottom:12px">
-                      <input class="form-check-input" type="checkbox" id="docPrefDownload">
-                      <label class="form-check-label" for="docPrefDownload">Download button in viewer</label>
                     </div>
                   </div>
 
@@ -359,6 +382,48 @@ const SidebarHtml = (() => {
                           </div>
                         </div>
                       </div>
+                    </div>
+                  </div>
+
+                  <!-- Audit tab (admin only) -->
+                  <div class="tab-pane" id="prefTabAudit" style="min-height:490px;padding:20px">
+                    <h4 class="mb-3">Audit Trail Settings</h4>
+
+                    <!-- Include archived -->
+                    <div class="mb-4">
+                      <label class="form-check form-switch">
+                        <input class="form-check-input" type="checkbox" id="prefIncludeArchived" />
+                        <span class="form-check-label fw-semibold">Show archived records on Audit Trail page</span>
+                      </label>
+                      <p class="text-secondary small mt-1">When enabled, the Audit Trail page queries the archive table instead of the live table. An indicator will appear on the page. This may be slower on large datasets.</p>
+                    </div>
+
+                    <!-- Record counts -->
+                    <div class="mb-4">
+                      <h5 class="mb-2">Record Counts</h5>
+                      <div id="prefAuditCounts" class="text-secondary small">
+                        <span class="spinner-border spinner-border-sm me-1"></span>Loading…
+                      </div>
+                    </div>
+
+                    <!-- Archive action -->
+                    <div class="mb-3 border-top pt-3">
+                      <h5 class="mb-1">Archive Old Records</h5>
+                      <p class="text-secondary small mb-3">Move records older than the selected date to the archive table. This cannot be undone.</p>
+                      <div class="row g-2 align-items-end mb-3">
+                        <div class="col">
+                          <label class="form-label mb-1 small">Archive records older than</label>
+                          <input type="datetime-local" id="prefArchiveCutoff" class="form-control form-control-sm" />
+                        </div>
+                        <div class="col-auto">
+                          <button class="btn btn-sm btn-outline-secondary" id="prefArchivePreview">Preview count</button>
+                        </div>
+                      </div>
+                      <div id="prefArchivePreviewResult" class="small text-secondary mb-3" style="display:none"></div>
+                      <button class="btn btn-sm btn-warning" id="prefArchiveRun" disabled>
+                        <i class="ti ti-archive me-1"></i>Archive now
+                      </button>
+                      <div id="prefArchiveResult" class="small mt-2" style="display:none"></div>
                     </div>
                   </div>
 
@@ -456,15 +521,100 @@ const SidebarHtml = (() => {
 
       // Read from saved prefs, falling back to DOC_DEFAULT_FEATURES
       const saved   = Auth.getPreference('docViewerPrefs', null) || {};
-      const upload  = Object.assign({}, DOC_DEFAULT_FEATURES.upload,   saved.upload   || {});
-      const del     = Object.assign({}, DOC_DEFAULT_FEATURES.delete,   saved.delete   || {});
-      const buttons = Object.assign({}, DOC_DEFAULT_FEATURES.pdfButtons, saved.pdfButtons || {});
+      const upload  = Object.assign({}, DOC_DEFAULT_FEATURES.upload,  saved.upload  || {});
+      const del     = Object.assign({}, DOC_DEFAULT_FEATURES.delete,  saved.delete  || {});
 
       document.getElementById('docPrefUploadButton').checked  = upload.modalButton   !== false;
       document.getElementById('docPrefDropZone').checked      = upload.dropZone      !== false;
       document.getElementById('docPrefPromptOnDrop').checked  = upload.promptOnDrop  !== false;
       document.getElementById('docPrefDeleteEnabled').checked = del.enabled          !== false;
-      document.getElementById('docPrefDownload').checked      = buttons.download     !== false;
+    }
+
+    async function _populateAuditTab() {
+      const auditTabLi = document.getElementById('prefTabAuditLi');
+      if (!auditTabLi) return;
+      if (!Auth.isAdmin()) return;
+      auditTabLi.style.display = '';
+
+      // Restore saved preference
+      const savedInclude = Auth.getPreference('auditIncludeArchived', false);
+      const toggle = document.getElementById('prefIncludeArchived');
+      if (toggle) toggle.checked = !!savedInclude;
+
+      // Set default cutoff to org retention months ago
+      const cutoffEl = document.getElementById('prefArchiveCutoff');
+      if (cutoffEl && !cutoffEl.value) {
+        const d = new Date();
+        const pad = n => String(n).padStart(2, '0');
+        cutoffEl.value = d.getFullYear() + '-' + pad(d.getMonth()+1) + '-' + pad(d.getDate()) + 'T' + pad(d.getHours()) + ':' + pad(d.getMinutes());
+      }
+
+      // Load counts
+      const countsEl = document.getElementById('prefAuditCounts');
+      if (countsEl) {
+        countsEl.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Loading…';
+        try {
+          const orgId = Auth.getOrganisationId();
+          const [liveRes, archiveRes] = await Promise.all([
+            sb.from('audit_log').select('id', { count: 'exact', head: true }).eq('organisation_id', orgId),
+            sb.from('audit_log_archive').select('id', { count: 'exact', head: true }).eq('organisation_id', orgId),
+          ]);
+          countsEl.innerHTML = '<table class="table table-sm">' +
+            '<tr><td>Live audit records</td><td class="fw-semibold">' + (liveRes.count || 0).toLocaleString() + '</td></tr>' +
+            '<tr><td>Archived audit records</td><td class="fw-semibold">' + (archiveRes.count || 0).toLocaleString() + '</td></tr>' +
+            '</table>';
+        } catch(e) {
+          countsEl.innerHTML = '<span class="text-danger">Could not load counts</span>';
+        }
+      }
+
+      // Preview button
+      const previewBtn = document.getElementById('prefArchivePreview');
+      const previewResult = document.getElementById('prefArchivePreviewResult');
+      const archiveRunBtn = document.getElementById('prefArchiveRun');
+
+      previewBtn?.addEventListener('click', async () => {
+        const cutoff = document.getElementById('prefArchiveCutoff')?.value;
+        if (!cutoff) { App.toast('Please select a date', 'warning'); return; }
+        previewBtn.disabled = true;
+        previewBtn.textContent = 'Counting…';
+        const orgId = Auth.getOrganisationId();
+        const { count } = await sb.from('audit_log')
+          .select('id', { count: 'exact', head: true })
+          .eq('organisation_id', orgId)
+          .lte('created_at', cutoff + ':59');
+        previewBtn.disabled = false;
+        previewBtn.textContent = 'Preview count';
+        previewResult.style.display = '';
+        previewResult.innerHTML = '<i class="ti ti-info-circle me-1"></i><strong>' + (count || 0).toLocaleString() + '</strong> record' + (count !== 1 ? 's' : '') + ' would be archived.';
+        archiveRunBtn.disabled = count === 0;
+      });
+
+      // Archive button
+      const archiveResult = document.getElementById('prefArchiveResult');
+      archiveRunBtn?.addEventListener('click', async () => {
+        const cutoff = document.getElementById('prefArchiveCutoff')?.value;
+        if (!cutoff) return;
+        if (!await App.confirm({ title: 'Archive audit records?', message: 'This will move records older than ' + cutoff.replace('T', ' ') + ' to the archive. This cannot be undone.', confirmText: 'Archive', confirmClass: 'btn-warning' })) return;
+        archiveRunBtn.disabled = true;
+        archiveRunBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Archiving…';
+
+        const { data, error } = await sb.rpc('archive_audit_log', { p_cutoff: new Date(cutoff + ':59').toISOString() });
+
+        archiveRunBtn.disabled = false;
+        archiveRunBtn.innerHTML = '<i class="ti ti-archive me-1"></i>Archive now';
+        archiveResult.style.display = '';
+        if (error) {
+          archiveResult.className = 'small mt-2 text-danger';
+          archiveResult.innerHTML = '<i class="ti ti-alert-circle me-1"></i>' + error.message;
+        } else {
+          const moved = data?.total_archived || 0;
+          archiveResult.className = 'small mt-2 text-success';
+          archiveResult.innerHTML = '<i class="ti ti-circle-check me-1"></i>' + moved.toLocaleString() + ' record' + (moved !== 1 ? 's' : '') + ' archived.';
+          previewResult.style.display = 'none';
+          await _populateAuditTab();
+        }
+      });
     }
 
     const openPreferences = e => {
@@ -479,6 +629,7 @@ const SidebarHtml = (() => {
 
       _populateProfile();
       _populateDocumentTab();
+      _populateAuditTab();
 
       // Reset password fields and error
       ['prefNewPassword','prefConfirmPassword','prefCurrentPassword'].forEach(id => {
@@ -539,16 +690,15 @@ const SidebarHtml = (() => {
           delete: Object.assign({}, saved.delete, {
             enabled: document.getElementById('docPrefDeleteEnabled').checked,
           }),
-          pdfButtons: Object.assign({}, saved.pdfButtons, {
-            download: document.getElementById('docPrefDownload').checked,
-          }),
         };
         await Auth.setPreference('docViewerPrefs', override);
-        console.log('[Prefs] saved docViewerPrefs:', JSON.stringify(override));
-        if (typeof loadDocFeatures === 'function') {
-          loadDocFeatures();
-          console.log('[Prefs] DOC_FEATURES after reload:', JSON.stringify(DOC_FEATURES));
-        }
+        if (typeof loadDocFeatures === 'function') loadDocFeatures();
+      }
+
+      // Audit settings
+      const auditToggle = document.getElementById('prefIncludeArchived');
+      if (auditToggle !== null) {
+        await Auth.setPreference('auditIncludeArchived', auditToggle.checked);
       }
 
       // Profile updates

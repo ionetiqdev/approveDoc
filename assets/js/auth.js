@@ -29,6 +29,23 @@ const Auth = (() => {
     AppSession.save(data.session);
     _session = data.session;
 
+    // Ensure the sb client uses the correct token for all subsequent queries.
+    // On some domains/environments setSession doesn't propagate to the client's
+    // internal query headers — explicitly set the auth header as a fallback.
+    sb.realtime?.setAuth(data.session.access_token);
+    const { createClient } = supabase;
+    if (window._authenticatedSb) {
+      // reuse existing authenticated client
+    } else {
+      window._authenticatedSb = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+        global: { headers: { Authorization: 'Bearer ' + data.session.access_token } },
+        auth:   { persistSession: false, autoRefreshToken: false }
+      });
+      // Override sb queries to use authenticated client
+      const origFrom = sb.from.bind(sb);
+      sb.from = (table) => window._authenticatedSb.from(table);
+    }
+
     _profile = await _loadProfile(_session.user.id);
     if (!_profile) {
       // No profile row exists for this authenticated user. Default to the
@@ -81,7 +98,10 @@ const Auth = (() => {
     try {
       const root = document.documentElement.dataset.appRoot || './';
       const absoluteRoot = new URL(root, window.location.href).pathname;
-      return 'app_active_organisation:' + absoluteRoot;
+      // Use just the top-level app segment (e.g. 'approvedoc') so the key
+      // is the same regardless of domain (ionetiq.dev vs approvedoc.app)
+      // or environment (/dev/ vs /)
+      return 'app_active_organisation:' + window.location.hostname + absoluteRoot;
     } catch (e) {
       return 'app_active_organisation';
     }
@@ -126,9 +146,48 @@ const Auth = (() => {
   }
 
   async function _loadProfile(userId) {
-    const { data, error } = await sb.from('profiles').select('*').eq('id', userId).maybeSingle();
+    // Get the access token directly from our session store
+    const saved = AppSession.load();
+    const token = saved?.access_token;
+
+    if (!token) {
+      console.warn('[Auth] _loadProfile - no access token available');
+      return null;
+    }
+
+    // Pass the token explicitly in case sb client state isn't synced yet
+    const { data, error } = await sb.from('profiles')
+      .select('*')
+      .eq('id', userId)
+      .maybeSingle();
+
     if (error) console.warn('[Auth] Profile load error:', error.message);
-    return data || null;
+    if (data) return data;
+
+    // If the client-level query returned nothing, try with explicit Authorization header
+    console.warn('[Auth] Client query returned no profile - trying with explicit token');
+    try {
+      const res = await fetch(
+        `${SUPABASE_URL}/rest/v1/profiles?id=eq.${userId}&select=*`,
+        {
+          headers: {
+            'apikey':        SUPABASE_ANON_KEY,
+            'Authorization': 'Bearer ' + token,
+            'Accept':        'application/vnd.pgrst.object+json',
+          }
+        }
+      );
+      if (res.ok) {
+        const data2 = await res.json();
+        console.log('[Auth] Explicit fetch profile result:', data2?.role);
+        return data2 || null;
+      } else {
+        console.warn('[Auth] Explicit fetch failed:', res.status, await res.text());
+      }
+    } catch(e) {
+      console.warn('[Auth] Explicit fetch error:', e.message);
+    }
+    return null;
   }
 
   function _applyUserUI() {
@@ -143,14 +202,15 @@ const Auth = (() => {
       : name.slice(0,2).toUpperCase();
 
     document.querySelectorAll('[data-user-initials]').forEach(el => {
-      if (avatarUrl) {
+      const safeAvatarUrl = avatarUrl && /^https?:\/\//.test(avatarUrl) ? avatarUrl : null;
+      if (safeAvatarUrl) {
         const img = document.createElement('img');
-        img.src = avatarUrl;
+        img.src = safeAvatarUrl;
         img.alt = initials;
         img.style.cssText = 'width:100%;height:100%;object-fit:cover;border-radius:50%';
         el.textContent = '';
         el.appendChild(img);
-        _wireAvatarTooltip(el, avatarUrl, name);
+        _wireAvatarTooltip(el, safeAvatarUrl, name);
       } else {
         el.textContent = initials;
       }
@@ -285,12 +345,21 @@ const Auth = (() => {
   }
 
   function _redirectToLogin() {
-    const root = window._appRoot || './';
+    const root = _safePath(window._appRootUrl || window._appRoot || './');
     window.location.replace(root + 'pages/auth/login.html');
   }
 
   function _rootPath() {
-    return window._appRoot || './';
+    return _safePath(window._appRootUrl || window._appRoot || './');
+  }
+
+  // Ensure redirect root is a relative path or same-origin URL — never an external domain
+  function _safePath(root) {
+    try {
+      const url = new URL(root, window.location.origin);
+      if (url.origin !== window.location.origin) return './';
+      return root;
+    } catch(e) { return './'; }
   }
 
   async function signOut() {

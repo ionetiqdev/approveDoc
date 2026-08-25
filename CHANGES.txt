@@ -1,1 +1,1 @@
-Audiences: add advisory line to audience type change confirmation modal
+Documents: add file-format icon pill next to category badge in document list
