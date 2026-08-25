@@ -2033,12 +2033,12 @@
 </div>
 <h2 id="pdfjs-exclusion">pdfjs/ exclusion<a class="headerlink" href="#pdfjs-exclusion" title="Permanent link">&para;</a></h2>
 <p><code>assets/pdfjs/</code> is <strong>always excluded</strong> from deployment zips. It is managed separately on the server. Zip command:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>zip -r approvedoc_DDMMYYYY_HHmm.zip . -x &quot;.git/*&quot; &quot;node_modules/*&quot; &quot;Backup/*&quot; &quot;*.zip&quot; &quot;project.conf&quot; &quot;assets/pdfjs/*&quot;
+<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>zip -r approvedoc_DDMMYYYY_HHmm.zip . -x ".git/*" "node_modules/*" "Backup/*" "*.zip" "project.conf" "assets/pdfjs/*"
 </code></pre></div>
 <h2 id="git-branch-conflicts">Git branch conflicts<a class="headerlink" href="#git-branch-conflicts" title="Permanent link">&para;</a></h2>
 <p>If <code>deploy dev</code> fails with "Your local changes would be overwritten by checkout", commit or stash local changes first:</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>git add -A
-<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>git commit -m &quot;WIP: local changes&quot;
+<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>git commit -m "WIP: local changes"
 <a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a>deploy dev
 </code></pre></div>
 

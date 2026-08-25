@@ -1974,8 +1974,8 @@
 </ul>
 <h2 id="_scopedkey">_scopedKey()<a class="headerlink" href="#_scopedkey" title="Permanent link">&para;</a></h2>
 <p>Internal function that builds localStorage keys scoped to the current deploy environment:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="nx">_scopedKey</span><span class="p">(</span><span class="s1">&#39;app_accent&#39;</span><span class="p">)</span>
-<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="c1">// → &#39;app_accent:ionetiq.dev/approvedoc/dev/&#39;</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="nx">_scopedKey</span><span class="p">(</span><span class="s1">'app_accent'</span><span class="p">)</span>
+<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="c1">// → 'app_accent:ionetiq.dev/approvedoc/dev/'</span>
 </code></pre></div>
 <p>See <a href="../../architecture/localstorage/">localStorage Isolation</a> for full details.</p>
 <h2 id="preferences-modal">Preferences modal<a class="headerlink" href="#preferences-modal" title="Permanent link">&para;</a></h2>
@@ -2014,7 +2014,7 @@
 <h2 id="subsystem-markers">Subsystem markers<a class="headerlink" href="#subsystem-markers" title="Permanent link">&para;</a></h2>
 <p>Optional subsystems (Documents, Issues) in the nav are wrapped in comment markers:</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="cm">&lt;!-- SUBSYSTEM:documents:start --&gt;</span>
-<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="p">&lt;</span><span class="nt">li</span> <span class="na">class</span><span class="o">=</span><span class="s">&quot;nav-item role-hidden&quot;</span> <span class="na">data-require-role</span><span class="o">=</span><span class="s">&quot;admin&quot;</span><span class="p">&gt;</span>...<span class="p">&lt;/</span><span class="nt">li</span><span class="p">&gt;</span>
+<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="p">&lt;</span><span class="nt">li</span> <span class="na">class</span><span class="o">=</span><span class="s">"nav-item role-hidden"</span> <span class="na">data-require-role</span><span class="o">=</span><span class="s">"admin"</span><span class="p">&gt;</span>...<span class="p">&lt;/</span><span class="nt">li</span><span class="p">&gt;</span>
 <a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="cm">&lt;!-- SUBSYSTEM:documents:end --&gt;</span>
 </code></pre></div>
 <p>To remove a subsystem from a project, delete everything between its markers. See <code>docs/SUBSYSTEMS.md</code>.</p>
