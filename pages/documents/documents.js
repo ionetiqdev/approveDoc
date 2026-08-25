@@ -390,7 +390,7 @@ function renderDocList(docs) {
           <div class="d-flex align-items-center justify-content-between gap-2">
             <div class="doc-list-title" style="min-width:0">${App.escHtml(d[DOC_CONFIG.colDocDesc] || 'Untitled document')}</div>
             <div class="d-flex align-items-center gap-1 flex-shrink-0">
-              <span class="badge bg-secondary-lt text-nowrap" title="${App.escHtml(fmt.label)}"><i class="ti ${fmt.icon}"></i></span>
+              <i class="ti ${fmt.icon} flex-shrink-0" title="${App.escHtml(fmt.label)}" style="font-size:1.2rem;line-height:1;color:var(--tblr-secondary,#6c757d)"></i>
               ${catName ? `<span class="badge bg-blue-lt text-nowrap">${App.escHtml(catName)}</span>` : ''}
             </div>
           </div>
