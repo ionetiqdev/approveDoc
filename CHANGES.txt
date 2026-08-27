@@ -1,1 +1,1 @@
-New Document modal: clarify file/URL fields support video, add live detected-type badge (PDF/Word/YouTube/Vimeo/video)
+Audiences list: colour-match the audience icon to its type pill (purple for Criteria built, blue for Selected users)
