@@ -1,1 +1,1 @@
-Audiences list: colour-match the audience icon to its type pill (purple for Criteria built, blue for Selected users)
+Audiences: fix is_criteria_built not set at creation, causing list pill/icon to show 'Selected users' for a new Criteria audience until first criteria save
