@@ -15,7 +15,7 @@
 
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/core@1.4.0/dist/css/tabler.min.css" />
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.44.0/dist/tabler-icons.min.css" />
-  <link rel="stylesheet" href="../../assets/css/theme.css?r=9n0ijsta" />
+  <link rel="stylesheet" href="../../assets/css/theme.css?r=zk3l9cya" />
 
   <script>
     (function() {
@@ -185,7 +185,7 @@
                   </div>
                 </div>
                 <div class="col-1"></div>
-                <div class="col-3 d-flex flex-column justify-content-end pb-1" style="gap:.5rem">
+                <div class="col-3 d-flex flex-column align-self-center" style="gap:.5rem">
                   <div class="form-check mb-0">
                     <input class="form-check-input" type="radio" name="dueDateMode" id="dueDateModeDate" value="date" checked>
                     <label class="form-check-label" for="dueDateModeDate">Due date</label>
@@ -241,7 +241,7 @@
 
                     <!-- Notifications tab -->
                     <div class="tab-pane" id="distTabWarnings">
-                      <div class="notification-grid" style="display:grid;grid-template-columns:108px max-content 105px 165px 1fr 44px;column-gap:.6rem;row-gap:.5rem;align-items:center">
+                      <div class="notification-grid" style="display:grid;grid-template-columns:108px 90px 128px 190px 1fr 44px;column-gap:.6rem;row-gap:.5rem;align-items:center">
                         <div class="notification-header" style="display:contents">
                           <div><span class="fw-semibold text-secondary" style="font-size:.75rem">Days</span></div>
                           <div><span class="fw-semibold text-secondary" style="font-size:.75rem">When</span></div>
@@ -297,15 +297,15 @@
   <script src="https://cdn.jsdelivr.net/npm/@tabler/core@1.4.0/dist/js/tabler.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="../../assets/js/version.js?r=9n0ijsta"></script>
-  <script src="../../assets/js/supabase-client.js?r=9n0ijsta"></script>
-  <script src="../../assets/js/auth.js?r=9n0ijsta"></script>
-  <script src="../../assets/js/app.js?r=9n0ijsta"></script>
-  <script src="../../assets/js/theme.js?r=9n0ijsta"></script>
-  <script src="../../assets/js/sidebar-html.js?r=9n0ijsta"></script>
-  <script src="../../assets/js/sidebar.js?r=9n0ijsta"></script>
-  <script src="../../assets/js/profile-modal.js?r=9n0ijsta"></script>
-  <script src="../../assets/js/status-widget.js?r=9n0ijsta"></script>
+  <script src="../../assets/js/version.js?r=zk3l9cya"></script>
+  <script src="../../assets/js/supabase-client.js?r=zk3l9cya"></script>
+  <script src="../../assets/js/auth.js?r=zk3l9cya"></script>
+  <script src="../../assets/js/app.js?r=zk3l9cya"></script>
+  <script src="../../assets/js/theme.js?r=zk3l9cya"></script>
+  <script src="../../assets/js/sidebar-html.js?r=zk3l9cya"></script>
+  <script src="../../assets/js/sidebar.js?r=zk3l9cya"></script>
+  <script src="../../assets/js/profile-modal.js?r=zk3l9cya"></script>
+  <script src="../../assets/js/status-widget.js?r=zk3l9cya"></script>
   <script>
 let distributionModal, deleteModal;
 let _distSaved = false;
@@ -536,8 +536,8 @@ function notificationRowHtml() {
       </div>
       <div>
         <label class="form-check form-switch mb-0 d-flex align-items-center gap-1" style="min-height:auto">
-          <input type="checkbox" class="form-check-input notif-dir-switch" role="switch" style="margin-top:0" />
-          <span class="notif-dir-label" style="font-size:12px">Before</span>
+          <input type="checkbox" class="form-check-input notif-dir-switch" role="switch" style="margin-top:0;flex-shrink:0" />
+          <span class="notif-dir-label" style="font-size:14px;width:40px;flex-shrink:0">Before</span>
         </label>
       </div>
       <div>
@@ -551,7 +551,7 @@ function notificationRowHtml() {
         </select>
       </div>
       <div class="notif-specific-wrap d-none" style="position:relative">
-        <input type="text" class="form-control notif-specific-search" placeholder="Search people…" autocomplete="off" style="font-size:12.5px" />
+        <input type="text" class="form-control notif-specific-search" placeholder="Search people…" autocomplete="off" style="padding-top:.25rem;padding-bottom:.25rem" />
         <input type="hidden" class="notif-specific-id" />
         <div class="notif-specific-dropdown dropdown-menu" style="display:none;max-height:200px;overflow-y:auto;overflow-x:hidden;position:absolute;top:100%;left:0;min-width:280px;white-space:nowrap;z-index:9999"></div>
       </div>
@@ -604,7 +604,7 @@ function wireNotificationRow(row, data = null) {
       : allUsers;
     if (!matches.length) { specificDropdown.style.display = 'none'; return; }
     specificDropdown.innerHTML = matches.slice(0, 20).map(u =>
-      `<button type="button" class="dropdown-item" style="font-size:12.5px" data-id="${u.user_id}">${App.escHtml(`${u.first_name || ''} ${u.last_name || ''}`.trim() || u.email)}</button>`
+      `<button type="button" class="dropdown-item py-1" data-id="${u.user_id}">${App.escHtml(`${u.first_name || ''} ${u.last_name || ''}`.trim() || u.email)}</button>`
     ).join('');
     specificDropdown.querySelectorAll('.dropdown-item').forEach(btn => {
       btn.addEventListener('mousedown', e => {

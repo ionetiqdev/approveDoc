@@ -1,1 +1,1 @@
-Notification row: Before/After button-group replaced with a compact switch (saves space), Channel column narrower, Send to column wider, smaller font for person names in search/dropdown
+Notification row: switch column fixed-width (no shift on toggle), Channel widened for WhatsApp, Send to widened for Specific person, person search/dropdown font matches other fields. Main dialog: Due date/Days radio pair vertically centered on the line.
