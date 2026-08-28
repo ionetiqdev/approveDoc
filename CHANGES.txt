@@ -1,1 +1,1 @@
-Distribution UI polish: notification list has one shared header (not per-row), red trash delete icon for consistency; Start Date label moved left of input; 15px padding above Require Password; Distribution Type defaults to One Off
+Rebuild: fresh zip after sidebar-html.js failed to update on prior deploys (page load hang, login broken across browsers)
