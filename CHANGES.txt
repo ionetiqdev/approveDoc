@@ -1,1 +1,1 @@
-Rebuild: fresh zip after sidebar-html.js failed to update on prior deploys (page load hang, login broken across browsers)
+Fix: cache-bust query string on all script/link tags was a static hardcoded value that never changed between deploys, causing browsers to keep serving stale cached JS (sidebar-html.js etc) indefinitely - this was the real cause of the blank sidebar/hang. Replaced all 5 static tokens with one fresh token that changes every build.
