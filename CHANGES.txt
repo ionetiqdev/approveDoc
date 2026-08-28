@@ -1,1 +1,1 @@
-Distribution modal restructured: single-column layout (narrower, taller) instead of two side-by-side columns to fix scaling issues on smaller windows. Tabs (Audiences/Notifications) moved below the fields. Document + Distribution type on same line. Require password moved beside Instructions.
+Audiences and Notifications lists now have a fixed 290px height (sized for ~5 rows) with internal vertical scroll - modal no longer resizes as rows are added. Notification grid header is sticky so it stays visible while rows scroll beneath it.

@@ -15,7 +15,7 @@
 
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/core@1.4.0/dist/css/tabler.min.css" />
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.44.0/dist/tabler-icons.min.css" />
-  <link rel="stylesheet" href="../../assets/css/theme.css?r=plawmodj" />
+  <link rel="stylesheet" href="../../assets/css/theme.css?r=oe5c2v8u" />
 
   <script>
     (function() {
@@ -243,7 +243,7 @@
 
                 <!-- Audiences tab -->
                 <div class="tab-pane active" id="distTabAudiences">
-                  <div id="audienceList" class="mb-2"></div>
+                  <div id="audienceList" class="mb-2" style="height:290px;overflow-y:auto"></div>
                   <button type="button" class="btn btn-sm btn-outline-secondary" id="addAudienceBtn">
                     <i class="ti ti-plus me-1"></i>Add audience
                   </button>
@@ -251,14 +251,14 @@
 
                 <!-- Notifications tab -->
                 <div class="tab-pane" id="distTabWarnings">
-                  <div class="notification-grid" style="display:grid;grid-template-columns:88px 118px 128px 190px 1fr 44px;column-gap:.6rem;row-gap:.5rem;align-items:center">
+                  <div class="notification-grid" style="display:grid;grid-template-columns:88px 118px 128px 190px 1fr 44px;column-gap:.6rem;row-gap:.5rem;align-items:center;height:290px;overflow-y:auto;overflow-x:hidden">
                     <div class="notification-header" style="display:contents">
-                      <div style="grid-column:1"><span class="fw-semibold text-secondary" style="font-size:.75rem">Days</span></div>
-                      <div style="grid-column:2"><span class="fw-semibold text-secondary" style="font-size:.75rem">When</span></div>
-                      <div style="grid-column:3"><span class="fw-semibold text-secondary" style="font-size:.75rem">Channel</span></div>
-                      <div style="grid-column:4"><span class="fw-semibold text-secondary" style="font-size:.75rem">Send to</span></div>
-                      <div style="grid-column:5"></div>
-                      <div style="grid-column:6"></div>
+                      <div style="grid-column:1;position:sticky;top:0;background:var(--tblr-card-bg,#fff);padding-bottom:.4rem;z-index:1"><span class="fw-semibold text-secondary" style="font-size:.75rem">Days</span></div>
+                      <div style="grid-column:2;position:sticky;top:0;background:var(--tblr-card-bg,#fff);padding-bottom:.4rem;z-index:1"><span class="fw-semibold text-secondary" style="font-size:.75rem">When</span></div>
+                      <div style="grid-column:3;position:sticky;top:0;background:var(--tblr-card-bg,#fff);padding-bottom:.4rem;z-index:1"><span class="fw-semibold text-secondary" style="font-size:.75rem">Channel</span></div>
+                      <div style="grid-column:4;position:sticky;top:0;background:var(--tblr-card-bg,#fff);padding-bottom:.4rem;z-index:1"><span class="fw-semibold text-secondary" style="font-size:.75rem">Send to</span></div>
+                      <div style="grid-column:5;position:sticky;top:0;background:var(--tblr-card-bg,#fff);padding-bottom:.4rem;z-index:1"></div>
+                      <div style="grid-column:6;position:sticky;top:0;background:var(--tblr-card-bg,#fff);padding-bottom:.4rem;z-index:1"></div>
                     </div>
                     <div id="notificationList" style="display:contents"></div>
                   </div>
@@ -305,15 +305,15 @@
   <script src="https://cdn.jsdelivr.net/npm/@tabler/core@1.4.0/dist/js/tabler.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="../../assets/js/version.js?r=plawmodj"></script>
-  <script src="../../assets/js/supabase-client.js?r=plawmodj"></script>
-  <script src="../../assets/js/auth.js?r=plawmodj"></script>
-  <script src="../../assets/js/app.js?r=plawmodj"></script>
-  <script src="../../assets/js/theme.js?r=plawmodj"></script>
-  <script src="../../assets/js/sidebar-html.js?r=plawmodj"></script>
-  <script src="../../assets/js/sidebar.js?r=plawmodj"></script>
-  <script src="../../assets/js/profile-modal.js?r=plawmodj"></script>
-  <script src="../../assets/js/status-widget.js?r=plawmodj"></script>
+  <script src="../../assets/js/version.js?r=oe5c2v8u"></script>
+  <script src="../../assets/js/supabase-client.js?r=oe5c2v8u"></script>
+  <script src="../../assets/js/auth.js?r=oe5c2v8u"></script>
+  <script src="../../assets/js/app.js?r=oe5c2v8u"></script>
+  <script src="../../assets/js/theme.js?r=oe5c2v8u"></script>
+  <script src="../../assets/js/sidebar-html.js?r=oe5c2v8u"></script>
+  <script src="../../assets/js/sidebar.js?r=oe5c2v8u"></script>
+  <script src="../../assets/js/profile-modal.js?r=oe5c2v8u"></script>
+  <script src="../../assets/js/status-widget.js?r=oe5c2v8u"></script>
   <script>
 let distributionModal, deleteModal;
 let _distSaved = false;
