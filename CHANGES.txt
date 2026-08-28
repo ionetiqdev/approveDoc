@@ -1,1 +1,1 @@
-Fix: notification rows now pack from the top (align-content:start) instead of stretching across the fixed-height grid. Fix: audience/person search dropdowns were clipped by the newly-scrollable lists - now repositioned as fixed, anchored to the input's screen position, escaping the scroll containers entirely. Close on scroll, cleaned up on row delete and modal reset.
+Distribution modal widened to 1000px. Channel column +50px, Person column (flexible) gains roughly the same via the wider modal; dropdown min-width widened to match.
