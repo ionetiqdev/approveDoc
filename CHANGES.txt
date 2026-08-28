@@ -1,1 +1,1 @@
-Fixes: Start Date label back beside input (not fused), input genuinely wider than before via extra column width; removed dead-space gap between Before/After and Channel; removed Person header label; widened specific-person dropdown beyond input width
+Notification list: rebuilt header + rows as a single shared CSS Grid (was independent Bootstrap rows, which could never truly align column widths) - titles now line up exactly with their fields below regardless of content width
