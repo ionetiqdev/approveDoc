@@ -1,1 +1,1 @@
-Audiences: fix is_criteria_built not set at creation, causing list pill/icon to show 'Selected users' for a new Criteria audience until first criteria save
+Notifications (Phase 1): renamed Warning to Notification throughout, unlimited notifications per distribution (was fixed 2), recipient targeting (user/manager/specific person), channel selection (email/SMS/WhatsApp/Slack/other). New ad_distribution_notification + ad_distribution_item_notification tables, rebuilt build_distribution_items. Sending not yet wired up - DB/UI only this phase.

@@ -15,7 +15,7 @@
 
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/core@1.4.0/dist/css/tabler.min.css" />
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.44.0/dist/tabler-icons.min.css" />
-  <link rel="stylesheet" href="../../assets/css/theme.css?r=g4dajnkl" />
+  <link rel="stylesheet" href="../../assets/css/theme.css?r=z82de1lk" />
 
   <script>
     (function() {
@@ -222,7 +222,7 @@
                       <a class="nav-link active" href="#distTabAudiences" data-bs-toggle="tab">Audiences</a>
                     </li>
                     <li class="nav-item">
-                      <a class="nav-link" href="#distTabWarnings" data-bs-toggle="tab">Warnings</a>
+                      <a class="nav-link" href="#distTabWarnings" data-bs-toggle="tab">Notifications</a>
                     </li>
                   </ul>
                 </div>
@@ -237,44 +237,12 @@
                       </button>
                     </div>
 
-                    <!-- Warnings tab -->
+                    <!-- Notifications tab -->
                     <div class="tab-pane" id="distTabWarnings">
-                      <div class="row g-2 mb-1">
-                        <div class="col-3"><span class="fw-semibold text-secondary" style="font-size:.8125rem">First Warning</span></div>
-                        <div class="col-3"></div>
-                        <div class="col-3"><span class="fw-semibold text-secondary" style="font-size:.8125rem">Second Warning</span></div>
-                        <div class="col-3"></div>
-                      </div>
-                      <div class="row g-2 mb-1">
-                        <div class="col-3"><label class="form-label mb-0">Days</label></div>
-                        <div class="col-3"></div>
-                        <div class="col-3"><label class="form-label mb-0">Days</label></div>
-                        <div class="col-3"></div>
-                      </div>
-                      <div class="row g-2">
-                        <div class="col-3">
-                          <input type="number" id="distributionWarn1Days" class="form-control" min="1" placeholder="e.g. 7" />
-                        </div>
-                        <div class="col-3 d-flex align-items-center">
-                          <div class="btn-group" role="group" style="width:60%;font-size:10px">
-                            <input type="radio" class="btn-check" name="warn1Dir" id="warn1DirB" value="B" checked autocomplete="off">
-                            <label class="btn btn-sm btn-outline-secondary" for="warn1DirB" style="transition:none">Before</label>
-                            <input type="radio" class="btn-check" name="warn1Dir" id="warn1DirA" value="A" autocomplete="off">
-                            <label class="btn btn-sm btn-outline-secondary" for="warn1DirA" style="transition:none">After</label>
-                          </div>
-                        </div>
-                        <div class="col-3">
-                          <input type="number" id="distributionWarn2Days" class="form-control" min="1" placeholder="e.g. 3" />
-                        </div>
-                        <div class="col-3 d-flex align-items-center">
-                          <div class="btn-group" role="group" style="width:60%;font-size:10px">
-                            <input type="radio" class="btn-check" name="warn2Dir" id="warn2DirB" value="B" checked autocomplete="off">
-                            <label class="btn btn-sm btn-outline-secondary" for="warn2DirB" style="transition:none">Before</label>
-                            <input type="radio" class="btn-check" name="warn2Dir" id="warn2DirA" value="A" autocomplete="off">
-                            <label class="btn btn-sm btn-outline-secondary" for="warn2DirA" style="transition:none">After</label>
-                          </div>
-                        </div>
-                      </div>
+                      <div id="notificationList" class="mb-2"></div>
+                      <button type="button" class="btn btn-sm btn-outline-secondary" id="addNotificationBtn">
+                        <i class="ti ti-plus me-1"></i>Add notification
+                      </button>
                     </div>
 
                   </div>
@@ -317,21 +285,22 @@
   <script src="https://cdn.jsdelivr.net/npm/@tabler/core@1.4.0/dist/js/tabler.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="../../assets/js/version.js?r=g4dajnkl"></script>
-  <script src="../../assets/js/supabase-client.js?r=g4dajnkl"></script>
-  <script src="../../assets/js/auth.js?r=g4dajnkl"></script>
-  <script src="../../assets/js/app.js?r=g4dajnkl"></script>
-  <script src="../../assets/js/theme.js?r=g4dajnkl"></script>
-  <script src="../../assets/js/sidebar-html.js?r=g4dajnkl"></script>
-  <script src="../../assets/js/sidebar.js?r=g4dajnkl"></script>
-  <script src="../../assets/js/profile-modal.js?r=g4dajnkl"></script>
-  <script src="../../assets/js/status-widget.js?r=g4dajnkl"></script>
+  <script src="../../assets/js/version.js?r=z82de1lk"></script>
+  <script src="../../assets/js/supabase-client.js?r=z82de1lk"></script>
+  <script src="../../assets/js/auth.js?r=z82de1lk"></script>
+  <script src="../../assets/js/app.js?r=z82de1lk"></script>
+  <script src="../../assets/js/theme.js?r=z82de1lk"></script>
+  <script src="../../assets/js/sidebar-html.js?r=z82de1lk"></script>
+  <script src="../../assets/js/sidebar.js?r=z82de1lk"></script>
+  <script src="../../assets/js/profile-modal.js?r=z82de1lk"></script>
+  <script src="../../assets/js/status-widget.js?r=z82de1lk"></script>
   <script>
 let distributionModal, deleteModal;
 let _distSaved = false;
 let allDistributions = [];
 let allDocuments = [];
 let allAudiences = [];
+let allUsers = [];
 let pendingDeleteId = null;
 
 (async () => {
@@ -393,7 +362,7 @@ let pendingDeleteId = null;
   });
   deleteModal       = new bootstrap.Modal(document.getElementById('deleteModal'));
 
-  await Promise.all([loadDocuments(), loadAudiences(), loadDistributions()]);
+  await Promise.all([loadDocuments(), loadAudiences(), loadUsers(), loadDistributions()]);
 
   document.getElementById('searchInput').addEventListener('input', renderTable);
   document.getElementById('createDistributionBtn').addEventListener('click', () => openModal());
@@ -402,12 +371,11 @@ let pendingDeleteId = null;
   // Wire tab validation indicators — red asterisk when required fields missing
   function _updateTabIndicators() {
     const hasAudience = getSelectedAudiences().length > 0;
-    const hasWarn1    = !!(document.getElementById('distributionWarn1Days').value &&
-                           document.querySelector('input[name="warn1Dir"]:checked')?.value);
+    const hasWarn1    = getNotificationRows().some(r => r._valid);
     const audTab  = document.querySelector('a[href="#distTabAudiences"]');
     const warnTab = document.querySelector('a[href="#distTabWarnings"]');
     if (audTab)  audTab.innerHTML  = hasAudience ? 'Audiences'  : 'Audiences <span class="text-danger">*</span>';
-    if (warnTab) warnTab.innerHTML = hasWarn1    ? 'Warnings'   : 'Warnings <span class="text-danger">*</span>';
+    if (warnTab) warnTab.innerHTML = hasWarn1    ? 'Notifications' : 'Notifications <span class="text-danger">*</span>';
   }
 
   // Update indicators when audiences change
@@ -418,10 +386,12 @@ let pendingDeleteId = null;
     setTimeout(_updateTabIndicators, 0);
   });
 
-  // Update indicators when warnings change
-  ['distributionWarn1Days', 'warn1DirB', 'warn1DirA'].forEach(id => {
-    const el = document.getElementById(id);
-    if (el) el.addEventListener('change', _updateTabIndicators);
+  // Update indicators when notifications change
+  document.getElementById('notificationList').addEventListener('change', _updateTabIndicators);
+  document.getElementById('notificationList').addEventListener('click', _updateTabIndicators);
+  document.getElementById('addNotificationBtn').addEventListener('click', () => {
+    addNotificationRow();
+    setTimeout(_updateTabIndicators, 0);
   });
 
   distModalEl.addEventListener('shown.bs.modal', _updateTabIndicators);
@@ -462,6 +432,12 @@ async function loadAudiences() {
   const { data, error } = await sb.from('ad_audience').select('audience_id, name').eq('organisation_id', Auth.getOrganisationId()).order('name');
   if (error) { console.error('[Distribution] audiences load error:', error); return; }
   allAudiences = data || [];
+}
+
+async function loadUsers() {
+  const { data, error } = await sb.from('ad_user').select('user_id, first_name, last_name, email').eq('organisation_id', Auth.getOrganisationId()).order('first_name');
+  if (error) { console.error('[Distribution] users load error:', error); return; }
+  allUsers = data || [];
 }
 
 function audienceRowHtml() {
@@ -530,6 +506,135 @@ function addAudienceRow(selectedId = '') {
 function getSelectedAudiences() {
   return [...document.querySelectorAll('#audienceList .audience-id-input')]
     .map(h => h.value).filter(v => !!v);
+}
+
+const NOTIFICATION_CHANNELS = [
+  { value: 'EMAIL',    label: 'Email' },
+  { value: 'SMS',       label: 'SMS' },
+  { value: 'WHATSAPP', label: 'WhatsApp' },
+  { value: 'SLACK',    label: 'Slack' },
+  { value: 'OTHER',    label: 'Other' },
+];
+
+function notificationRowHtml() {
+  const channelOptions = NOTIFICATION_CHANNELS.map(c => `<option value="${c.value}">${c.label}</option>`).join('');
+  return `<div class="border rounded p-2 mb-2 notification-row">
+    <div class="row g-2 align-items-end">
+      <div class="col-auto" style="width:90px">
+        <label class="form-label mb-0" style="font-size:.75rem">Days</label>
+        <input type="number" class="form-control notif-days" min="1" placeholder="e.g. 7" />
+      </div>
+      <div class="col-auto">
+        <label class="form-label mb-0" style="font-size:.75rem">When</label><br>
+        <div class="btn-group" role="group" style="font-size:11px">
+          <input type="radio" class="btn-check notif-dir-radio" name="notifDir_${_notifRowSeq}" value="B" checked autocomplete="off">
+          <label class="btn btn-sm btn-outline-secondary" style="transition:none">Before</label>
+          <input type="radio" class="btn-check notif-dir-radio" name="notifDir_${_notifRowSeq}" value="A" autocomplete="off">
+          <label class="btn btn-sm btn-outline-secondary" style="transition:none">After</label>
+        </div>
+      </div>
+      <div class="col-auto" style="width:140px">
+        <label class="form-label mb-0" style="font-size:.75rem">Send to</label>
+        <select class="form-select notif-recipient">
+          <option value="USER">The user</option>
+          <option value="MANAGER">Their manager</option>
+          <option value="SPECIFIC">Specific person</option>
+        </select>
+      </div>
+      <div class="col notif-specific-wrap d-none" style="position:relative;min-width:160px">
+        <label class="form-label mb-0" style="font-size:.75rem">Person</label>
+        <input type="text" class="form-control notif-specific-search" placeholder="Search people…" autocomplete="off" />
+        <input type="hidden" class="notif-specific-id" />
+        <div class="notif-specific-dropdown dropdown-menu w-100" style="display:none;max-height:200px;overflow-y:auto;position:absolute;top:100%;left:0;z-index:9999"></div>
+      </div>
+      <div class="col-auto" style="width:130px">
+        <label class="form-label mb-0" style="font-size:.75rem">Channel</label>
+        <select class="form-select notif-channel">${channelOptions}</select>
+      </div>
+      <div class="col-auto">
+        <button type="button" class="btn btn-outline-secondary remove-notification-btn" title="Remove"><i class="ti ti-x"></i></button>
+      </div>
+    </div>
+  </div>`;
+}
+
+let _notifRowSeq = 0;
+
+function wireNotificationRow(row, data = null) {
+  const daysInput      = row.querySelector('.notif-days');
+  const recipientSelect = row.querySelector('.notif-recipient');
+  const channelSelect  = row.querySelector('.notif-channel');
+  const specificWrap   = row.querySelector('.notif-specific-wrap');
+  const specificSearch = row.querySelector('.notif-specific-search');
+  const specificHidden = row.querySelector('.notif-specific-id');
+  const specificDropdown = row.querySelector('.notif-specific-dropdown');
+  const removeBtn      = row.querySelector('.remove-notification-btn');
+
+  if (data) {
+    daysInput.value = data.days ?? '';
+    row.querySelectorAll('.notif-dir-radio').forEach(r => { r.checked = r.value === (data.direction || 'B'); });
+    recipientSelect.value = data.recipient_type || 'USER';
+    channelSelect.value   = data.channel || 'EMAIL';
+    if (data.recipient_type === 'SPECIFIC' && data.specific_user_id) {
+      const u = allUsers.find(u => u.user_id === data.specific_user_id);
+      if (u) { specificSearch.value = `${u.first_name || ''} ${u.last_name || ''}`.trim() || u.email; specificHidden.value = data.specific_user_id; }
+    }
+  }
+
+  function toggleSpecific() {
+    specificWrap.classList.toggle('d-none', recipientSelect.value !== 'SPECIFIC');
+  }
+  toggleSpecific();
+  recipientSelect.addEventListener('change', toggleSpecific);
+
+  function showDropdown(term) {
+    const lower = term.toLowerCase();
+    const matches = term
+      ? allUsers.filter(u => `${u.first_name || ''} ${u.last_name || ''} ${u.email || ''}`.toLowerCase().includes(lower))
+      : allUsers;
+    if (!matches.length) { specificDropdown.style.display = 'none'; return; }
+    specificDropdown.innerHTML = matches.slice(0, 20).map(u =>
+      `<button type="button" class="dropdown-item" data-id="${u.user_id}">${App.escHtml(`${u.first_name || ''} ${u.last_name || ''}`.trim() || u.email)}</button>`
+    ).join('');
+    specificDropdown.querySelectorAll('.dropdown-item').forEach(btn => {
+      btn.addEventListener('mousedown', e => {
+        e.preventDefault();
+        specificSearch.value = btn.textContent;
+        specificHidden.value = btn.dataset.id;
+        specificDropdown.style.display = 'none';
+      });
+    });
+    specificDropdown.style.display = 'block';
+  }
+  specificSearch.addEventListener('input', () => {
+    specificHidden.value = '';
+    showDropdown(specificSearch.value.trim());
+  });
+  specificSearch.addEventListener('focus', () => showDropdown(specificSearch.value.trim()));
+  specificSearch.addEventListener('blur', () => setTimeout(() => { specificDropdown.style.display = 'none'; }, 150));
+
+  removeBtn.addEventListener('click', () => row.remove());
+}
+
+function addNotificationRow(data = null) {
+  const list = document.getElementById('notificationList');
+  const div  = document.createElement('div');
+  _notifRowSeq++;
+  div.innerHTML = notificationRowHtml();
+  const row = div.firstElementChild;
+  list.appendChild(row);
+  wireNotificationRow(row, data);
+}
+
+function getNotificationRows() {
+  return [...document.querySelectorAll('#notificationList .notification-row')].map(row => {
+    const days = row.querySelector('.notif-days').value;
+    const direction = row.querySelector('.notif-dir-radio:checked')?.value || 'B';
+    const recipient_type = row.querySelector('.notif-recipient').value;
+    const specific_user_id = row.querySelector('.notif-specific-id').value || null;
+    const channel = row.querySelector('.notif-channel').value;
+    return { days: days ? parseInt(days) : null, direction, recipient_type, specific_user_id, channel, _valid: !!days };
+  });
 }
 
 async function loadDistributions() {
@@ -641,14 +746,6 @@ async function openModal(item = null) {
     document.getElementById('distributionStartDate').value      = item.start_date || '';
     document.getElementById('distributionDueDate').value        = item.due_date || '';
     document.getElementById('distributionDaysToAck').value      = item.days_to_acknowledge ?? '';
-    document.getElementById('distributionWarn1Days').value      = item.first_warning_days ?? '';
-    const w1dir = item.first_warning_direction || 'B';
-    document.getElementById('warn1DirB').checked = w1dir === 'B';
-    document.getElementById('warn1DirA').checked = w1dir === 'A';
-    document.getElementById('distributionWarn2Days').value      = item.second_warning_days ?? '';
-    const w2dir = item.second_warning_direction || 'B';
-    document.getElementById('warn2DirB').checked = w2dir === 'B';
-    document.getElementById('warn2DirA').checked = w2dir === 'A';
     document.getElementById('distributionReqPassword').checked  = item.req_password ?? false;
 
     // Set radio based on whether days_to_acknowledge was used
@@ -665,8 +762,18 @@ async function openModal(item = null) {
     document.getElementById('audienceList').innerHTML = '';
     (links || []).forEach(link => addAudienceRow(link.audience_id));
     if (!links?.length) addAudienceRow();
+
+    // Load existing notification rules in sort_order order
+    const { data: notifRules } = await sb.from('ad_distribution_notification')
+      .select('days, direction, recipient_type, specific_user_id, channel')
+      .eq('distribution_id', item.distribution_id)
+      .order('sort_order');
+    document.getElementById('notificationList').innerHTML = '';
+    (notifRules || []).forEach(rule => addNotificationRow(rule));
+    if (!notifRules?.length) addNotificationRow();
   } else {
     addAudienceRow();
+    addNotificationRow();
   }
   distributionModal.show();
   setTimeout(() => document.getElementById('distributionName').focus(), 300);
@@ -685,16 +792,13 @@ function resetModal() {
   document.getElementById('distributionStartDate').value      = '';
   document.getElementById('distributionDueDate').value        = '';
   document.getElementById('distributionDaysToAck').value      = '';
-  document.getElementById('distributionWarn1Days').value      = '';
-  document.getElementById('warn1DirB').checked = true;
-  document.getElementById('distributionWarn2Days').value      = '';
-  document.getElementById('warn2DirB').checked = true;
   document.getElementById('distributionReqPassword').checked  = false;
   // Reset radio to Due date mode
   document.getElementById('dueDateModeDate').checked = true;
   document.getElementById('dueDateField').classList.remove('d-none');
   document.getElementById('daysToAckField').classList.add('d-none');
   document.getElementById('audienceList').innerHTML = '';
+  document.getElementById('notificationList').innerHTML = '';
 }
 
 async function saveDistribution() {
@@ -733,17 +837,17 @@ async function saveDistribution() {
   const selectedAudiences = getSelectedAudiences();
   if (!selectedAudiences.length) errors.push('At least one audience');
 
-  const warn1Days = document.getElementById('distributionWarn1Days').value ? parseInt(document.getElementById('distributionWarn1Days').value) : null;
-  const warn1Dir  = document.querySelector('input[name="warn1Dir"]:checked')?.value || null;
-  if (!warn1Days || !warn1Dir) errors.push('At least first warning — days and direction');
+  const notificationRows = getNotificationRows();
+  const validNotifications = notificationRows.filter(r => r._valid);
+  if (!validNotifications.length) errors.push('At least one notification — days must be set');
+  const badSpecific = validNotifications.some(r => r.recipient_type === 'SPECIFIC' && !r.specific_user_id);
+  if (badSpecific) errors.push('Each "Specific person" notification needs a person selected');
 
   if (errors.length) {
     errorEl.innerHTML = `Please complete the following required fields:<ul class="mb-0 mt-1">${errors.map(e => `<li>${e}</li>`).join('')}</ul>`;
     errorEl.classList.remove('d-none');
     return;
   }
-  const warn2Days = document.getElementById('distributionWarn2Days').value ? parseInt(document.getElementById('distributionWarn2Days').value) : null;
-  const warn2Dir  = document.querySelector('input[name="warn2Dir"]:checked')?.value || null;
 
   document.getElementById('saveDistributionSpinner').classList.remove('d-none');
   document.getElementById('saveDistributionBtn').disabled = true;
@@ -756,10 +860,6 @@ async function saveDistribution() {
     start_date: startDate,
     due_date: dueDate,
     days_to_acknowledge: dueDateMode === 'days' ? daysToAck : null,
-    first_warning_days: warn1Days,
-    first_warning_direction: warn1Dir,
-    second_warning_days: warn2Days,
-    second_warning_direction: warn2Dir,
     req_acknowledgement: true,
     req_password: reqPassword,
     owner: Auth.getSession()?.user?.id || null,
@@ -803,6 +903,24 @@ async function saveDistribution() {
     if (audienceRows.length) {
       const { error: audErr } = await sb.from('ad_distribution_audience').insert(audienceRows);
       if (audErr) App.toast('Audience links could not be saved: ' + audErr.message, 'warning');
+    }
+
+    await sb.from('ad_distribution_notification').delete().eq('distribution_id', newDistribId);
+
+    const notificationRowsToSave = validNotifications.map((r, i) => ({
+      distribution_id: newDistribId,
+      organisation_id: Auth.getOrganisationId(),
+      days: r.days,
+      direction: r.direction,
+      recipient_type: r.recipient_type,
+      specific_user_id: r.recipient_type === 'SPECIFIC' ? r.specific_user_id : null,
+      channel: r.channel,
+      sort_order: i,
+    }));
+
+    if (notificationRowsToSave.length) {
+      const { error: notifErr } = await sb.from('ad_distribution_notification').insert(notificationRowsToSave);
+      if (notifErr) App.toast('Notifications could not be saved: ' + notifErr.message, 'warning');
     }
   }
 
