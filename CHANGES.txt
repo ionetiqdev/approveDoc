@@ -1,1 +1,1 @@
-Notification list: rebuilt header + rows as a single shared CSS Grid (was independent Bootstrap rows, which could never truly align column widths) - titles now line up exactly with their fields below regardless of content width
+Notification row: Before/After button-group replaced with a compact switch (saves space), Channel column narrower, Send to column wider, smaller font for person names in search/dropdown
