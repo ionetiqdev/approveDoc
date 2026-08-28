@@ -15,7 +15,7 @@
 
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/core@1.4.0/dist/css/tabler.min.css" />
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.44.0/dist/tabler-icons.min.css" />
-  <link rel="stylesheet" href="../../assets/css/theme.css?r=achl1tb3" />
+  <link rel="stylesheet" href="../../assets/css/theme.css?r=plawmodj" />
 
   <script>
     (function() {
@@ -150,7 +150,7 @@
 
   <!-- Create / Edit modal -->
   <div class="modal modal-blur fade" id="distributionModal" tabindex="-1">
-    <div class="modal-dialog modal-dialog-centered" style="max-width:70vw">
+    <div class="modal-dialog modal-dialog-centered" style="max-width:900px">
       <div class="modal-content">
         <div class="modal-header">
           <h5 class="modal-title" id="distributionModalTitle">Create distribution</h5>
@@ -160,120 +160,117 @@
           <div id="distributionModalError" class="alert alert-danger d-none py-2 small mb-3"></div>
           <input type="hidden" id="distributionId" />
 
-          <div class="row g-4">
-
-            <!-- Left column: distribution details -->
-            <div class="col-6">
-              <div class="mb-3">
-                <label class="form-label">Name <span class="text-danger">*</span></label>
-                <input type="text" id="distributionName" class="form-control" placeholder="e.g. Q3 Policy Update" />
-              </div>
-              <div class="mb-3">
-                <label class="form-label">Document</label>
-                <select id="distributionDoc" class="form-select">
-                  <option value="">— None —</option>
-                </select>
-              </div>
-              <div class="mb-3">
-                <label class="form-label">Distribution type <span class="text-danger">*</span></label>
-                <select id="distributionType" class="form-select">
-                  <option value="">— Select —</option>
-                  <option value="ONEOFF" selected>One off</option>
-                  <option value="FIXED_VAL">Fixed validity</option>
-                  <option value="TO_CLOSE">Until closed</option>
-                </select>
-              </div>
-              <div class="mb-3">
-                <label class="form-label">Instructions</label>
-                <textarea id="distributionInstructions" class="form-control" rows="3" placeholder="Instructions shown to users when acknowledging…"></textarea>
-              </div>
-              <!-- Start date / radio / due date row -->
-              <div class="row g-2 mb-3 align-items-end" style="padding-top:10px">
-                <div class="col-5">
-                  <div class="d-flex align-items-center gap-2">
-                    <label class="form-label mb-0 flex-shrink-0">Start date <span class="text-danger">*</span></label>
-                    <input type="date" id="distributionStartDate" class="form-control" />
-                  </div>
-                </div>
-                <div class="col-1"></div>
-                <div class="col-3 d-flex flex-column align-self-center" style="gap:.5rem">
-                  <div class="form-check mb-0">
-                    <input class="form-check-input" type="radio" name="dueDateMode" id="dueDateModeDate" value="date" checked>
-                    <label class="form-check-label" for="dueDateModeDate">Due date</label>
-                  </div>
-                  <div class="form-check mb-0">
-                    <input class="form-check-input" type="radio" name="dueDateMode" id="dueDateModeDays" value="days">
-                    <label class="form-check-label" for="dueDateModeDays">Days to acknowledge</label>
-                  </div>
-                </div>
-                <div class="col-3">
-                  <div id="dueDateField">
-                    <input type="date" id="distributionDueDate" class="form-control" />
-                  </div>
-                  <div class="d-none" id="daysToAckField">
-                    <input type="number" id="distributionDaysToAck" class="form-control" min="1" placeholder="e.g. 30" />
-                  </div>
-                </div>
-              </div>
-
-              <div class="row g-3" style="padding-top:15px">
-                <div class="col-6">
-                  <label class="form-check form-switch">
-                    <input type="checkbox" id="distributionReqPassword" class="form-check-input" />
-                    <span class="form-check-label">Require password</span>
-                  </label>
-                </div>
-              </div>
-            </div>
-
-            <!-- Right column: tabbed card -->
-            <div class="col-6">
-              <div class="card mb-0 h-100">
-                <div class="card-header">
-                  <ul class="nav nav-tabs card-header-tabs" data-bs-toggle="tabs">
-                    <li class="nav-item">
-                      <a class="nav-link active" href="#distTabAudiences" data-bs-toggle="tab">Audiences</a>
-                    </li>
-                    <li class="nav-item">
-                      <a class="nav-link" href="#distTabWarnings" data-bs-toggle="tab">Notifications</a>
-                    </li>
-                  </ul>
-                </div>
-                <div class="card-body">
-                  <div class="tab-content">
-
-                    <!-- Audiences tab -->
-                    <div class="tab-pane active" id="distTabAudiences">
-                      <div id="audienceList" class="mb-2"></div>
-                      <button type="button" class="btn btn-sm btn-outline-secondary" id="addAudienceBtn">
-                        <i class="ti ti-plus me-1"></i>Add audience
-                      </button>
-                    </div>
-
-                    <!-- Notifications tab -->
-                    <div class="tab-pane" id="distTabWarnings">
-                      <div class="notification-grid" style="display:grid;grid-template-columns:88px 118px 128px 190px 1fr 44px;column-gap:.6rem;row-gap:.5rem;align-items:center">
-                        <div class="notification-header" style="display:contents">
-                          <div style="grid-column:1"><span class="fw-semibold text-secondary" style="font-size:.75rem">Days</span></div>
-                          <div style="grid-column:2"><span class="fw-semibold text-secondary" style="font-size:.75rem">When</span></div>
-                          <div style="grid-column:3"><span class="fw-semibold text-secondary" style="font-size:.75rem">Channel</span></div>
-                          <div style="grid-column:4"><span class="fw-semibold text-secondary" style="font-size:.75rem">Send to</span></div>
-                          <div style="grid-column:5"></div>
-                          <div style="grid-column:6"></div>
-                        </div>
-                        <div id="notificationList" style="display:contents"></div>
-                      </div>
-                      <button type="button" class="btn btn-sm btn-outline-secondary mt-2" id="addNotificationBtn">
-                        <i class="ti ti-plus me-1"></i>Add notification
-                      </button>
-                    </div>
-
-                  </div>
-                </div>
-              </div>
-            </div>
-
+          <div class="mb-3">
+            <label class="form-label">Name <span class="text-danger">*</span></label>
+            <input type="text" id="distributionName" class="form-control" placeholder="e.g. Q3 Policy Update" />
           </div>
+
+          <div class="row g-3 mb-3">
+            <div class="col-6">
+              <label class="form-label">Document</label>
+              <select id="distributionDoc" class="form-select">
+                <option value="">— None —</option>
+              </select>
+            </div>
+            <div class="col-6">
+              <label class="form-label">Distribution type <span class="text-danger">*</span></label>
+              <select id="distributionType" class="form-select">
+                <option value="">— Select —</option>
+                <option value="ONEOFF" selected>One off</option>
+                <option value="FIXED_VAL">Fixed validity</option>
+                <option value="TO_CLOSE">Until closed</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="row g-3 mb-3">
+            <div class="col-8">
+              <label class="form-label">Instructions</label>
+              <textarea id="distributionInstructions" class="form-control" rows="3" placeholder="Instructions shown to users when acknowledging…"></textarea>
+            </div>
+            <div class="col-4">
+              <label class="form-label">&nbsp;</label>
+              <label class="form-check form-switch d-block">
+                <input type="checkbox" id="distributionReqPassword" class="form-check-input" />
+                <span class="form-check-label">Require password</span>
+              </label>
+            </div>
+          </div>
+
+          <!-- Start date / radio / due date row -->
+          <div class="row g-2 mb-3 align-items-end">
+            <div class="col-5">
+              <div class="d-flex align-items-center gap-2">
+                <label class="form-label mb-0 flex-shrink-0">Start date <span class="text-danger">*</span></label>
+                <input type="date" id="distributionStartDate" class="form-control" />
+              </div>
+            </div>
+            <div class="col-1"></div>
+            <div class="col-3 d-flex flex-column align-self-center" style="gap:.5rem">
+              <div class="form-check mb-0">
+                <input class="form-check-input" type="radio" name="dueDateMode" id="dueDateModeDate" value="date" checked>
+                <label class="form-check-label" for="dueDateModeDate">Due date</label>
+              </div>
+              <div class="form-check mb-0">
+                <input class="form-check-input" type="radio" name="dueDateMode" id="dueDateModeDays" value="days">
+                <label class="form-check-label" for="dueDateModeDays">Days to acknowledge</label>
+              </div>
+            </div>
+            <div class="col-3">
+              <div id="dueDateField">
+                <input type="date" id="distributionDueDate" class="form-control" />
+              </div>
+              <div class="d-none" id="daysToAckField">
+                <input type="number" id="distributionDaysToAck" class="form-control" min="1" placeholder="e.g. 30" />
+              </div>
+            </div>
+          </div>
+
+          <!-- Tabbed card: Audiences / Notifications -->
+          <div class="card mb-0">
+            <div class="card-header">
+              <ul class="nav nav-tabs card-header-tabs" data-bs-toggle="tabs">
+                <li class="nav-item">
+                  <a class="nav-link active" href="#distTabAudiences" data-bs-toggle="tab">Audiences</a>
+                </li>
+                <li class="nav-item">
+                  <a class="nav-link" href="#distTabWarnings" data-bs-toggle="tab">Notifications</a>
+                </li>
+              </ul>
+            </div>
+            <div class="card-body">
+              <div class="tab-content">
+
+                <!-- Audiences tab -->
+                <div class="tab-pane active" id="distTabAudiences">
+                  <div id="audienceList" class="mb-2"></div>
+                  <button type="button" class="btn btn-sm btn-outline-secondary" id="addAudienceBtn">
+                    <i class="ti ti-plus me-1"></i>Add audience
+                  </button>
+                </div>
+
+                <!-- Notifications tab -->
+                <div class="tab-pane" id="distTabWarnings">
+                  <div class="notification-grid" style="display:grid;grid-template-columns:88px 118px 128px 190px 1fr 44px;column-gap:.6rem;row-gap:.5rem;align-items:center">
+                    <div class="notification-header" style="display:contents">
+                      <div style="grid-column:1"><span class="fw-semibold text-secondary" style="font-size:.75rem">Days</span></div>
+                      <div style="grid-column:2"><span class="fw-semibold text-secondary" style="font-size:.75rem">When</span></div>
+                      <div style="grid-column:3"><span class="fw-semibold text-secondary" style="font-size:.75rem">Channel</span></div>
+                      <div style="grid-column:4"><span class="fw-semibold text-secondary" style="font-size:.75rem">Send to</span></div>
+                      <div style="grid-column:5"></div>
+                      <div style="grid-column:6"></div>
+                    </div>
+                    <div id="notificationList" style="display:contents"></div>
+                  </div>
+                  <button type="button" class="btn btn-sm btn-outline-secondary mt-2" id="addNotificationBtn">
+                    <i class="ti ti-plus me-1"></i>Add notification
+                  </button>
+                </div>
+
+              </div>
+            </div>
+          </div>
+
         </div>
         <div class="modal-footer">
           <button type="button" class="btn" data-bs-dismiss="modal">Cancel</button>
@@ -308,15 +305,15 @@
   <script src="https://cdn.jsdelivr.net/npm/@tabler/core@1.4.0/dist/js/tabler.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="../../assets/js/version.js?r=achl1tb3"></script>
-  <script src="../../assets/js/supabase-client.js?r=achl1tb3"></script>
-  <script src="../../assets/js/auth.js?r=achl1tb3"></script>
-  <script src="../../assets/js/app.js?r=achl1tb3"></script>
-  <script src="../../assets/js/theme.js?r=achl1tb3"></script>
-  <script src="../../assets/js/sidebar-html.js?r=achl1tb3"></script>
-  <script src="../../assets/js/sidebar.js?r=achl1tb3"></script>
-  <script src="../../assets/js/profile-modal.js?r=achl1tb3"></script>
-  <script src="../../assets/js/status-widget.js?r=achl1tb3"></script>
+  <script src="../../assets/js/version.js?r=plawmodj"></script>
+  <script src="../../assets/js/supabase-client.js?r=plawmodj"></script>
+  <script src="../../assets/js/auth.js?r=plawmodj"></script>
+  <script src="../../assets/js/app.js?r=plawmodj"></script>
+  <script src="../../assets/js/theme.js?r=plawmodj"></script>
+  <script src="../../assets/js/sidebar-html.js?r=plawmodj"></script>
+  <script src="../../assets/js/sidebar.js?r=plawmodj"></script>
+  <script src="../../assets/js/profile-modal.js?r=plawmodj"></script>
+  <script src="../../assets/js/status-widget.js?r=plawmodj"></script>
   <script>
 let distributionModal, deleteModal;
 let _distSaved = false;

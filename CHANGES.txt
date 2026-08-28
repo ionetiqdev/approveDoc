@@ -1,1 +1,1 @@
-Fix: switch knob was invisible in After state (white knob on white background) - now uses light grey background so knob stays visible. Verified Notifications tab count logic is correct via isolated test.
+Distribution modal restructured: single-column layout (narrower, taller) instead of two side-by-side columns to fix scaling issues on smaller windows. Tabs (Audiences/Notifications) moved below the fields. Document + Distribution type on same line. Require password moved beside Instructions.
