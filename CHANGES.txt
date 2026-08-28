@@ -1,1 +1,1 @@
-Notification row: switch column fixed-width (no shift on toggle), Channel widened for WhatsApp, Send to widened for Specific person, person search/dropdown font matches other fields. Main dialog: Due date/Days radio pair vertically centered on the line.
+Notification switch label widened to fit Before without wrapping (space taken from Days column). Audiences/Notifications tab titles now show live selection counts, e.g. 'Audiences (2)'.
