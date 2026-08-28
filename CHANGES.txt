@@ -1,1 +1,1 @@
-Notification row: Before (left/unchecked) is now the coloured switch state instead of After, slide direction unchanged. Delete icon pinned to explicit grid column 6 so it stays at the right edge regardless of whether the Person field is shown (fixes CSS Grid auto-placement shifting it left when that field was hidden).
+Fix: switch knob was invisible in After state (white knob on white background) - now uses light grey background so knob stays visible. Verified Notifications tab count logic is correct via isolated test.
