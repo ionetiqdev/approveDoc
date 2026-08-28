@@ -1,1 +1,1 @@
-Notification switch label widened to fit Before without wrapping (space taken from Days column). Audiences/Notifications tab titles now show live selection counts, e.g. 'Audiences (2)'.
+Notification row: Before (left/unchecked) is now the coloured switch state instead of After, slide direction unchanged. Delete icon pinned to explicit grid column 6 so it stays at the right edge regardless of whether the Person field is shown (fixes CSS Grid auto-placement shifting it left when that field was hidden).

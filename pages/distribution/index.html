@@ -15,7 +15,7 @@
 
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/core@1.4.0/dist/css/tabler.min.css" />
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.44.0/dist/tabler-icons.min.css" />
-  <link rel="stylesheet" href="../../assets/css/theme.css?r=j6ksy41t" />
+  <link rel="stylesheet" href="../../assets/css/theme.css?r=omdly506" />
 
   <script>
     (function() {
@@ -56,6 +56,17 @@
     .distribution-card { flex: 1; min-height: 0; display: flex; flex-direction: column; overflow: hidden; }
     .distribution-card .table-scroll { flex: 1; min-height: 0; overflow-y: auto; }
     /* Direction toggle: hover changes text colour only, not background */
+    /* Colour the unchecked (Before, slid left) state instead of the default
+       checked (After, slid right) state - slide direction is unaffected,
+       this only swaps which position is visually "on". */
+    .notif-dir-switch:not(:checked) {
+      background-color: var(--tblr-primary);
+      border-color: var(--tblr-primary);
+    }
+    .notif-dir-switch:checked {
+      background-color: #fff;
+      border-color: rgba(0,0,0,.25);
+    }
     .btn-check + .btn-outline-secondary:hover {
       background: transparent !important;
       color: var(--tblr-primary) !important;
@@ -243,12 +254,12 @@
                     <div class="tab-pane" id="distTabWarnings">
                       <div class="notification-grid" style="display:grid;grid-template-columns:88px 118px 128px 190px 1fr 44px;column-gap:.6rem;row-gap:.5rem;align-items:center">
                         <div class="notification-header" style="display:contents">
-                          <div><span class="fw-semibold text-secondary" style="font-size:.75rem">Days</span></div>
-                          <div><span class="fw-semibold text-secondary" style="font-size:.75rem">When</span></div>
-                          <div><span class="fw-semibold text-secondary" style="font-size:.75rem">Channel</span></div>
-                          <div><span class="fw-semibold text-secondary" style="font-size:.75rem">Send to</span></div>
-                          <div></div>
-                          <div></div>
+                          <div style="grid-column:1"><span class="fw-semibold text-secondary" style="font-size:.75rem">Days</span></div>
+                          <div style="grid-column:2"><span class="fw-semibold text-secondary" style="font-size:.75rem">When</span></div>
+                          <div style="grid-column:3"><span class="fw-semibold text-secondary" style="font-size:.75rem">Channel</span></div>
+                          <div style="grid-column:4"><span class="fw-semibold text-secondary" style="font-size:.75rem">Send to</span></div>
+                          <div style="grid-column:5"></div>
+                          <div style="grid-column:6"></div>
                         </div>
                         <div id="notificationList" style="display:contents"></div>
                       </div>
@@ -297,15 +308,15 @@
   <script src="https://cdn.jsdelivr.net/npm/@tabler/core@1.4.0/dist/js/tabler.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="../../assets/js/version.js?r=j6ksy41t"></script>
-  <script src="../../assets/js/supabase-client.js?r=j6ksy41t"></script>
-  <script src="../../assets/js/auth.js?r=j6ksy41t"></script>
-  <script src="../../assets/js/app.js?r=j6ksy41t"></script>
-  <script src="../../assets/js/theme.js?r=j6ksy41t"></script>
-  <script src="../../assets/js/sidebar-html.js?r=j6ksy41t"></script>
-  <script src="../../assets/js/sidebar.js?r=j6ksy41t"></script>
-  <script src="../../assets/js/profile-modal.js?r=j6ksy41t"></script>
-  <script src="../../assets/js/status-widget.js?r=j6ksy41t"></script>
+  <script src="../../assets/js/version.js?r=omdly506"></script>
+  <script src="../../assets/js/supabase-client.js?r=omdly506"></script>
+  <script src="../../assets/js/auth.js?r=omdly506"></script>
+  <script src="../../assets/js/app.js?r=omdly506"></script>
+  <script src="../../assets/js/theme.js?r=omdly506"></script>
+  <script src="../../assets/js/sidebar-html.js?r=omdly506"></script>
+  <script src="../../assets/js/sidebar.js?r=omdly506"></script>
+  <script src="../../assets/js/profile-modal.js?r=omdly506"></script>
+  <script src="../../assets/js/status-widget.js?r=omdly506"></script>
   <script>
 let distributionModal, deleteModal;
 let _distSaved = false;
@@ -535,31 +546,31 @@ const NOTIFICATION_CHANNELS = [
 function notificationRowHtml() {
   const channelOptions = NOTIFICATION_CHANNELS.map(c => `<option value="${c.value}">${c.label}</option>`).join('');
   return `<div class="notification-row" style="display:contents">
-      <div>
+      <div style="grid-column:1">
         <input type="number" class="form-control notif-days" min="1" placeholder="e.g. 7" />
       </div>
-      <div>
+      <div style="grid-column:2">
         <label class="form-check form-switch mb-0 d-flex align-items-center gap-1" style="min-height:auto">
           <input type="checkbox" class="form-check-input notif-dir-switch" role="switch" style="margin-top:0;flex-shrink:0" />
           <span class="notif-dir-label" style="font-size:14px;width:50px;flex-shrink:0;white-space:nowrap">Before</span>
         </label>
       </div>
-      <div>
+      <div style="grid-column:3">
         <select class="form-select notif-channel">${channelOptions}</select>
       </div>
-      <div>
+      <div style="grid-column:4">
         <select class="form-select notif-recipient">
           <option value="USER">The user</option>
           <option value="MANAGER">Their manager</option>
           <option value="SPECIFIC">Specific person</option>
         </select>
       </div>
-      <div class="notif-specific-wrap d-none" style="position:relative">
+      <div class="notif-specific-wrap d-none" style="grid-column:5;position:relative">
         <input type="text" class="form-control notif-specific-search" placeholder="Search people…" autocomplete="off" style="padding-top:.25rem;padding-bottom:.25rem" />
         <input type="hidden" class="notif-specific-id" />
         <div class="notif-specific-dropdown dropdown-menu" style="display:none;max-height:200px;overflow-y:auto;overflow-x:hidden;position:absolute;top:100%;left:0;min-width:280px;white-space:nowrap;z-index:9999"></div>
       </div>
-      <div>
+      <div style="grid-column:6">
         <button type="button" class="btn btn-icon text-danger remove-notification-btn" title="Delete"><i class="ti ti-trash"></i></button>
       </div>
     </div>`;
