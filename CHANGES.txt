@@ -1,1 +1,1 @@
-Distribution UI: notification row reordered (Days, When, Channel, Send to, Person, Delete), Days field 20% wider, tighter gap after Before/After, delete icon pinned to line end. Start Date now input-group matching Due Date width, whole row bottom-aligned.
+Fixes: Start Date label back beside input (not fused), input genuinely wider than before via extra column width; removed dead-space gap between Before/After and Channel; removed Person header label; widened specific-person dropdown beyond input width
