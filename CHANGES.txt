@@ -1,1 +1,1 @@
-Add tools/notification-webhook-test.html for the notification webhook prototype; committed to git but excluded from the live FTP deploy via a new tools/** entry in deploy.yml.
+Remove tools/notification-webhook-test.html and its deploy.yml exclude entry - was flagged by GitGuardian for containing the dev Supabase anon key; the test page is kept local only, outside the repo, going forward.

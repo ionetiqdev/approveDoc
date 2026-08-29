@@ -74,7 +74,6 @@ jobs:
             assets/pdfjs/**
             mobile/**
             docs/mkdocs-site/**
-            tools/**
 
       - name: Notify Slack
         if: success() && vars.SLACK_NOTIFY == 'true'
