@@ -1,1 +1,1 @@
-Distribution modal widened to 1000px. Channel column +50px, Person column (flexible) gains roughly the same via the wider modal; dropdown min-width widened to match.
+Add tools/notification-webhook-test.html for the notification webhook prototype; committed to git but excluded from the live FTP deploy via a new tools/** entry in deploy.yml.
