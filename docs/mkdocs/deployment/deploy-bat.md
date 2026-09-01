@@ -15,7 +15,7 @@ deploy main     :: Deploy to ionetiq.dev/approvedoc/ (production)
 ## What it does
 
 1. Finds `approvedoc_DDMMYYYY_HHmm.zip` in `C:\Users\{user}\My Drive\Downloads`
-2. Extracts it to the IIS working directory
+2. Extracts it to the local working directory
 3. Regenerates cache-busting strings on all HTML/JS files
 4. Writes `version.js` with `APP_PUBLISHED = 'DD/MM/YYYY HH:MM'` (UK time)
 5. Switches to the target git branch

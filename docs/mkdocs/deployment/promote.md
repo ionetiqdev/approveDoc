@@ -77,20 +77,25 @@ This assumes dev is always the source of truth and nothing is ever
 committed directly to main outside this promote step. If that ever
 stops being true, this process needs revisiting.
 
-## A note on the working directory and IIS
+## A note on the working directory and local testing
 
-This project's working directory is also served locally by IIS
-(`C:\inetpub\wwwroot\approveDoc` or equivalent for approveDoc).
-That's available if you ever need it, but it is NOT the normal way
-this gets tested - day-to-day testing happens on the real hosted
-`dev` folder (`ionetiq.dev/approvedoc/dev/`) after running
-`deploy.bat dev` and letting GitHub Actions publish it, same as
-described above. Reach for local IIS only in an unusual situation
-(offline work, debugging something that's hard to diagnose against
-the live dev site) - be aware that `deploy.bat` extracting a new
-build into the working directory will make IIS start serving that
-new build immediately, before it's been pushed to GitHub or
-deployed anywhere else.
+The working directory happens to sit under `C:\inetpub\wwwroot\approveDoc`
+on Mike's machine, served locally by IIS - but that's a personal setup
+choice for local testing convenience, not a platform requirement.
+approveDoc doesn't depend on IIS in any way; it's a static site (HTML/JS
++ Supabase) that any web server can serve, and production hosting is
+whatever `ionetiq.dev`/`approvedoc.app` actually runs on via the GitHub
+Actions FTP deploy - not IIS.
+
+Local IIS is NOT the normal way this gets tested - day-to-day testing
+happens on the real hosted `dev` folder (`ionetiq.dev/approvedoc/dev/`)
+after running `deploy.bat dev` and letting GitHub Actions publish it,
+same as described above. Reach for local testing only in an unusual
+situation (offline work, debugging something that's hard to diagnose
+against the live dev site) - be aware that `deploy.bat` extracting a
+new build into the working directory will make the local server start
+serving that new build immediately, before it's been pushed to GitHub
+or deployed anywhere else.
 
 ## A note on deploy.bat's overwrite behaviour
 

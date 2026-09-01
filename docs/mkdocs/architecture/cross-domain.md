@@ -1,6 +1,6 @@
 # Cross-Domain Compatibility
 
-approveDoc is hosted at `ionetiq.dev/approvedoc/` but also accessible at `approvedoc.app/` — a DNS alias pointing to the same IIS server and folder.
+approveDoc is hosted at `ionetiq.dev/approvedoc/` but also accessible at `approvedoc.app/` — a DNS alias pointing to the same server and folder.
 
 ## The problem
 
