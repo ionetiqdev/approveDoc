@@ -17,7 +17,7 @@
    → uses dev Supabase project
    → commits to dev branch on GitHub
 4. Test on dev URL
-5. When happy, deploy.bat main
+5. When happy, promote to production — see [PROMOTE.md](PROMOTE.md). **Never run `deploy.bat main`** after initial project setup; it must go through `git reset --hard dev` + `git push origin main --force-with-lease` instead.
    → deploys to production URL
    → uses production Supabase project
    → commits to main branch on GitHub

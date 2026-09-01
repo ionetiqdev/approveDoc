@@ -9,6 +9,9 @@ deploy dev      :: Deploy to ionetiq.dev/approvedoc/dev/
 deploy main     :: Deploy to ionetiq.dev/approvedoc/ (production)
 ```
 
+!!! danger "Never run `deploy dev main` after initial setup"
+    Despite being a valid command, `deploy.bat main` must **not** be used to promote to production once the project is past its initial setup. Promotion goes through a separate process instead — see [Promoting to Production](promote.md) (`git reset --hard dev` + `git push origin main --force-with-lease`). Running `deploy.bat main` directly bypasses that process and can push an inconsistent state to production.
+
 ## What it does
 
 1. Finds `approvedoc_DDMMYYYY_HHmm.zip` in `C:\Users\{user}\My Drive\Downloads`

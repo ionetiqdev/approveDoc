@@ -1,4 +1,7 @@
-# Promote dev → main
+# Promoting to Production
+
+!!! info
+    This mirrors `docs/PROMOTE.md` in the repo root — kept in sync manually.
 
 How a new build goes from a zip Claude hands you, through dev testing,
 to live on production.

@@ -28,3 +28,9 @@ Migrations are numbered sequentially and applied in order. Run in the Supabase S
 | `22-ad-document-reference.sql` | `ad_document_reference` table with RLS; unique on `(user_id, doc_id)` |
 | `23-external-document-sources.sql` | `ad_external_source` table; `source_type`, `source_id`, `external_url`, `external_ref` on `ad_document_file` |
 | `24-rls-country-language.sql` | Enable RLS on `ad_country` and `ad_language` |
+| `25-audit-trail.sql` | `audit_log` table, generic `audit_trigger_fn()`, triggers on 13 core tables, `audit_retention_months` on `organisations` |
+| `26-video-compliance.sql` | `video_watch_threshold_pct` / `video_seek_lock_enabled` on `organisations`; `video_watched_seconds` / `video_duration_seconds` on `ad_distribution_item`; `update_video_compliance_settings()` RPC |
+| `27-notifications.sql` | `ad_distribution_notification` (per-distribution rules), `ad_distribution_item_notification` (generated instances), `ad_notification` (in-app inbox) |
+
+!!! note "00-FULL-SCHEMA.sql"
+    `supabase/00-FULL-SCHEMA.sql` is the from-scratch rebuild script — it should contain the equivalent of every migration above in one file. If a new incremental migration is added, `00-FULL-SCHEMA.sql` needs the same change or it drifts out of sync (this happened once before with `25-audit-trail.sql`'s block).

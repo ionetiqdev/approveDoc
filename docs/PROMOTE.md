@@ -7,7 +7,7 @@ to live on production.
 
 ## 1. Deploy a new zip to dev
 
-Claude names every build zip `template_DDMMYYYY_HHmm.zip`
+Claude names every build zip `approvedoc_DDMMYYYY_HHmm.zip`
 (UK date/time) and it lands in your Downloads folder when you save it.
 Then, from this project's working directory:
 
@@ -15,13 +15,13 @@ Then, from this project's working directory:
 deploy.bat dev
 ```
 
-`deploy.bat` finds the newest `template_*.zip` in Downloads
+`deploy.bat` finds the newest `approvedoc_*.zip` in Downloads
 automatically (no need to tell it which one), extracts it on top of
 this working directory, moves the zip into `.\Backup\` (kept
 indefinitely - clear it out by hand if it grows large), regenerates
 `version.js` with that build's published timestamp, commits, and
 pushes to the `dev` branch. GitHub Actions deploys it to
-`public_html/template/dev/`.
+`ionetiq.dev/approvedoc/dev/`.
 
 ## 2. Test on dev
 
@@ -42,7 +42,7 @@ git push origin main --force-with-lease
 
 This pushes the exact build already proven out on dev - same files,
 same `version.js` timestamp - to the `main` branch. GitHub Actions
-deploys that to `public_html/template/` (production root).
+deploys that to `ionetiq.dev/approvedoc/` (production root).
 
 ---
 
@@ -77,10 +77,10 @@ stops being true, this process needs revisiting.
 ## A note on the working directory and IIS
 
 This project's working directory is also served locally by IIS
-(`C:\inetpub\wwwroot\Template` or equivalent for other projects).
+(`C:\inetpub\wwwroot\approveDoc` or equivalent for approveDoc).
 That's available if you ever need it, but it is NOT the normal way
 this gets tested - day-to-day testing happens on the real hosted
-`dev` folder (`public_html/template/dev/`) after running
+`dev` folder (`ionetiq.dev/approvedoc/dev/`) after running
 `deploy.bat dev` and letting GitHub Actions publish it, same as
 described above. Reach for local IIS only in an unusual situation
 (offline work, debugging something that's hard to diagnose against

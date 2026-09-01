@@ -60,6 +60,8 @@ nav:
     - Org Chart: features/org-chart.md
     - Users (Admin): features/users-admin.md
     - Notifications (prototype): features/notifications.md
+    - Video Compliance: features/video-compliance.md
+    - Audit Trail: features/audit-trail.md
   - Database:
     - Schema Overview: database/schema.md
     - RLS Patterns: database/rls.md
@@ -70,6 +72,7 @@ nav:
     - send-notification-direct (prototype): edge-functions/send-notification-direct.md
   - Deployment:
     - deploy.bat: deployment/deploy-bat.md
+    - Promoting to Production: deployment/promote.md
     - Environments: deployment/environments.md
   - Guides:
     - Authentication: guides/authentication.md
