@@ -1295,6 +1295,90 @@
 
               
             
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../features/notifications/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Notifications (prototype)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../features/video-compliance/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Video Compliance
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../features/audit-trail/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Audit Trail
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
           </ul>
         </nav>
       
@@ -1557,6 +1641,34 @@
 
               
             
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../edge-functions/send-notification-direct/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    send-notification-direct (prototype)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
           </ul>
         </nav>
       
@@ -1633,6 +1745,34 @@
     
   
     deploy.bat
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../deployment/promote/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Promoting to Production
   
 
     
@@ -2073,7 +2213,7 @@
     EF --&gt; SP</code></pre>
 <h2 id="key-design-decisions">Key design decisions<a class="headerlink" href="#key-design-decisions" title="Permanent link">&para;</a></h2>
 <h3 id="no-build-step">No build step<a class="headerlink" href="#no-build-step" title="Permanent link">&para;</a></h3>
-<p>All JavaScript is plain vanilla ES6+. No TypeScript, no bundler, no NPM for the frontend. This keeps the deployment pipeline simple — a zip file extracted to an IIS folder is all that's needed.</p>
+<p>All JavaScript is plain vanilla ES6+. No TypeScript, no bundler, no NPM for the frontend. This keeps the deployment pipeline simple — a zip file extracted to a folder on any web server is all that's needed. No specific server software (IIS, Apache, etc.) is required; production hosting is whatever <code>ionetiq.dev</code>/<code>approvedoc.app</code> happens to run, deployed via GitHub Actions over FTP.</p>
 <h3 id="multi-tenancy-via-organisation_id">Multi-tenancy via <code>organisation_id</code><a class="headerlink" href="#multi-tenancy-via-organisation_id" title="Permanent link">&para;</a></h3>
 <p>Every approveDoc table carries an <code>organisation_id</code> FK. Supabase Row Level Security policies enforce that users can only access data belonging to their own organisation. Super admins can switch between organisations via a session-scoped switcher.</p>
 <h3 id="auth-via-supabase-jwt">Auth via Supabase JWT<a class="headerlink" href="#auth-via-supabase-jwt" title="Permanent link">&para;</a></h3>

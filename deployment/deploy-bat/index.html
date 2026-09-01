@@ -15,10 +15,10 @@
         <link rel="canonical" href="https://ionetiqdev.github.io/approveDoc/deployment/deploy-bat/">
       
       
-        <link rel="prev" href="../../edge-functions/fetch-document/">
+        <link rel="prev" href="../../edge-functions/send-notification-direct/">
       
       
-        <link rel="next" href="../environments/">
+        <link rel="next" href="../promote/">
       
       
         
@@ -1162,6 +1162,90 @@
 
               
             
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../features/notifications/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Notifications (prototype)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../features/video-compliance/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Video Compliance
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../features/audit-trail/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Audit Trail
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
           </ul>
         </nav>
       
@@ -1424,6 +1508,34 @@
 
               
             
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../edge-functions/send-notification-direct/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    send-notification-direct (prototype)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
           </ul>
         </nav>
       
@@ -1613,6 +1725,34 @@
   
 </nav>
       
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../promote/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Promoting to Production
+  
+
+    
+  </span>
+  
+  
+
+      </a>
     </li>
   
 
@@ -1989,10 +2129,14 @@
 <div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>deploy dev      :: Deploy to ionetiq.dev/approvedoc/dev/
 <a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>deploy main     :: Deploy to ionetiq.dev/approvedoc/ (production)
 </code></pre></div>
+<div class="admonition danger">
+<p class="admonition-title">Never run <code>deploy dev main</code> after initial setup</p>
+<p>Despite being a valid command, <code>deploy.bat main</code> must <strong>not</strong> be used to promote to production once the project is past its initial setup. Promotion goes through a separate process instead — see <a href="../promote/">Promoting to Production</a> (<code>git reset --hard dev</code> + <code>git push origin main --force-with-lease</code>). Running <code>deploy.bat main</code> directly bypasses that process and can push an inconsistent state to production.</p>
+</div>
 <h2 id="what-it-does">What it does<a class="headerlink" href="#what-it-does" title="Permanent link">&para;</a></h2>
 <ol>
 <li>Finds <code>approvedoc_DDMMYYYY_HHmm.zip</code> in <code>C:\Users\{user}\My Drive\Downloads</code></li>
-<li>Extracts it to the IIS working directory</li>
+<li>Extracts it to the local working directory</li>
 <li>Regenerates cache-busting strings on all HTML/JS files</li>
 <li>Writes <code>version.js</code> with <code>APP_PUBLISHED = 'DD/MM/YYYY HH:MM'</code> (UK time)</li>
 <li>Switches to the target git branch</li>

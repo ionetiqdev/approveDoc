@@ -12,13 +12,13 @@
         <meta name="author" content="ionetiq">
       
       
-        <link rel="canonical" href="https://ionetiqdev.github.io/approveDoc/modules/auth/">
+        <link rel="canonical" href="https://ionetiqdev.github.io/approveDoc/deployment/promote/">
       
       
-        <link rel="prev" href="../supabase-client/">
+        <link rel="prev" href="../deploy-bat/">
       
       
-        <link rel="next" href="../app/">
+        <link rel="next" href="../environments/">
       
       
         
@@ -29,7 +29,7 @@
     
     
       
-        <title>auth.js - approveDoc Developer Docs</title>
+        <title>Promoting to Production - approveDoc Developer Docs</title>
       
     
     
@@ -80,7 +80,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#authjs" class="md-skip">
+        <a href="#promoting-to-production" class="md-skip">
           Skip to content
         </a>
       
@@ -114,7 +114,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              auth.js
+              Promoting to Production
             
           </span>
         </div>
@@ -264,13 +264,11 @@
   
   
   
-    
-  
   
     
     
-      <li class="md-tabs__item md-tabs__item--active">
-        <a href="../supabase-client/" class="md-tabs__link">
+      <li class="md-tabs__item">
+        <a href="../../modules/supabase-client/" class="md-tabs__link">
           
   
   
@@ -346,11 +344,13 @@
   
   
   
+    
+  
   
     
     
-      <li class="md-tabs__item">
-        <a href="../../deployment/deploy-bat/" class="md-tabs__link">
+      <li class="md-tabs__item md-tabs__item--active">
+        <a href="../deploy-bat/" class="md-tabs__link">
           
   
   
@@ -659,31 +659,28 @@
       
   
   
-    
   
   
-  
     
     
     
     
-      
-        
-        
       
       
         
       
     
     
-    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--nested">
       
         
-        
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" checked>
         
           
-          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="">
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="0">
             
   
   
@@ -701,7 +698,7 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="true">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
           <label class="md-nav__title" for="__nav_3">
             <span class="md-nav__icon md-icon"></span>
             
@@ -719,7 +716,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../supabase-client/" class="md-nav__link">
+      <a href="../../modules/supabase-client/" class="md-nav__link">
         
   
   
@@ -744,37 +741,10 @@
                 
   
   
-    
   
   
-  
-    <li class="md-nav__item md-nav__item--active">
-      
-      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
-      
-      
-        
-      
-      
-        <label class="md-nav__link md-nav__link--active" for="__toc">
-          
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    auth.js
-  
-
-    
-  </span>
-  
-  
-
-          <span class="md-nav__icon md-icon"></span>
-        </label>
-      
-      <a href="./" class="md-nav__link md-nav__link--active">
+    <li class="md-nav__item">
+      <a href="../../modules/auth/" class="md-nav__link">
         
   
   
@@ -790,164 +760,6 @@
   
 
       </a>
-      
-        
-
-<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
-  
-  
-  
-    
-  
-  
-    <label class="md-nav__title" for="__toc">
-      <span class="md-nav__icon md-icon"></span>
-      Table of contents
-    </label>
-    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
-      
-        <li class="md-nav__item">
-  <a href="#role-model" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Role model
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#public-api" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Public API
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="Public API">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#authentication" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Authentication
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#session-profile" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Session &amp; profile
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#role-checks" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Role checks
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#organisation-switcher-super_admin-only" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Organisation switcher (super_admin only)
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#user-preferences" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        User preferences
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#ui-refresh" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        UI refresh
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#requireauth-flow" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        requireAuth() flow
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#cross-domain-patch" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Cross-domain patch
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#_applyuserui-authrefreshui" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        _applyUserUI() / Auth.refreshUI()
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#organisation-resolution" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Organisation resolution
-      
-    </span>
-  </a>
-  
-</li>
-      
-    </ul>
-  
-</nav>
-      
     </li>
   
 
@@ -960,7 +772,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../app/" class="md-nav__link">
+      <a href="../../modules/app/" class="md-nav__link">
         
   
   
@@ -988,7 +800,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../sidebar-html/" class="md-nav__link">
+      <a href="../../modules/sidebar-html/" class="md-nav__link">
         
   
   
@@ -1016,7 +828,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../sidebar-theme/" class="md-nav__link">
+      <a href="../../modules/sidebar-theme/" class="md-nav__link">
         
   
   
@@ -1044,7 +856,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../status-widget/" class="md-nav__link">
+      <a href="../../modules/status-widget/" class="md-nav__link">
         
   
   
@@ -1072,7 +884,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../profile-modal/" class="md-nav__link">
+      <a href="../../modules/profile-modal/" class="md-nav__link">
         
   
   
@@ -1735,28 +1547,31 @@
       
   
   
+    
   
   
+  
     
     
     
     
+      
+        
+        
       
       
         
       
     
     
-    <li class="md-nav__item md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
       
         
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7" checked>
         
           
-        
-        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_7" >
-        
-          
-          <label class="md-nav__link" for="__nav_7" id="__nav_7_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_7" id="__nav_7_label" tabindex="">
             
   
   
@@ -1774,7 +1589,7 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_7_label" aria-expanded="false">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_7_label" aria-expanded="true">
           <label class="md-nav__title" for="__nav_7">
             <span class="md-nav__icon md-icon"></span>
             
@@ -1792,7 +1607,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../deployment/deploy-bat/" class="md-nav__link">
+      <a href="../deploy-bat/" class="md-nav__link">
         
   
   
@@ -1817,10 +1632,37 @@
                 
   
   
+    
   
   
-    <li class="md-nav__item">
-      <a href="../../deployment/promote/" class="md-nav__link">
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Promoting to Production
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
         
   
   
@@ -1836,6 +1678,103 @@
   
 
       </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#1-deploy-a-new-zip-to-dev" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. Deploy a new zip to dev
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2-test-on-dev" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. Test on dev
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#3-promote-dev-main" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. Promote dev → main
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#why-not-just-run-deploybat-main-with-the-same-zip" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Why not just run deploy.bat main with the same zip?
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#why-force-with-lease-and-not-a-plain-merge" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Why --force-with-lease and not a plain merge?
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#a-note-on-the-working-directory-and-local-testing" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        A note on the working directory and local testing
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#a-note-on-deploybats-overwrite-behaviour" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        A note on deploy.bat's overwrite behaviour
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
     </li>
   
 
@@ -1848,7 +1787,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../deployment/environments/" class="md-nav__link">
+      <a href="../environments/" class="md-nav__link">
         
   
   
@@ -2132,10 +2071,10 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#role-model" class="md-nav__link">
+  <a href="#1-deploy-a-new-zip-to-dev" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Role model
+        1. Deploy a new zip to dev
       
     </span>
   </a>
@@ -2143,93 +2082,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#public-api" class="md-nav__link">
+  <a href="#2-test-on-dev" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Public API
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="Public API">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#authentication" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Authentication
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#session-profile" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Session &amp; profile
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#role-checks" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Role checks
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#organisation-switcher-super_admin-only" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Organisation switcher (super_admin only)
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#user-preferences" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        User preferences
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#ui-refresh" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        UI refresh
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#requireauth-flow" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        requireAuth() flow
+        2. Test on dev
       
     </span>
   </a>
@@ -2237,10 +2093,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#cross-domain-patch" class="md-nav__link">
+  <a href="#3-promote-dev-main" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Cross-domain patch
+        3. Promote dev → main
       
     </span>
   </a>
@@ -2248,10 +2104,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#_applyuserui-authrefreshui" class="md-nav__link">
+  <a href="#why-not-just-run-deploybat-main-with-the-same-zip" class="md-nav__link">
     <span class="md-ellipsis">
       
-        _applyUserUI() / Auth.refreshUI()
+        Why not just run deploy.bat main with the same zip?
       
     </span>
   </a>
@@ -2259,10 +2115,32 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#organisation-resolution" class="md-nav__link">
+  <a href="#why-force-with-lease-and-not-a-plain-merge" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Organisation resolution
+        Why --force-with-lease and not a plain merge?
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#a-note-on-the-working-directory-and-local-testing" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        A note on the working directory and local testing
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#a-note-on-deploybats-overwrite-behaviour" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        A note on deploy.bat's overwrite behaviour
       
     </span>
   </a>
@@ -2289,124 +2167,89 @@
   
 
 
-<h1 id="authjs">auth.js<a class="headerlink" href="#authjs" title="Permanent link">&para;</a></h1>
-<p>The authentication and authorisation module. Everything auth-related goes through <code>Auth.*</code>.</p>
-<h2 id="role-model">Role model<a class="headerlink" href="#role-model" title="Permanent link">&para;</a></h2>
-<table>
-<thead>
-<tr>
-<th>Role</th>
-<th>Access</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><code>super_admin</code></td>
-<td>All organisations. ionetiq team only.</td>
-</tr>
-<tr>
-<td><code>admin</code></td>
-<td>One organisation. Full admin functions.</td>
-</tr>
-<tr>
-<td><code>user</code></td>
-<td>One organisation. Editing capability.</td>
-</tr>
-<tr>
-<td><code>view</code></td>
-<td>One organisation. Read-only.</td>
-</tr>
-</tbody>
-</table>
-<div class="admonition danger">
-<p class="admonition-title">Fixed role strings</p>
-<p>Role values are fixed — they are referenced directly in RLS policies. Do not rename or add roles without updating every RLS policy that checks <code>_my_role()</code>.</p>
+<h1 id="promoting-to-production">Promoting to Production<a class="headerlink" href="#promoting-to-production" title="Permanent link">&para;</a></h1>
+<div class="admonition info">
+<p class="admonition-title">Info</p>
+<p>This mirrors <code>docs/PROMOTE.md</code> in the repo root — kept in sync manually.</p>
 </div>
-<h2 id="public-api">Public API<a class="headerlink" href="#public-api" title="Permanent link">&para;</a></h2>
-<h3 id="authentication">Authentication<a class="headerlink" href="#authentication" title="Permanent link">&para;</a></h3>
-<p><div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="k">await</span><span class="w"> </span><span class="nx">Auth</span><span class="p">.</span><span class="nx">requireAuth</span><span class="p">()</span>
+<p>How a new build goes from a zip Claude hands you, through dev testing,
+to live on production.</p>
+<hr />
+<h2 id="1-deploy-a-new-zip-to-dev">1. Deploy a new zip to dev<a class="headerlink" href="#1-deploy-a-new-zip-to-dev" title="Permanent link">&para;</a></h2>
+<p>Claude names every build zip <code>approvedoc_DDMMYYYY_HHmm.zip</code>
+(UK date/time) and it lands in your Downloads folder when you save it.
+Then, from this project's working directory:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>deploy.bat dev
 </code></pre></div>
-Call at the top of every protected page. Loads session, profile, and active organisation. Redirects to login if unauthenticated. Returns the Supabase session object or <code>null</code>.</p>
-<p><div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="k">await</span><span class="w"> </span><span class="nx">Auth</span><span class="p">.</span><span class="nx">requireGuest</span><span class="p">()</span>
+<p><code>deploy.bat</code> finds the newest <code>approvedoc_*.zip</code> in Downloads
+automatically (no need to tell it which one), extracts it on top of
+this working directory, moves the zip into <code>.\Backup\</code> (kept
+indefinitely - clear it out by hand if it grows large), regenerates
+<code>version.js</code> with that build's published timestamp, commits, and
+pushes to the <code>dev</code> branch. GitHub Actions deploys it to
+<code>ionetiq.dev/approvedoc/dev/</code>.</p>
+<h2 id="2-test-on-dev">2. Test on dev<a class="headerlink" href="#2-test-on-dev" title="Permanent link">&para;</a></h2>
+<p>If something's wrong, tell Claude, get a new zip, run <code>deploy.bat dev</code>
+again. Repeat as many times as needed - dev is just "whatever the
+latest zip was," there's nothing special to reset between attempts.</p>
+<h2 id="3-promote-dev-main">3. Promote dev → main<a class="headerlink" href="#3-promote-dev-main" title="Permanent link">&para;</a></h2>
+<p>Once dev is good, do NOT run <code>deploy.bat main</code>. Instead, make main an
+exact mirror of dev:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>git checkout main
+<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>git reset --hard dev
+<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>git push origin main --force-with-lease
 </code></pre></div>
-Call on the login page. Redirects to dashboard if already authenticated.</p>
-<p><div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="k">await</span><span class="w"> </span><span class="nx">Auth</span><span class="p">.</span><span class="nx">signOut</span><span class="p">()</span>
-</code></pre></div>
-Signs out and redirects to login.</p>
-<h3 id="session-profile">Session &amp; profile<a class="headerlink" href="#session-profile" title="Permanent link">&para;</a></h3>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="nx">Auth</span><span class="p">.</span><span class="nx">getSession</span><span class="p">()</span><span class="w">           </span><span class="c1">// Supabase session object</span>
-<a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="nx">Auth</span><span class="p">.</span><span class="nx">getProfile</span><span class="p">()</span><span class="w">           </span><span class="c1">// profiles row for the current user</span>
-<a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="nx">Auth</span><span class="p">.</span><span class="nx">getOrganisationId</span><span class="p">()</span><span class="w">    </span><span class="c1">// UUID of the currently active organisation</span>
-</code></pre></div>
-<h3 id="role-checks">Role checks<a class="headerlink" href="#role-checks" title="Permanent link">&para;</a></h3>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="nx">Auth</span><span class="p">.</span><span class="nx">isSuperAdmin</span><span class="p">()</span><span class="w">   </span><span class="c1">// true if role === 'super_admin'</span>
-<a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a><span class="nx">Auth</span><span class="p">.</span><span class="nx">isAdmin</span><span class="p">()</span><span class="w">        </span><span class="c1">// true if role is 'admin' or 'super_admin'</span>
-<a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a><span class="nx">Auth</span><span class="p">.</span><span class="nx">canEdit</span><span class="p">()</span><span class="w">        </span><span class="c1">// true if role is 'user', 'admin', or 'super_admin'</span>
-</code></pre></div>
-<h3 id="organisation-switcher-super_admin-only">Organisation switcher (super_admin only)<a class="headerlink" href="#organisation-switcher-super_admin-only" title="Permanent link">&para;</a></h3>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="k">await</span><span class="w"> </span><span class="nx">Auth</span><span class="p">.</span><span class="nx">setActiveOrganisation</span><span class="p">(</span><span class="nx">orgId</span><span class="p">)</span><span class="w">   </span><span class="c1">// Switch active org; returns bool</span>
-<a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a><span class="k">await</span><span class="w"> </span><span class="nx">Auth</span><span class="p">.</span><span class="nx">getAllOrganisations</span><span class="p">()</span><span class="w">           </span><span class="c1">// All org rows</span>
-</code></pre></div>
-<h3 id="user-preferences">User preferences<a class="headerlink" href="#user-preferences" title="Permanent link">&para;</a></h3>
-<p>Stored in <code>profiles.preferences</code> (JSONB column).</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="nx">Auth</span><span class="p">.</span><span class="nx">getPreference</span><span class="p">(</span><span class="nx">key</span><span class="p">,</span><span class="w"> </span><span class="nx">defaultValue</span><span class="p">)</span>
-<a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a><span class="k">await</span><span class="w"> </span><span class="nx">Auth</span><span class="p">.</span><span class="nx">setPreference</span><span class="p">(</span><span class="nx">key</span><span class="p">,</span><span class="w"> </span><span class="nx">value</span><span class="p">)</span>
-</code></pre></div>
-<p>Example:
-<div class="highlight"><pre><span></span><code><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="c1">// Save a preference</span>
-<a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a><span class="k">await</span><span class="w"> </span><span class="nx">Auth</span><span class="p">.</span><span class="nx">setPreference</span><span class="p">(</span><span class="s1">'docViewerPrefs'</span><span class="p">,</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">upload</span><span class="o">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">dropZone</span><span class="o">:</span><span class="w"> </span><span class="kc">false</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="p">});</span>
-<a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a>
-<a id="__codelineno-7-4" name="__codelineno-7-4" href="#__codelineno-7-4"></a><span class="c1">// Read it back (with default)</span>
-<a id="__codelineno-7-5" name="__codelineno-7-5" href="#__codelineno-7-5"></a><span class="kd">const</span><span class="w"> </span><span class="nx">prefs</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">Auth</span><span class="p">.</span><span class="nx">getPreference</span><span class="p">(</span><span class="s1">'docViewerPrefs'</span><span class="p">,</span><span class="w"> </span><span class="kc">null</span><span class="p">);</span>
-</code></pre></div></p>
-<h3 id="ui-refresh">UI refresh<a class="headerlink" href="#ui-refresh" title="Permanent link">&para;</a></h3>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a><span class="nx">Auth</span><span class="p">.</span><span class="nx">refreshUI</span><span class="p">()</span>
-</code></pre></div>
-<p>Re-runs role-based element reveal and user name/initials/role fill-in. Must be called after <code>SidebarHtml.inject()</code> on every page.</p>
-<h2 id="requireauth-flow">requireAuth() flow<a class="headerlink" href="#requireauth-flow" title="Permanent link">&para;</a></h2>
-<pre class="mermaid"><code>flowchart TD
-    A[requireAuth called] --&gt; B{AppSession.load()}
-    B -- null --&gt; C[Redirect to login]
-    B -- session --&gt; D[sb.auth.setSession]
-    D -- error --&gt; E[Clear session + redirect]
-    D -- ok --&gt; F[Patch sb.from]
-    F --&gt; G[_loadProfile]
-    G -- no profile --&gt; H[Default to view role]
-    G -- profile --&gt; I[_resolveActiveOrganisation]
-    H --&gt; I
-    I --&gt; J[_applyUserUI]
-    J --&gt; K[Return session]</code></pre>
-<h2 id="cross-domain-patch">Cross-domain patch<a class="headerlink" href="#cross-domain-patch" title="Permanent link">&para;</a></h2>
-<p>After <code>setSession()</code> succeeds, <code>auth.js</code> patches <code>sb.from</code> to route all queries through an authenticated client with an explicit <code>Authorization</code> header. See <a href="../../architecture/cross-domain/">Cross-Domain Compatibility</a> for full details.</p>
-<h2 id="_applyuserui-authrefreshui">_applyUserUI() / Auth.refreshUI()<a class="headerlink" href="#_applyuserui-authrefreshui" title="Permanent link">&para;</a></h2>
-<p>Updates the DOM with the current user's information:</p>
-<ul>
-<li><code>[data-user-name]</code> — filled with display name</li>
-<li><code>[data-user-email]</code> — filled with email</li>
-<li><code>[data-user-role]</code> — filled with formatted role (e.g. "Super Admin")</li>
-<li><code>[data-user-initials]</code> — avatar image or initials</li>
-<li><code>[data-active-organisation]</code> — org name or switcher dropdown</li>
-<li><code>[data-require-role="..."]</code> — <code>role-hidden</code> class removed for matching roles</li>
-</ul>
-<h2 id="organisation-resolution">Organisation resolution<a class="headerlink" href="#organisation-resolution" title="Permanent link">&para;</a></h2>
-<table>
-<thead>
-<tr>
-<th>User type</th>
-<th>Resolution</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>Non-super-admin</td>
-<td>Always <code>profiles.organisation_id</code> — fixed, can't be changed</td>
-</tr>
-<tr>
-<td>Super-admin</td>
-<td>Last-picked org from localStorage (scoped key), defaulting to alphabetically-first</td>
-</tr>
-</tbody>
-</table>
+<p>This pushes the exact build already proven out on dev - same files,
+same <code>version.js</code> timestamp - to the <code>main</code> branch. GitHub Actions
+deploys that to <code>ionetiq.dev/approvedoc/</code> (production root).</p>
+<hr />
+<h2 id="why-not-just-run-deploybat-main-with-the-same-zip">Why not just run deploy.bat main with the same zip?<a class="headerlink" href="#why-not-just-run-deploybat-main-with-the-same-zip" title="Permanent link">&para;</a></h2>
+<p><code>deploy.bat</code> regenerates <code>version.js</code> with a fresh "right now"
+timestamp every time it runs. If you ran it again for main, production
+would show a different Published time than what you actually tested
+on dev - even though the code is identical. Promoting via
+<code>git reset --hard dev</code> instead keeps that traceability: the timestamp
+on production always tells you exactly which dev-tested build is live.</p>
+<h2 id="why-force-with-lease-and-not-a-plain-merge">Why --force-with-lease and not a plain merge?<a class="headerlink" href="#why-force-with-lease-and-not-a-plain-merge" title="Permanent link">&para;</a></h2>
+<p>main and dev tend to diverge in their own commit history (every
+<code>deploy.bat</code> run is its own commit, on top of whatever was there
+before). A plain <code>git merge dev</code> tries to reconcile two independent
+histories and can throw conflicts - typically in <code>version.js</code> and any
+file changed on both branches - even when you don't actually want a
+true merge, you just want main to become dev.</p>
+<p><code>git reset --hard dev</code> skips that entirely: it moves main's pointer to
+the same commit as dev, full stop. <code>--force-with-lease</code> (rather than
+plain <code>--force</code>) still protects you if someone else pushed to main
+since you last fetched - it refuses rather than silently overwriting
+work it hasn't seen.</p>
+<p>This assumes dev is always the source of truth and nothing is ever
+committed directly to main outside this promote step. If that ever
+stops being true, this process needs revisiting.</p>
+<h2 id="a-note-on-the-working-directory-and-local-testing">A note on the working directory and local testing<a class="headerlink" href="#a-note-on-the-working-directory-and-local-testing" title="Permanent link">&para;</a></h2>
+<p>The working directory happens to sit under <code>C:\inetpub\wwwroot\approveDoc</code>
+on Mike's machine, served locally by IIS - but that's a personal setup
+choice for local testing convenience, not a platform requirement.
+approveDoc doesn't depend on IIS in any way; it's a static site (HTML/JS
++ Supabase) that any web server can serve, and production hosting is
+whatever <code>ionetiq.dev</code>/<code>approvedoc.app</code> actually runs on via the GitHub
+Actions FTP deploy - not IIS.</p>
+<p>Local IIS is NOT the normal way this gets tested - day-to-day testing
+happens on the real hosted <code>dev</code> folder (<code>ionetiq.dev/approvedoc/dev/</code>)
+after running <code>deploy.bat dev</code> and letting GitHub Actions publish it,
+same as described above. Reach for local testing only in an unusual
+situation (offline work, debugging something that's hard to diagnose
+against the live dev site) - be aware that <code>deploy.bat</code> extracting a
+new build into the working directory will make the local server start
+serving that new build immediately, before it's been pushed to GitHub
+or deployed anywhere else.</p>
+<h2 id="a-note-on-deploybats-overwrite-behaviour">A note on deploy.bat's overwrite behaviour<a class="headerlink" href="#a-note-on-deploybats-overwrite-behaviour" title="Permanent link">&para;</a></h2>
+<p><code>deploy.bat</code> extracts the new zip ON TOP of the working directory - it
+does not delete files first. If a build ever genuinely removes a file
+(a page gets deleted, something gets renamed), the old file will
+linger in your working directory and could still get committed/pushed
+even though it's no longer part of the real build. If you know a
+build removed something, delete it from the working directory by hand
+before running <code>deploy.bat</code>.</p>
 
 
 
