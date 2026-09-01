@@ -9,7 +9,7 @@
 | Development (vanity) | `https://approvedoc.app/dev/` | `dev` |
 | Production (vanity) | `https://approvedoc.app/` | `main` |
 
-`approvedoc.app` is a DNS alias pointing to the same server and folder as `ionetiq.dev/approvedoc`. No separate deployment needed.
+`approvedoc.app` is a DNS alias pointing to the same IIS server and folder as `ionetiq.dev/approvedoc`. No separate deployment needed.
 
 ## Supabase project
 

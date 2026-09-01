@@ -39,7 +39,7 @@ graph TD
 ## Key design decisions
 
 ### No build step
-All JavaScript is plain vanilla ES6+. No TypeScript, no bundler, no NPM for the frontend. This keeps the deployment pipeline simple — a zip file extracted to a folder on any web server is all that's needed. No specific server software (IIS, Apache, etc.) is required; production hosting is whatever `ionetiq.dev`/`approvedoc.app` happens to run, deployed via GitHub Actions over FTP.
+All JavaScript is plain vanilla ES6+. No TypeScript, no bundler, no NPM for the frontend. This keeps the deployment pipeline simple — a zip file extracted to an IIS folder is all that's needed.
 
 ### Multi-tenancy via `organisation_id`
 Every approveDoc table carries an `organisation_id` FK. Supabase Row Level Security policies enforce that users can only access data belonging to their own organisation. Super admins can switch between organisations via a session-scoped switcher.

@@ -2785,6 +2785,89 @@ comment on function public.build_distribution_items(uuid) is
   'Creates ad_distribution_item rows for all users in all audiences linked to a distribution, and ad_distribution_item_notification rows for every enabled notification rule. Safe to call multiple times - existing rows are not overwritten, new ones (from audience or notification rule changes) are added.';
 
 -- ============================================================================
+-- 28-notification-sending.sql
+-- ============================================================================
+-- SETUP STEPS REQUIRED AFTER RUNNING (secrets never live in a git-tracked
+-- migration - see supabase/28-notification-sending.sql for details):
+--   1. Edge Function secret MAKE_NOTIFICATIONS_WEBHOOK_URL (Dashboard).
+--   2. Vault secret 'cron_edge_function_key' holding a service-role key,
+--      run once via SQL Editor: select vault.create_secret('<key>', 'cron_edge_function_key');
+
+create or replace function public.increment_notifications_sent(p_distribution_id uuid)
+returns void language plpgsql security definer as $$
+begin
+  update public.ad_distribution
+  set notifications_sent = notifications_sent + 1
+  where distribution_id = p_distribution_id;
+end;
+$$;
+
+create extension if not exists pg_cron with schema extensions;
+create extension if not exists pg_net with schema extensions;
+
+create or replace function public.trigger_send_due_notifications()
+returns void language plpgsql security definer as $$
+declare
+  v_key     text;
+  v_project_url text := 'https://mimqaklxfmdjlkadjxoh.supabase.co'; -- update per project on fresh setup
+begin
+  select decrypted_secret into v_key
+  from vault.decrypted_secrets
+  where name = 'cron_edge_function_key'
+  limit 1;
+
+  if v_key is null then
+    raise notice 'trigger_send_due_notifications: cron_edge_function_key not set in Vault yet - skipping.';
+    return;
+  end if;
+
+  perform net.http_post(
+    url     := v_project_url || '/functions/v1/send-due-notifications',
+    headers := jsonb_build_object('Authorization', 'Bearer ' || v_key, 'Content-Type', 'application/json'),
+    body    := '{}'::jsonb
+  );
+end;
+$$;
+
+comment on function public.trigger_send_due_notifications() is
+  'Called nightly by pg_cron. Invokes the send-due-notifications Edge Function via pg_net, authenticated with a service-role key stored in Vault (name: cron_edge_function_key) so no credential lives in the cron job definition itself.';
+
+select cron.unschedule('send-due-notifications-nightly')
+where exists (select 1 from cron.job where jobname = 'send-due-notifications-nightly');
+
+select cron.schedule(
+  'send-due-notifications-nightly',
+  '0 6 * * *',
+  $$select public.trigger_send_due_notifications();$$
+);
+
+-- ============================================================================
+-- 29-notification-template.sql
+-- ============================================================================
+-- Prototype: RLS and organisation_id nullability need tightening before
+-- production use - see supabase/29-notification-template.sql for details.
+
+create table if not exists public.ad_notification_template (
+  template_id     uuid primary key default gen_random_uuid(),
+  organisation_id uuid references public.organisations(id) on delete cascade,
+  name            varchar not null,
+  message_title   text not null,
+  message_text    text not null,
+  created_at      timestamptz not null default now(),
+  updated_at      timestamptz not null default now()
+);
+
+comment on table public.ad_notification_template is
+  'Reusable message templates for notifications. message_text supports {firstname}/{lastname} tokens (see send-notification-direct). Prototype: RLS and organisation_id nullability need tightening before production use.';
+
+alter table public.ad_notification_template enable row level security;
+drop policy if exists "prototype_anon_all_notification_template" on public.ad_notification_template;
+create policy "prototype_anon_all_notification_template"
+  on public.ad_notification_template for all
+  to anon
+  using (true);
+
+-- ============================================================================
 -- dev-seed.sql
 -- ============================================================================
 

@@ -1,7 +1,7 @@
 # approveDoc — Codebase Documentation
 
 > **Version:** v1.0 (build `11/08/2026`)  
-> **Stack:** Tabler UI + Bootstrap 5.3 · Vanilla JS · Supabase (PostgreSQL + Auth + Storage + Edge Functions)  
+> **Stack:** Tabler UI + Bootstrap 5.3 · Vanilla JS · Supabase (PostgreSQL + Auth + Storage + Edge Functions) · IIS (Windows)  
 > **Repo:** `github.com/ionetiqdev/approveDoc.git`  
 
 ---
@@ -143,7 +143,7 @@ deploy main    → deploys to ionetiq.dev/approvedoc/ (production)
 
 **What it does:**
 1. Finds `approvedoc_DDMMYYYY_HHmm.zip` in `Downloads`
-2. Extracts it to the local working directory
+2. Extracts it to the IIS working directory
 3. Regenerates cache-busting strings on all HTML/JS files
 4. Writes `version.js` with `APP_PUBLISHED = 'DD/MM/YYYY HH:MM'`
 5. Switches to the target git branch
@@ -812,7 +812,7 @@ Used for first-time password set after invite. Reads `access_token` from the URL
 
 ## 10. Cross-Domain Compatibility
 
-approveDoc is hosted at `ionetiq.dev/approvedoc/` but is also accessible at `approvedoc.app/` (DNS alias to the same server and folder).
+approveDoc is hosted at `ionetiq.dev/approvedoc/` but is also accessible at `approvedoc.app/` (DNS alias to the same IIS server and folder).
 
 **Problem:** `sb.auth.setSession()` in Supabase JS v2 does not always propagate the access token to the client's internal query state when called on a new origin. This means `sb.from('profiles').select('*')` runs as anonymous and returns nothing, even though the session was successfully restored.
 

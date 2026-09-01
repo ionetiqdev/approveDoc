@@ -7,7 +7,7 @@ to live on production.
 
 ## 1. Deploy a new zip to dev
 
-Claude names every build zip `approvedoc_DDMMYYYY_HHmm.zip`
+Claude names every build zip `template_DDMMYYYY_HHmm.zip`
 (UK date/time) and it lands in your Downloads folder when you save it.
 Then, from this project's working directory:
 
@@ -15,13 +15,13 @@ Then, from this project's working directory:
 deploy.bat dev
 ```
 
-`deploy.bat` finds the newest `approvedoc_*.zip` in Downloads
+`deploy.bat` finds the newest `template_*.zip` in Downloads
 automatically (no need to tell it which one), extracts it on top of
 this working directory, moves the zip into `.\Backup\` (kept
 indefinitely - clear it out by hand if it grows large), regenerates
 `version.js` with that build's published timestamp, commits, and
 pushes to the `dev` branch. GitHub Actions deploys it to
-`ionetiq.dev/approvedoc/dev/`.
+`public_html/template/dev/`.
 
 ## 2. Test on dev
 
@@ -42,7 +42,7 @@ git push origin main --force-with-lease
 
 This pushes the exact build already proven out on dev - same files,
 same `version.js` timestamp - to the `main` branch. GitHub Actions
-deploys that to `ionetiq.dev/approvedoc/` (production root).
+deploys that to `public_html/template/` (production root).
 
 ---
 
@@ -74,25 +74,20 @@ This assumes dev is always the source of truth and nothing is ever
 committed directly to main outside this promote step. If that ever
 stops being true, this process needs revisiting.
 
-## A note on the working directory and local testing
+## A note on the working directory and IIS
 
-The working directory happens to sit under `C:\inetpub\wwwroot\approveDoc`
-on Mike's machine, served locally by IIS - but that's a personal setup
-choice for local testing convenience, not a platform requirement.
-approveDoc doesn't depend on IIS in any way; it's a static site (HTML/JS
-+ Supabase) that any web server can serve, and production hosting is
-whatever `ionetiq.dev`/`approvedoc.app` actually runs on via the GitHub
-Actions FTP deploy - not IIS.
-
-Local IIS is NOT the normal way this gets tested - day-to-day testing
-happens on the real hosted `dev` folder (`ionetiq.dev/approvedoc/dev/`)
-after running `deploy.bat dev` and letting GitHub Actions publish it,
-same as described above. Reach for local testing only in an unusual
-situation (offline work, debugging something that's hard to diagnose
-against the live dev site) - be aware that `deploy.bat` extracting a
-new build into the working directory will make the local server start
-serving that new build immediately, before it's been pushed to GitHub
-or deployed anywhere else.
+This project's working directory is also served locally by IIS
+(`C:\inetpub\wwwroot\Template` or equivalent for other projects).
+That's available if you ever need it, but it is NOT the normal way
+this gets tested - day-to-day testing happens on the real hosted
+`dev` folder (`public_html/template/dev/`) after running
+`deploy.bat dev` and letting GitHub Actions publish it, same as
+described above. Reach for local IIS only in an unusual situation
+(offline work, debugging something that's hard to diagnose against
+the live dev site) - be aware that `deploy.bat` extracting a new
+build into the working directory will make IIS start serving that
+new build immediately, before it's been pushed to GitHub or
+deployed anywhere else.
 
 ## A note on deploy.bat's overwrite behaviour
 

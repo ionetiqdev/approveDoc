@@ -32,7 +32,7 @@ graph LR
 |---|---|
 | Frontend | Tabler UI + Bootstrap 5.3 + Vanilla JS |
 | Backend | Supabase (PostgreSQL + Auth + Storage + Edge Functions) |
-| Hosting | Static site — GitHub Actions FTP deploy to `ionetiq.dev`/`approvedoc.app`. No specific server software required |
+| Hosting | IIS (Windows) |
 | Source control | GitHub (`ionetiqdev/approveDoc`) |
 
 ## Quick links

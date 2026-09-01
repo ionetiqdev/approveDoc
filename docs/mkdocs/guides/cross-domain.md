@@ -2,7 +2,7 @@
 
 ## The Problem
 
-approveDoc is deployed at `ionetiq.dev/approvedoc/` but is also accessible at `approvedoc.app/` (same server, same folder). Each domain is a different browser origin, so localStorage is completely isolated — a user logged in on `ionetiq.dev` is not logged in on `approvedoc.app`.
+approveDoc is deployed at `ionetiq.dev/approvedoc/` but is also accessible at `approvedoc.app/` (same IIS server, same folder). Each domain is a different browser origin, so localStorage is completely isolated — a user logged in on `ionetiq.dev` is not logged in on `approvedoc.app`.
 
 More critically: `sb.auth.setSession()` in Supabase JS v2 does not always propagate the access token to the client's internal query state on a new origin. This means `sb.from('profiles').select('*')` runs as anonymous and returns nothing, even though the session was successfully restored from localStorage.
 

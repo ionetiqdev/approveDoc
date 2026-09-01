@@ -40,12 +40,10 @@ approveDoc/
 │       └── org-chart.html        # Org hierarchy
 │
 ├── supabase/
-│   ├── 00-FULL-SCHEMA.sql        # From-scratch rebuild script
-│   ├── 01- to 27-*.sql           # Sequential DB migrations
+│   ├── 01- to 24-*.sql          # Sequential DB migrations
 │   └── functions/
 │       ├── manage-user/          # Edge function: user lifecycle
-│       ├── fetch-document/       # Edge function: external doc proxy
-│       └── convert-document/     # Edge function: Word→PDF via CloudConvert
+│       └── fetch-document/       # Edge function: external doc proxy
 │
 └── docs/                         # Developer documentation
     ├── CODEBASE.md
@@ -56,6 +54,3 @@ approveDoc/
 
 !!! tip "pdfjs/ is excluded from zips"
     `assets/pdfjs/` is never included in deployment zips. It is managed separately on the server. Always exclude it when repackaging.
-
-!!! warning "Two edge functions exist only in Supabase, not in this repo"
-    `send-due-notifications` (the nightly cron target) and the prototype `send-notification-direct` were deployed directly via the Supabase MCP tooling and have no corresponding source file committed here. This is a real gap — if the repo is ever rebuilt from scratch, these functions' logic only exists in the dev/prod Supabase projects themselves, not in git.
