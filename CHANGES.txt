@@ -1,1 +1,1 @@
-Remove tools/notification-webhook-test.html and its deploy.yml exclude entry - was flagged by GitGuardian for containing the dev Supabase anon key; the test page is kept local only, outside the repo, going forward.
+Document the notification system (Make + Edge Function implementations) in the mkdocs site: new Features > Notifications page, new Edge Functions > send-notification-direct page, notification tables added to Database > Schema Overview and its ER diagram.

@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Notification Direct Tester</title>
+<style>
+  :root {
+    --bg: #0f1115;
+    --panel: #161a21;
+    --border: #2a2f3a;
+    --text: #e6e9ef;
+    --muted: #8b93a3;
+    --mono: 'SF Mono', 'Consolas', 'Menlo', monospace;
+    --accent: #f2994a;
+    --accent2: #a679ec;
+    --ok: #3ecf8e;
+    --err: #f2545b;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    padding: 32px 16px 80px;
+  }
+  .wrap { max-width: 640px; margin: 0 auto; }
+  h1 {
+    font-size: 18px;
+    font-weight: 600;
+    margin: 0 0 4px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--accent); }
+  .subtitle { color: var(--muted); font-size: 13px; margin: 0 0 24px; }
+  .url-row {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 10px 12px;
+    margin-bottom: 24px;
+  }
+  .url-row input {
+    flex: 1;
+    background: transparent;
+    border: none;
+    color: var(--muted);
+    font-family: var(--mono);
+    font-size: 12px;
+    outline: none;
+  }
+  .url-row button {
+    background: none;
+    border: 1px solid var(--border);
+    color: var(--muted);
+    border-radius: 5px;
+    padding: 4px 8px;
+    font-size: 11px;
+    cursor: pointer;
+  }
+  .url-row button:hover { color: var(--text); border-color: var(--muted); }
+
+  .card {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 20px;
+    margin-bottom: 16px;
+  }
+  .card-title {
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--muted);
+    margin: 0 0 14px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .field { margin-bottom: 14px; }
+  .field:last-child { margin-bottom: 0; }
+  label {
+    display: block;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--muted);
+    margin-bottom: 6px;
+  }
+  input[type=text], textarea, select {
+    width: 100%;
+    background: #0d1015;
+    border: 1px solid var(--border);
+    color: var(--text);
+    border-radius: 6px;
+    padding: 9px 10px;
+    font-size: 13px;
+    font-family: var(--mono);
+    outline: none;
+  }
+  input[type=text]:focus, textarea:focus, select:focus { border-color: var(--accent); }
+  textarea { resize: vertical; min-height: 54px; }
+  .row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .hint { color: var(--muted); font-size: 11px; margin-top: 4px; }
+
+  .template-row { display: flex; gap: 8px; }
+  .template-row select { flex: 1; }
+  .btn-sm {
+    background: none;
+    border: 1px solid var(--border);
+    color: var(--text);
+    border-radius: 6px;
+    padding: 0 12px;
+    font-size: 12px;
+    cursor: pointer;
+    white-space: nowrap;
+  }
+  .btn-sm:hover { border-color: var(--accent); color: var(--accent); }
+  .btn-sm.accent2:hover { border-color: var(--accent2); color: var(--accent2); }
+
+  .send-btn {
+    width: 100%;
+    background: var(--accent);
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    padding: 13px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    margin-top: 4px;
+  }
+  .send-btn:hover { filter: brightness(1.08); }
+  .send-btn:disabled { opacity: 0.5; cursor: default; }
+
+  .result { margin-top: 20px; }
+  .result-head {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    margin-bottom: 8px;
+  }
+  .badge {
+    font-size: 11px;
+    font-weight: 600;
+    padding: 2px 8px;
+    border-radius: 20px;
+  }
+  .badge.ok { background: rgba(62,207,142,0.15); color: var(--ok); }
+  .badge.err { background: rgba(242,84,91,0.15); color: var(--err); }
+  pre {
+    background: #0d1015;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 12px;
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--muted);
+    overflow-x: auto;
+    white-space: pre-wrap;
+    word-break: break-word;
+  }
+  .payload-preview summary {
+    cursor: pointer;
+    font-size: 12px;
+    color: var(--muted);
+    margin-bottom: 8px;
+  }
+  .html-preview {
+    background: #0d1015;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 12px;
+    font-size: 13px;
+    line-height: 1.5;
+    color: var(--text);
+  }
+  .html-preview b, .html-preview strong { color: var(--accent); }
+  .toast {
+    font-size: 11px;
+    color: var(--ok);
+    margin-top: 6px;
+    min-height: 14px;
+  }
+  .toast.err { color: var(--err); }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1><span class="dot"></span>Notification Direct Tester</h1>
+  <p class="subtitle">Same payload contract as the Make.com version, but calls the <code>send-notification-direct</code> Supabase Edge Function instead — direct Slack/Resend/ClickSend API calls, no Make in the loop. Dev only, side-by-side comparison.</p>
+
+  <div class="url-row">
+    <input id="webhookUrl" type="text" value="https://mimqaklxfmdjlkadjxoh.supabase.co/functions/v1/send-notification-direct">
+    <button onclick="copyUrl()">Copy</button>
+  </div>
+  <p class="hint" style="margin-top:-16px;margin-bottom:24px;">Requires each channel's secret to be set in Supabase (Dashboard → Edge Functions → Manage secrets): <code>SLACK_BOT_TOKEN</code>, <code>RESEND_API_KEY</code> + <code>RESEND_FROM_EMAIL</code>, <code>CLICKSEND_USERNAME</code> + <code>CLICKSEND_API_KEY</code>. Until those are set, that channel will respond with a clear config error rather than silently failing.</p>
+
+  <div class="card">
+    <p class="card-title">Template <span id="templateStatus" style="text-transform:none;letter-spacing:0;"></span></p>
+    <div class="template-row">
+      <select id="templateSelect" onchange="applyTemplate()">
+        <option value="">— choose a template, or write your own below —</option>
+      </select>
+      <button class="btn-sm" onclick="loadTemplates()">Refresh</button>
+    </div>
+    <p class="hint">Templates are stored in Supabase (<code>ad_notification_template</code>, dev). Editing the fields below doesn't change the saved template — use "Save as new template" for that.</p>
+  </div>
+
+  <div class="card">
+    <div class="field">
+      <label>Type (channel)</label>
+      <select id="f_type">
+        <option value="SLACK" selected>SLACK</option>
+        <option value="EMAIL">EMAIL</option>
+        <option value="SMS">SMS</option>
+        <option value="WHATSAPP">WHATSAPP (not built yet)</option>
+      </select>
+    </div>
+
+    <div class="row2">
+      <div class="field">
+        <label>First name</label>
+        <input type="text" id="f_firstname" value="Mike">
+      </div>
+      <div class="field">
+        <label>Last name</label>
+        <input type="text" id="f_lastname" value="Ball">
+      </div>
+    </div>
+
+    <div class="row2">
+      <div class="field">
+        <label>Email</label>
+        <input type="text" id="f_email" value="mike.ball@ionetiq.dev">
+      </div>
+      <div class="field">
+        <label>Phone</label>
+        <input type="text" id="f_phone" value="447789666369">
+      </div>
+    </div>
+
+    <div class="field">
+      <label>Slack ID (optional — overrides the email lookup)</label>
+      <input type="text" id="f_slack_id" value="">
+      <p class="hint">Leave blank to let the scenario look the user up by email.</p>
+    </div>
+
+    <div class="field">
+      <label>Message title</label>
+      <input type="text" id="f_message_title" value="Test message">
+    </div>
+
+    <div class="field">
+      <label>Message text (basic HTML: &lt;b&gt;, &lt;strong&gt;, &lt;br&gt; — plus {firstname} / {lastname})</label>
+      <textarea id="f_message_text" rows="4">Welcome to {firstname} {lastname}</textarea>
+    </div>
+
+    <div class="field">
+      <label>Preview (as it'll render in email; Slack converts &lt;b&gt;→*bold*, &lt;br&gt;→line break)</label>
+      <div class="html-preview" id="htmlPreview"></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <p class="card-title">Save as new template</p>
+    <div class="field">
+      <label>Template name</label>
+      <input type="text" id="newTemplateName" placeholder="e.g. Deadline reminder">
+    </div>
+    <button class="btn-sm accent2" onclick="saveTemplate()">Save current title + text as new template</button>
+    <p class="toast" id="saveToast"></p>
+  </div>
+
+  <div class="card payload-preview">
+    <details>
+      <summary>Raw payload that will be sent</summary>
+      <pre id="payloadPreview">{}</pre>
+    </details>
+  </div>
+
+  <button class="send-btn" id="sendBtn" onclick="sendPayload()">Send test notification</button>
+
+  <div class="result" id="resultBox" style="display:none;">
+    <div class="result-head">
+      <span>Response</span>
+      <span class="badge" id="statusBadge"></span>
+    </div>
+    <pre id="responseBody"></pre>
+  </div>
+</div>
+
+<script>
+const SUPABASE_URL = 'https://mimqaklxfmdjlkadjxoh.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1pbXFha2x4Zm1kamxrYWRqeG9oIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY2MjQ5MjMsImV4cCI6MjEwMjIwMDkyM30.EkNUgooVzOmwji-2vUTdZrRcnDkRbJ-DhtXMOAZVjEc';
+let templates = [];
+
+async function loadTemplates() {
+  const status = document.getElementById('templateStatus');
+  const select = document.getElementById('templateSelect');
+  status.textContent = 'loading…';
+  try {
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/ad_notification_template?select=*&order=name.asc`, {
+      headers: {
+        'apikey': SUPABASE_ANON_KEY,
+        'Authorization': `Bearer ${SUPABASE_ANON_KEY}`
+      }
+    });
+    if (!res.ok) throw new Error(`${res.status} ${res.statusText}`);
+    templates = await res.json();
+    select.innerHTML = '<option value="">— choose a template, or write your own below —</option>' +
+      templates.map(t => `<option value="${t.template_id}">${t.name}</option>`).join('');
+    status.textContent = `${templates.length} loaded`;
+  } catch (err) {
+    status.textContent = 'failed to load';
+    console.error(err);
+  }
+}
+
+function applyTemplate() {
+  const id = document.getElementById('templateSelect').value;
+  if (!id) return;
+  const t = templates.find(t => t.template_id === id);
+  if (!t) return;
+  document.getElementById('f_message_title').value = t.message_title;
+  document.getElementById('f_message_text').value = t.message_text;
+  refreshPreview();
+}
+
+async function saveTemplate() {
+  const toast = document.getElementById('saveToast');
+  const name = document.getElementById('newTemplateName').value.trim();
+  if (!name) {
+    toast.textContent = 'Give the template a name first.';
+    toast.className = 'toast err';
+    return;
+  }
+  const body = {
+    name,
+    message_title: document.getElementById('f_message_title').value,
+    message_text: document.getElementById('f_message_text').value
+  };
+  try {
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/ad_notification_template`, {
+      method: 'POST',
+      headers: {
+        'apikey': SUPABASE_ANON_KEY,
+        'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+        'Content-Type': 'application/json',
+        'Prefer': 'return=minimal'
+      },
+      body: JSON.stringify(body)
+    });
+    if (!res.ok) throw new Error(`${res.status} ${res.statusText}`);
+    toast.textContent = `Saved "${name}".`;
+    toast.className = 'toast';
+    document.getElementById('newTemplateName').value = '';
+    await loadTemplates();
+  } catch (err) {
+    toast.textContent = 'Save failed: ' + err.message;
+    toast.className = 'toast err';
+  }
+}
+
+function buildPayload() {
+  return {
+    type: document.getElementById('f_type').value,
+    firstname: document.getElementById('f_firstname').value,
+    lastname: document.getElementById('f_lastname').value,
+    email: document.getElementById('f_email').value,
+    phone: document.getElementById('f_phone').value,
+    slack_id: document.getElementById('f_slack_id').value,
+    message_title: document.getElementById('f_message_title').value,
+    message_text: document.getElementById('f_message_text').value
+  };
+}
+
+function refreshPreview() {
+  document.getElementById('payloadPreview').textContent = JSON.stringify(buildPayload(), null, 2);
+  const fn = document.getElementById('f_firstname').value;
+  const ln = document.getElementById('f_lastname').value;
+  const raw = document.getElementById('f_message_text').value
+    .replaceAll('{firstname}', fn)
+    .replaceAll('{lastname}', ln);
+  document.getElementById('htmlPreview').innerHTML = raw;
+}
+
+document.querySelectorAll('input, textarea, select').forEach(el => {
+  if (el.id !== 'webhookUrl') el.addEventListener('input', refreshPreview);
+});
+refreshPreview();
+loadTemplates();
+
+function copyUrl() {
+  const input = document.getElementById('webhookUrl');
+  input.select();
+  document.execCommand('copy');
+}
+
+async function sendPayload() {
+  const btn = document.getElementById('sendBtn');
+  const resultBox = document.getElementById('resultBox');
+  const badge = document.getElementById('statusBadge');
+  const body = document.getElementById('responseBody');
+  const url = document.getElementById('webhookUrl').value.trim();
+
+  btn.disabled = true;
+  btn.textContent = 'Sending…';
+  resultBox.style.display = 'block';
+  badge.className = 'badge';
+  badge.textContent = '…';
+  body.textContent = '';
+
+  const payload = buildPayload();
+
+  try {
+    const res = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+        'apikey': SUPABASE_ANON_KEY
+      },
+      body: JSON.stringify(payload)
+    });
+    const text = await res.text();
+
+    badge.classList.add(res.ok ? 'ok' : 'err');
+    badge.textContent = res.ok ? `${res.status} OK` : `${res.status} ERROR`;
+    body.textContent = text || '(empty response body)';
+  } catch (err) {
+    badge.classList.add('err');
+    badge.textContent = 'NETWORK ERROR';
+    body.textContent = String(err);
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Send test notification';
+  }
+}
+</script>
+</body>
+</html>

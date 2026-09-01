@@ -59,6 +59,7 @@ nav:
     - Acknowledge: features/acknowledge.md
     - Org Chart: features/org-chart.md
     - Users (Admin): features/users-admin.md
+    - Notifications (prototype): features/notifications.md
   - Database:
     - Schema Overview: database/schema.md
     - RLS Patterns: database/rls.md
@@ -66,6 +67,7 @@ nav:
   - Edge Functions:
     - manage-user: edge-functions/manage-user.md
     - fetch-document: edge-functions/fetch-document.md
+    - send-notification-direct (prototype): edge-functions/send-notification-direct.md
   - Deployment:
     - deploy.bat: deployment/deploy-bat.md
     - Environments: deployment/environments.md

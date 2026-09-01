@@ -42,6 +42,15 @@
 | `ad_distribution_audience` | Many-to-many: distribution ↔ audience |
 | `ad_distribution_item` | One per user per distribution; tracks status |
 
+### Notifications *(prototype — see [Notifications feature doc](../features/notifications.md))*
+
+| Table | Purpose |
+|---|---|
+| `ad_distribution_notification` | Config: per-distribution notification rules — when (`days` offset + `direction` before/after due date), who (`recipient_type`: `USER`/`MANAGER`/`SPECIFIC`, optional `specific_user_id`), and which `channel` |
+| `ad_distribution_item_notification` | Instance: one row per (distribution item × notification rule) generated from the config above, tracking `status` (`PENDING`/`SENT`/`FAILED`) and `sent_at` |
+| `ad_notification` | In-app notification / inbox entries — `type`, `payload` (JSONB), `sent_at`, `read_at`. Distinct from the outbound Slack/email/SMS channels above |
+| `ad_notification_template` *(dev only, prototype RLS)* | Reusable `message_title` + `message_text` (HTML, with `{firstname}`/`{lastname}` tokens) — not yet referenced by `ad_distribution_notification` |
+
 ## Distribution item status values
 
 | Status | Meaning |
@@ -88,4 +97,9 @@ erDiagram
     ad_document ||--o{ ad_document_reference : "referenced in"
 
     ad_user ||--o| ad_user : "reports to (manager_id)"
+
+    ad_distribution ||--o{ ad_distribution_notification : "configures"
+    ad_distribution_item ||--o{ ad_distribution_item_notification : "generates"
+    ad_distribution_notification ||--o{ ad_distribution_item_notification : "instantiates"
+    ad_user ||--o{ ad_notification : "receives"
 ```
