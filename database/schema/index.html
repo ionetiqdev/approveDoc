@@ -15,7 +15,7 @@
         <link rel="canonical" href="https://ionetiqdev.github.io/approveDoc/database/schema/">
       
       
-        <link rel="prev" href="../../features/audit-trail/">
+        <link rel="prev" href="../../features/users-admin/">
       
       
         <link rel="next" href="../rls/">
@@ -1162,90 +1162,6 @@
 
               
             
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../../features/notifications/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Notifications (prototype)
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../../features/video-compliance/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Video Compliance
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../../features/audit-trail/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Audit Trail
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
           </ul>
         </nav>
       
@@ -1426,17 +1342,6 @@
     <span class="md-ellipsis">
       
         Distribution &amp; Compliance
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#notifications-prototype-see-notifications-feature-doc" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Notifications (prototype — see Notifications feature doc)
       
     </span>
   </a>
@@ -1663,34 +1568,6 @@
 
               
             
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../../edge-functions/send-notification-direct/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    send-notification-direct (prototype)
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
           </ul>
         </nav>
       
@@ -1767,34 +1644,6 @@
     
   
     deploy.bat
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../../deployment/promote/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Promoting to Production
   
 
     
@@ -2154,17 +2003,6 @@
   
 </li>
         
-          <li class="md-nav__item">
-  <a href="#notifications-prototype-see-notifications-feature-doc" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Notifications (prototype — see Notifications feature doc)
-      
-    </span>
-  </a>
-  
-</li>
-        
       </ul>
     </nav>
   
@@ -2349,33 +2187,6 @@
 </tr>
 </tbody>
 </table>
-<h3 id="notifications-prototype-see-notifications-feature-doc">Notifications <em>(prototype — see <a href="../../features/notifications/">Notifications feature doc</a>)</em><a class="headerlink" href="#notifications-prototype-see-notifications-feature-doc" title="Permanent link">&para;</a></h3>
-<table>
-<thead>
-<tr>
-<th>Table</th>
-<th>Purpose</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><code>ad_distribution_notification</code></td>
-<td>Config: per-distribution notification rules — when (<code>days</code> offset + <code>direction</code> before/after due date), who (<code>recipient_type</code>: <code>USER</code>/<code>MANAGER</code>/<code>SPECIFIC</code>, optional <code>specific_user_id</code>), and which <code>channel</code></td>
-</tr>
-<tr>
-<td><code>ad_distribution_item_notification</code></td>
-<td>Instance: one row per (distribution item × notification rule) generated from the config above, tracking <code>status</code> (<code>PENDING</code>/<code>SENT</code>/<code>FAILED</code>) and <code>sent_at</code></td>
-</tr>
-<tr>
-<td><code>ad_notification</code></td>
-<td>In-app notification / inbox entries — <code>type</code>, <code>payload</code> (JSONB), <code>sent_at</code>, <code>read_at</code>. Distinct from the outbound Slack/email/SMS channels above</td>
-</tr>
-<tr>
-<td><code>ad_notification_template</code> <em>(dev only, prototype RLS)</em></td>
-<td>Reusable <code>message_title</code> + <code>message_text</code> (HTML, with <code>{firstname}</code>/<code>{lastname}</code> tokens) — not yet referenced by <code>ad_distribution_notification</code></td>
-</tr>
-</tbody>
-</table>
 <h2 id="distribution-item-status-values">Distribution item status values<a class="headerlink" href="#distribution-item-status-values" title="Permanent link">&para;</a></h2>
 <table>
 <thead>
@@ -2461,12 +2272,7 @@
     ad_user ||--o{ ad_document_reference : "saves"
     ad_document ||--o{ ad_document_reference : "referenced in"
 
-    ad_user ||--o| ad_user : "reports to (manager_id)"
-
-    ad_distribution ||--o{ ad_distribution_notification : "configures"
-    ad_distribution_item ||--o{ ad_distribution_item_notification : "generates"
-    ad_distribution_notification ||--o{ ad_distribution_item_notification : "instantiates"
-    ad_user ||--o{ ad_notification : "receives"</code></pre>
+    ad_user ||--o| ad_user : "reports to (manager_id)"</code></pre>
 
 
 

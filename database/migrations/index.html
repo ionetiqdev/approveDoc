@@ -1162,90 +1162,6 @@
 
               
             
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../../features/notifications/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Notifications (prototype)
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../../features/video-compliance/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Video Compliance
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../../features/audit-trail/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Audit Trail
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
           </ul>
         </nav>
       
@@ -1521,34 +1437,6 @@
 
               
             
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../../edge-functions/send-notification-direct/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    send-notification-direct (prototype)
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
           </ul>
         </nav>
       
@@ -1625,34 +1513,6 @@
     
   
     deploy.bat
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../../deployment/promote/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Promoting to Production
   
 
     
@@ -2074,24 +1934,8 @@
 <td><code>24-rls-country-language.sql</code></td>
 <td>Enable RLS on <code>ad_country</code> and <code>ad_language</code></td>
 </tr>
-<tr>
-<td><code>25-audit-trail.sql</code></td>
-<td><code>audit_log</code> table, generic <code>audit_trigger_fn()</code>, triggers on 13 core tables, <code>audit_retention_months</code> on <code>organisations</code></td>
-</tr>
-<tr>
-<td><code>26-video-compliance.sql</code></td>
-<td><code>video_watch_threshold_pct</code> / <code>video_seek_lock_enabled</code> on <code>organisations</code>; <code>video_watched_seconds</code> / <code>video_duration_seconds</code> on <code>ad_distribution_item</code>; <code>update_video_compliance_settings()</code> RPC</td>
-</tr>
-<tr>
-<td><code>27-notifications.sql</code></td>
-<td><code>ad_distribution_notification</code> (per-distribution rules), <code>ad_distribution_item_notification</code> (generated instances), <code>ad_notification</code> (in-app inbox)</td>
-</tr>
 </tbody>
 </table>
-<div class="admonition note">
-<p class="admonition-title">00-FULL-SCHEMA.sql</p>
-<p><code>supabase/00-FULL-SCHEMA.sql</code> is the from-scratch rebuild script — it should contain the equivalent of every migration above in one file. If a new incremental migration is added, <code>00-FULL-SCHEMA.sql</code> needs the same change or it drifts out of sync (this happened once before with <code>25-audit-trail.sql</code>'s block).</p>
-</div>
 
 
 

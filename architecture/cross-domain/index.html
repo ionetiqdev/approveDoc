@@ -1256,90 +1256,6 @@
 
               
             
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../../features/notifications/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Notifications (prototype)
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../../features/video-compliance/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Video Compliance
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../../features/audit-trail/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Audit Trail
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
           </ul>
         </nav>
       
@@ -1602,34 +1518,6 @@
 
               
             
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../../edge-functions/send-notification-direct/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    send-notification-direct (prototype)
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
           </ul>
         </nav>
       
@@ -1706,34 +1594,6 @@
     
   
     deploy.bat
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../../deployment/promote/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Promoting to Production
   
 
     
@@ -2102,7 +1962,7 @@
 
 
 <h1 id="cross-domain-compatibility">Cross-Domain Compatibility<a class="headerlink" href="#cross-domain-compatibility" title="Permanent link">&para;</a></h1>
-<p>approveDoc is hosted at <code>ionetiq.dev/approvedoc/</code> but also accessible at <code>approvedoc.app/</code> — a DNS alias pointing to the same server and folder.</p>
+<p>approveDoc is hosted at <code>ionetiq.dev/approvedoc/</code> but also accessible at <code>approvedoc.app/</code> — a DNS alias pointing to the same IIS server and folder.</p>
 <h2 id="the-problem">The problem<a class="headerlink" href="#the-problem" title="Permanent link">&para;</a></h2>
 <p>Supabase JS v2's <code>sb.auth.setSession()</code> does not always propagate the access token to the client's internal query state when called on a new origin. This causes <code>sb.from('profiles').select('*')</code> to run as anonymous and return nothing — even though the session was successfully restored — resulting in:</p>
 <ul>
